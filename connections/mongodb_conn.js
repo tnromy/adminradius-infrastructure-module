@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-require('dotenv').config();
+const dbConfig = require('../src/config/database.config');
 
 let connection = null;
 
@@ -7,26 +7,14 @@ const connectDB = async () => {
   try {
     if (connection) return connection;
 
-    const options = {
-      minPoolSize: parseInt(process.env.MONGODB_MIN_POOL_SIZE || '5'),
-      maxPoolSize: parseInt(process.env.MONGODB_MAX_POOL_SIZE || '50'),
-      autoIndex: true,
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
-      family: 4,
-      heartbeatFrequencyMS: 10000,
-      retryWrites: true,
-      retryReads: true
-    };
-
     console.log('Connecting to MongoDB...', {
-      host: process.env.MONGO_HOST,
-      user: process.env.MONGO_USER,
-      port: process.env.MONGO_PORT,
-      poolSize: `${options.minPoolSize}-${options.maxPoolSize}`
+      host: dbConfig.host,
+      user: dbConfig.user,
+      port: dbConfig.port,
+      poolSize: `${dbConfig.options.minPoolSize}-${dbConfig.options.maxPoolSize}`
     });
 
-    connection = await mongoose.connect(process.env.MONGODB_URI, options);
+    connection = await mongoose.connect(dbConfig.uri, dbConfig.options);
 
     mongoose.connection.on('connected', () => {
       console.log('MongoDB connection established successfully');
@@ -38,7 +26,7 @@ const connectDB = async () => {
       // Attempt to reconnect
       setTimeout(() => {
         console.log('Attempting to reconnect to MongoDB...');
-        mongoose.connect(process.env.MONGODB_URI, options).catch(err => {
+        mongoose.connect(dbConfig.uri, dbConfig.options).catch(err => {
           console.error('Reconnection failed:', err);
         });
       }, 5000);
