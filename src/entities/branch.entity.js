@@ -5,6 +5,7 @@
 const { createLocationEntity, validateLocationEntity } = require('./location.entity');
 const { createAddressEntity, validateAddressEntity } = require('./address.entity');
 const { createContactEntity, validateContactEntity } = require('./contact.entity');
+const { validateNetDeviceRouterEntity } = require('./netDeviceRouter.entity');
 
 /**
  * Fungsi untuk membuat objek branch
@@ -18,6 +19,7 @@ function createBranchEntity(data = {}) {
     location: data.location ? createLocationEntity(data.location) : createLocationEntity(),
     address: data.address ? createAddressEntity(data.address) : createAddressEntity(),
     contact: data.contact ? createContactEntity(data.contact) : createContactEntity(),
+    children: data.children || [],
     createdAt: data.createdAt || new Date(),
     updatedAt: data.updatedAt || new Date()
   };
@@ -50,6 +52,20 @@ function validateBranchEntity(data) {
   // Validasi contact jika ada
   if (data.contact && !validateContactEntity(data.contact)) {
     return false;
+  }
+  
+  // Validasi children jika ada
+  if (data.children) {
+    if (!Array.isArray(data.children)) {
+      return false;
+    }
+    
+    // Validasi setiap item dalam children harus berupa netDeviceRouter
+    for (const child of data.children) {
+      if (!validateNetDeviceRouterEntity(child)) {
+        return false;
+      }
+    }
   }
   
   return true;

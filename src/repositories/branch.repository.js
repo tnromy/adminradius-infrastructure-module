@@ -4,6 +4,7 @@
 
 const { getCollection } = require('./database.connector');
 const { createBranchEntity } = require('../entities/branch.entity');
+const { createNetDeviceRouterEntity } = require('../entities/netDeviceRouter.entity');
 const mongoose = require('mongoose');
 const { ObjectId } = mongoose.Types;
 
@@ -98,10 +99,48 @@ async function deleteBranch(id) {
   }
 }
 
+/**
+ * Menambahkan router ke branch berdasarkan ID branch
+ * @param {string} id - ID branch
+ * @param {Object} routerData - Data router yang akan ditambahkan
+ * @returns {Promise<Object>} - Data branch yang sudah diupdate dengan router baru
+ */
+async function addRouterToBranch(id, routerData) {
+  try {
+    const collection = getCollection(COLLECTION);
+    
+    // Buat entity router dengan ObjectId baru
+    const routerId = new ObjectId();
+    const router = createNetDeviceRouterEntity({
+      ...routerData,
+      _id: routerId
+    });
+    
+    // Update branch, tambahkan router ke children
+    const result = await collection.updateOne(
+      { _id: new ObjectId(id) },
+      { 
+        $push: { children: router },
+        $set: { updatedAt: new Date() }
+      }
+    );
+    
+    if (result.matchedCount === 0) {
+      return null;
+    }
+    
+    return getBranchById(id);
+  } catch (error) {
+    console.error(`Error adding router to branch with ID ${id}:`, error);
+    throw error;
+  }
+}
+
 module.exports = {
   getAllBranches,
   getBranchById,
   createBranch,
   updateBranch,
-  deleteBranch
+  deleteBranch,
+  addRouterToBranch
 };
