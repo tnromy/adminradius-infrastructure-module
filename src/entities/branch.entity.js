@@ -11,7 +11,8 @@ function createBranchEntity(data = {}) {
   return {
     _id: data._id || null,
     name: data.name || '',
-    // Properti lain dapat ditambahkan sesuai kebutuhan
+    createdAt: data.createdAt || new Date(),
+    updatedAt: data.updatedAt || new Date()
   };
 }
 
@@ -24,6 +25,11 @@ function validateBranchEntity(data) {
   if (!data.name || typeof data.name !== 'string') {
     return false;
   }
+  
+  if (data.name.length < 3 || data.name.length > 64) {
+    return false;
+  }
+  
   return true;
 }
 

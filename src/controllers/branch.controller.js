@@ -3,6 +3,7 @@
  */
 
 const branchRepository = require('../repositories/branch.repository');
+const { validateBranchEntity } = require('../entities/branch.entity');
 
 /**
  * Mendapatkan semua branches
@@ -57,8 +58,10 @@ async function getBranchById(req, res) {
  */
 async function createBranch(req, res) {
   try {
+    // Validasi telah dilakukan di middleware validation
     const branch = await branchRepository.createBranch(req.body);
-    res.status(201).json({
+    res.status(200).json({
+      message: 'Branch created successfully',
       data: branch
     });
   } catch (error) {
