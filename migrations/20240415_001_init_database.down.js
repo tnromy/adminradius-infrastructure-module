@@ -1,4 +1,4 @@
-const { connectDB } = require('../conn');
+const { connectDB } = require('../connections/mongodb_conn');
 
 console.log('Dropping database...');
 

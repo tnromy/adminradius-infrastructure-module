@@ -4,7 +4,7 @@ const { exec } = require('child_process');
 const util = require('util');
 const execPromise = util.promisify(exec);
 
-const SEEDERS_DIR = path.join(__dirname, 'seeders');
+const SEEDERS_DIR = path.join(__dirname, '..', 'seeders');
 
 async function runSeeder(file) {
   try {
