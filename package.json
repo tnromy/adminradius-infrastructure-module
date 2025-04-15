@@ -1,7 +1,19 @@
 {
+  "name": "infrastructuresservice",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "migrate": "node migrate.js",
+    "seed": "node seed.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
   "dependencies": {
-    "dotenv": "^16.5.0",
-    "mongoose": "^8.13.2",
-    "uuidv7": "^1.0.2"
+    "dotenv": "^16.4.5",
+    "mongoose": "^8.2.3",
+    "uuidv7": "^0.6.3"
   }
 }
