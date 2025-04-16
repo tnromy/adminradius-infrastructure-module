@@ -3,6 +3,45 @@
  */
 
 const odcRepository = require('../repositories/netDeviceOdc.repository');
+const odpRepository = require('../repositories/netDeviceOdp.repository');
+
+/**
+ * Mendapatkan ODP berdasarkan ID
+ * @param {Object} req - Request object
+ * @param {Object} res - Response object
+ */
+async function getOdpById(req, res) {
+  try {
+    const { odp_id } = req.params;
+    // Ambil parameter result dari query
+    const { result } = req.query;
+    
+    // Validasi parameter result jika ada
+    if (result && !Object.values(odpRepository.ResultTypes).includes(result)) {
+      return res.status(400).json({
+        error: 'Invalid result type',
+        valid_values: Object.values(odpRepository.ResultTypes)
+      });
+    }
+    
+    const odp = await odpRepository.getOdpDetailById(odp_id, result);
+    
+    if (!odp) {
+      return res.status(404).json({
+        error: 'ODP not found'
+      });
+    }
+    
+    res.status(200).json({
+      data: odp
+    });
+  } catch (error) {
+    console.error('Error in getOdpById controller:', error);
+    res.status(500).json({
+      error: 'Internal server error'
+    });
+  }
+}
 
 /**
  * Menambahkan ODP ke ODC pada tray tertentu
@@ -60,5 +99,6 @@ async function addOdpToOdc(req, res) {
 }
 
 module.exports = {
+  getOdpById,
   addOdpToOdc
 }; 

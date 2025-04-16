@@ -10,6 +10,11 @@ const { ObjectId } = mongoose.Types;
 // Nama collection
 const COLLECTION = 'branches';
 
+// Enum untuk tipe result
+const ResultTypes = {
+  ODPS: 'ODPS'
+};
+
 /**
  * Mencari ODP dan mendapatkan informasi path ke ODP
  * @param {string} odpId - ID ODP
@@ -92,6 +97,44 @@ async function getOdpById(odpId) {
 }
 
 /**
+ * Mendapatkan detail ODP berdasarkan ID dengan level detail tertentu
+ * @param {string} odpId - ID ODP
+ * @param {string} resultType - Tipe hasil (ODPS)
+ * @returns {Promise<Object>} - Data ODP sesuai level detail
+ */
+async function getOdpDetailById(odpId, resultType = null) {
+  try {
+    const odpInfo = await getOdpById(odpId);
+    
+    if (!odpInfo || !odpInfo.odp) {
+      return null;
+    }
+    
+    // Ambil data ODP
+    const odp = odpInfo.odp;
+    
+    // Jika resultType tidak dispesifikasikan, kembalikan data lengkap seperti biasa
+    if (!resultType || !Object.values(ResultTypes).includes(resultType)) {
+      return odp;
+    }
+    
+    // Filter data sesuai resultType
+    const odpCopy = { ...odp };
+    
+    // ODPS: Hapus children dari ODP
+    if (resultType === ResultTypes.ODPS) {
+      delete odpCopy.children;
+      return odpCopy;
+    }
+    
+    return odpCopy;
+  } catch (error) {
+    console.error(`Error getting ODP detail with ID ${odpId}:`, error);
+    throw error;
+  }
+}
+
+/**
  * Menambahkan ONT ke ODP
  * @param {string} odpId - ID ODP
  * @param {Object} ontData - Data ONT yang akan ditambahkan
@@ -153,5 +196,7 @@ async function addOntToOdp(odpId, ontData) {
 
 module.exports = {
   getOdpById,
-  addOntToOdp
+  getOdpDetailById,
+  addOntToOdp,
+  ResultTypes
 }; 
