@@ -20,15 +20,33 @@ const ResultTypes = {
   ODPS: 'ODPS'
 };
 
+// Enum untuk tipe deleted filter
+const DeletedFilterTypes = {
+  ONLY: 'ONLY',    // Hanya data yang dihapus (memiliki deleted_at)
+  WITH: 'WITH',    // Semua data, termasuk yang dihapus
+  WITHOUT: 'WITHOUT' // Hanya data yang tidak dihapus (default)
+};
+
 /**
  * Mendapatkan semua branches dengan level detail tertentu
  * @param {string} resultType - Tipe hasil (BRANCHES, ROUTERS, OLTS, ODCS, ODPS)
- * @returns {Promise<Array>} - Array berisi data branches sesuai level detail
+ * @param {string} deletedFilter - Filter data yang dihapus (ONLY, WITH, WITHOUT)
+ * @returns {Promise<Array>} - Array berisi data branches sesuai level detail dan filter
  */
-async function getAllBranches(resultType = null) {
+async function getAllBranches(resultType = null, deletedFilter = DeletedFilterTypes.WITHOUT) {
   try {
     const collection = getCollection(COLLECTION);
-    const branches = await collection.find({}).toArray();
+    
+    // Buat query berdasarkan deleted filter
+    let query = {};
+    if (deletedFilter === DeletedFilterTypes.ONLY) {
+      query.deleted_at = { $exists: true };
+    } else if (deletedFilter === DeletedFilterTypes.WITHOUT) {
+      query.deleted_at = { $exists: false };
+    }
+    // Jika WITH, tidak perlu filter (tampilkan semua)
+    
+    const branches = await collection.find(query).toArray();
     
     // Jika resultType tidak dispesifikasikan, kembalikan data lengkap seperti biasa
     if (!resultType || !Object.values(ResultTypes).includes(resultType)) {
@@ -192,12 +210,23 @@ async function getAllBranches(resultType = null) {
  * Mendapatkan branch berdasarkan ID dengan level detail tertentu
  * @param {string} id - ID branch
  * @param {string} resultType - Tipe hasil (BRANCHES, ROUTERS, OLTS, ODCS, ODPS)
- * @returns {Promise<Object>} - Data branch sesuai level detail
+ * @param {string} deletedFilter - Filter data yang dihapus (ONLY, WITH, WITHOUT)
+ * @returns {Promise<Object>} - Data branch sesuai level detail dan filter
  */
-async function getBranchById(id, resultType = null) {
+async function getBranchById(id, resultType = null, deletedFilter = DeletedFilterTypes.WITHOUT) {
   try {
     const collection = getCollection(COLLECTION);
-    const branch = await collection.findOne({ _id: new ObjectId(id) });
+    
+    // Buat query berdasarkan ID dan deleted filter
+    let query = { _id: new ObjectId(id) };
+    if (deletedFilter === DeletedFilterTypes.ONLY) {
+      query.deleted_at = { $exists: true };
+    } else if (deletedFilter === DeletedFilterTypes.WITHOUT) {
+      query.deleted_at = { $exists: false };
+    }
+    // Jika WITH, tidak perlu tambahan filter, cukup filter berdasarkan ID saja
+    
+    const branch = await collection.findOne(query);
     
     if (!branch) {
       return null;
@@ -354,7 +383,7 @@ async function getBranchById(id, resultType = null) {
     
     return branchCopy;
   } catch (error) {
-    console.error(`Error getting branch with ID ${id}:`, error);
+    console.error('Error getting branch by ID:', error);
     throw error;
   }
 }
@@ -462,5 +491,6 @@ module.exports = {
   updateBranch,
   deleteBranch,
   addRouterToBranch,
-  ResultTypes
+  ResultTypes,
+  DeletedFilterTypes
 };

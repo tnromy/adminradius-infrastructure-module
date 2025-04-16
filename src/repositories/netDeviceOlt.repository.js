@@ -6,6 +6,7 @@ const { getCollection } = require('./database.connector');
 const { createNetDeviceOdcEntity } = require('../entities/netDeviceOdc.entity');
 const mongoose = require('mongoose');
 const { ObjectId } = mongoose.Types;
+const { DeletedFilterTypes } = require('./branch.repository');
 
 // Nama collection
 const COLLECTION = 'branches';
@@ -20,52 +21,83 @@ const ResultTypes = {
 /**
  * Mendapatkan OLT berdasarkan ID
  * @param {string} oltId - ID OLT
- * @returns {Promise<Object>} - Data OLT dengan info path
+ * @param {string} deletedFilter - Filter data yang dihapus (ONLY, WITH, WITHOUT)
+ * @returns {Promise<Object>} - Data OLT
  */
-async function getOltById(oltId) {
+async function getOltById(oltId, deletedFilter = DeletedFilterTypes.WITHOUT) {
   try {
-    const collection = getCollection(COLLECTION);
-    // Mencari branch yang memiliki router dengan OLT berdasarkan ID
-    const branch = await collection.findOne({
-      'children.children._id': new ObjectId(oltId)
-    });
+    const branchCollection = getCollection('branches');
+    const objectId = new ObjectId(oltId);
     
-    if (!branch) {
+    // Pipeline aggregation untuk mencari OLT berdasarkan ID
+    const pipeline = [
+      // Match branches yang memiliki OLT dengan ID tertentu
+      {
+        $match: {
+          'children.children._id': objectId
+        }
+      }
+    ];
+    
+    // Tambahkan filter deleted
+    if (deletedFilter === DeletedFilterTypes.ONLY) {
+      pipeline[0].$match['children.children.deleted_at'] = { $exists: true };
+    } else if (deletedFilter === DeletedFilterTypes.WITHOUT) {
+      pipeline[0].$match['children.children.deleted_at'] = { $exists: false };
+    }
+    
+    // Eksekusi query untuk mendapatkan branch
+    const branches = await branchCollection.aggregate(pipeline).toArray();
+    
+    if (!branches || branches.length === 0) {
       return null;
     }
     
-    // Cari router yang memiliki OLT
-    let foundOlt = null;
+    // Ambil branch pertama yang memiliki OLT tersebut
+    const branch = branches[0];
+    
+    // Loop setiap router untuk menemukan OLT
     let routerIndex = -1;
     let oltIndex = -1;
+    let oltData = null;
     
-    // Iterasi melalui children (router) dari branch
+    // Loop untuk menemukan router dan OLT
     for (let i = 0; i < branch.children.length; i++) {
       const router = branch.children[i];
       
-      // Iterasi melalui children (OLT) dari router
-      for (let j = 0; j < router.children.length; j++) {
-        const olt = router.children[j];
-        
-        if (olt._id.toString() === oltId && olt.type === 'olt') {
-          foundOlt = olt;
-          routerIndex = i;
-          oltIndex = j;
-          break;
+      if (router.children && Array.isArray(router.children)) {
+        for (let j = 0; j < router.children.length; j++) {
+          const olt = router.children[j];
+          
+          if (olt._id.toString() === oltId.toString()) {
+            routerIndex = i;
+            oltIndex = j;
+            oltData = olt;
+            break;
+          }
         }
       }
       
-      if (foundOlt) break;
+      if (oltData) break;
     }
     
+    // Jika OLT tidak ditemukan
+    if (!oltData) {
+      return null;
+    }
+    
+    // Return objek dengan data OLT, branch, dan indeks
     return {
-      olt: foundOlt,
-      branch,
+      olt: oltData,
+      branch: {
+        _id: branch._id,
+        name: branch.name
+      },
       routerIndex,
       oltIndex
     };
   } catch (error) {
-    console.error(`Error getting OLT with ID ${oltId}:`, error);
+    console.error('Error getting OLT by ID:', error);
     throw error;
   }
 }
@@ -89,7 +121,7 @@ async function getOltDetailById(oltId, resultType = null) {
     
     // Jika resultType tidak dispesifikasikan, kembalikan data lengkap seperti biasa
     if (!resultType || !Object.values(ResultTypes).includes(resultType)) {
-      return olt;
+      return oltInfo;
     }
     
     // Filter data sesuai resultType
@@ -104,7 +136,10 @@ async function getOltDetailById(oltId, resultType = null) {
           return portCopy;
         });
       }
-      return oltCopy;
+      return {
+        ...oltInfo,
+        olt: oltCopy
+      };
     }
     
     // ODCS: Hapus children dari setiap tray di trays dari ODC
@@ -133,7 +168,10 @@ async function getOltDetailById(oltId, resultType = null) {
           return portCopy;
         });
       }
-      return oltCopy;
+      return {
+        ...oltInfo,
+        olt: oltCopy
+      };
     }
     
     // ODPS: Hapus children dari setiap ODP
@@ -169,10 +207,13 @@ async function getOltDetailById(oltId, resultType = null) {
           return portCopy;
         });
       }
-      return oltCopy;
+      return {
+        ...oltInfo,
+        olt: oltCopy
+      };
     }
     
-    return oltCopy;
+    return oltInfo;
   } catch (error) {
     console.error(`Error getting OLT detail with ID ${oltId}:`, error);
     throw error;

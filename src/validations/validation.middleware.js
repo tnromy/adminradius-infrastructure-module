@@ -2,7 +2,7 @@
  * Middleware validasi umum menggunakan express-validator
  */
 
-const { validationResult } = require('express-validator');
+const { validationResult, query } = require('express-validator');
 
 /**
  * Middleware untuk memeriksa validasi dan mengirimkan respons error jika ada
@@ -21,6 +21,21 @@ const validationMiddleware = (req, res, next) => {
   next();
 };
 
-module.exports = {
+/**
+ * Middleware untuk memvalidasi parameter deleted
+ * ONLY - Hanya menampilkan data yang memiliki property deleted_at
+ * WITH - Menampilkan semua data, termasuk yang memiliki property deleted_at
+ * WITHOUT - Hanya menampilkan data yang tidak memiliki property deleted_at (default)
+ */
+const validateDeletedParam = [
+  query('deleted')
+    .optional()
+    .isIn(['ONLY', 'WITH', 'WITHOUT'])
+    .withMessage('Parameter deleted harus bernilai ONLY, WITH, atau WITHOUT'),
   validationMiddleware
+];
+
+module.exports = {
+  validationMiddleware,
+  validateDeletedParam
 }; 

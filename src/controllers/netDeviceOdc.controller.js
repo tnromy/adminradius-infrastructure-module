@@ -4,6 +4,7 @@
 
 const oltRepository = require('../repositories/netDeviceOlt.repository');
 const odcRepository = require('../repositories/netDeviceOdc.repository');
+const branchRepository = require('../repositories/branch.repository'); // Untuk DeletedFilterTypes
 
 /**
  * Mendapatkan ODC berdasarkan ID
@@ -13,18 +14,16 @@ const odcRepository = require('../repositories/netDeviceOdc.repository');
 async function getOdcById(req, res) {
   try {
     const { odc_id } = req.params;
-    // Ambil parameter result dari query
-    const { result } = req.query;
+    // Ambil parameter dari query
+    const { deleted } = req.query;
     
-    // Validasi parameter result jika ada
-    if (result && !Object.values(odcRepository.ResultTypes).includes(result)) {
-      return res.status(400).json({
-        error: 'Invalid result type',
-        valid_values: Object.values(odcRepository.ResultTypes)
-      });
+    // Tentukan filter deleted (defaultnya WITHOUT)
+    let deletedFilter = branchRepository.DeletedFilterTypes.WITHOUT;
+    if (deleted && Object.values(branchRepository.DeletedFilterTypes).includes(deleted)) {
+      deletedFilter = deleted;
     }
     
-    const odc = await odcRepository.getOdcDetailById(odc_id, result);
+    const odc = await odcRepository.getOdcById(odc_id, deletedFilter);
     
     if (!odc) {
       return res.status(404).json({

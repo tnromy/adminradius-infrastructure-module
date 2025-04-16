@@ -6,6 +6,7 @@ const { getCollection } = require('./database.connector');
 const { createNetDeviceOntEntity } = require('../entities/netDeviceOnt.entity');
 const mongoose = require('mongoose');
 const { ObjectId } = mongoose.Types;
+const { DeletedFilterTypes } = require('./branch.repository');
 
 // Nama collection
 const COLLECTION = 'branches';
@@ -16,62 +17,90 @@ const ResultTypes = {
 };
 
 /**
- * Mencari ODP dan mendapatkan informasi path ke ODP
+ * Mendapatkan ODP berdasarkan ID
  * @param {string} odpId - ID ODP
- * @returns {Promise<Object>} - Data ODP dan path informasi
+ * @param {string} deletedFilter - Filter data yang dihapus (ONLY, WITH, WITHOUT)
+ * @returns {Promise<Object>} - Data ODP
  */
-async function getOdpById(odpId) {
+async function getOdpById(odpId, deletedFilter = DeletedFilterTypes.WITHOUT) {
   try {
-    const collection = getCollection(COLLECTION);
+    const branchCollection = getCollection('branches');
+    const objectId = new ObjectId(odpId);
     
-    // Mencari branch yang memiliki ODP berdasarkan ID
-    const branch = await collection.findOne({
-      'children.children.pon_port.children.trays.children._id': new ObjectId(odpId)
-    });
+    // Pipeline aggregation untuk mencari branch yang berisi ODP dengan ID tertentu
+    const pipeline = [
+      // Match branches yang memiliki ODP dengan ID tertentu
+      {
+        $match: {
+          'children.children.pon_port.children.trays.children._id': objectId
+        }
+      }
+    ];
     
-    if (!branch) {
+    // Tambahkan filter deleted
+    if (deletedFilter === DeletedFilterTypes.ONLY) {
+      pipeline[0].$match['children.children.pon_port.children.trays.children.deleted_at'] = { $exists: true };
+    } else if (deletedFilter === DeletedFilterTypes.WITHOUT) {
+      pipeline[0].$match['children.children.pon_port.children.trays.children.deleted_at'] = { $exists: false };
+    }
+    
+    // Eksekusi query untuk mendapatkan branch
+    const branches = await branchCollection.aggregate(pipeline).toArray();
+    
+    if (!branches || branches.length === 0) {
       return null;
     }
     
-    // Informasi path ke ODP
-    let foundOdp = null;
-    let branchId = branch._id;
+    // Ambil branch pertama yang memiliki ODP tersebut
+    const branch = branches[0];
+    
+    // Variabel untuk menyimpan indeks dan data
     let routerIndex = -1;
     let oltIndex = -1;
     let ponPortIndex = -1;
     let odcIndex = -1;
     let trayIndex = -1;
     let odpIndex = -1;
+    let odpData = null;
     
-    // Cari ODP dalam struktur bersarang
-    outerLoop:
-    for (let i = 0; i < branch.children.length; i++) {
+    // Loop melalui branch > router > olt > pon_port > odc > tray > odp
+    outerLoop: for (let i = 0; i < branch.children.length; i++) {
       const router = branch.children[i];
       
-      for (let j = 0; j < router.children.length; j++) {
-        const olt = router.children[j];
-        
-        for (let k = 0; k < olt.pon_port.length; k++) {
-          const ponPort = olt.pon_port[k];
+      if (router.children && Array.isArray(router.children)) {
+        for (let j = 0; j < router.children.length; j++) {
+          const olt = router.children[j];
           
-          for (let l = 0; l < ponPort.children.length; l++) {
-            const odc = ponPort.children[l];
-            
-            for (let m = 0; m < odc.trays.length; m++) {
-              const tray = odc.trays[m];
+          if (olt.pon_port && Array.isArray(olt.pon_port)) {
+            for (let k = 0; k < olt.pon_port.length; k++) {
+              const ponPort = olt.pon_port[k];
               
-              for (let n = 0; n < tray.children.length; n++) {
-                const odp = tray.children[n];
-                
-                if (odp._id.toString() === odpId && odp.type === 'odp') {
-                  foundOdp = odp;
-                  routerIndex = i;
-                  oltIndex = j;
-                  ponPortIndex = k;
-                  odcIndex = l;
-                  trayIndex = m;
-                  odpIndex = n;
-                  break outerLoop;
+              if (ponPort.children && Array.isArray(ponPort.children)) {
+                for (let l = 0; l < ponPort.children.length; l++) {
+                  const odc = ponPort.children[l];
+                  
+                  if (odc.trays && Array.isArray(odc.trays)) {
+                    for (let m = 0; m < odc.trays.length; m++) {
+                      const tray = odc.trays[m];
+                      
+                      if (tray.children && Array.isArray(tray.children)) {
+                        for (let n = 0; n < tray.children.length; n++) {
+                          const odp = tray.children[n];
+                          
+                          if (odp._id.toString() === odpId.toString()) {
+                            routerIndex = i;
+                            oltIndex = j;
+                            ponPortIndex = k;
+                            odcIndex = l;
+                            trayIndex = m;
+                            odpIndex = n;
+                            odpData = odp;
+                            break outerLoop;
+                          }
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -80,9 +109,15 @@ async function getOdpById(odpId) {
       }
     }
     
+    // Jika ODP tidak ditemukan
+    if (!odpData) {
+      return null;
+    }
+    
+    // Return objek dengan data ODP dan indeksnya
     return {
-      odp: foundOdp,
-      branchId,
+      odp: odpData,
+      branchId: branch._id,
       routerIndex,
       oltIndex,
       ponPortIndex,
@@ -91,7 +126,7 @@ async function getOdpById(odpId) {
       odpIndex
     };
   } catch (error) {
-    console.error(`Error getting ODP with ID ${odpId}:`, error);
+    console.error('Error getting ODP by ID:', error);
     throw error;
   }
 }
@@ -115,7 +150,7 @@ async function getOdpDetailById(odpId, resultType = null) {
     
     // Jika resultType tidak dispesifikasikan, kembalikan data lengkap seperti biasa
     if (!resultType || !Object.values(ResultTypes).includes(resultType)) {
-      return odp;
+      return odpInfo;
     }
     
     // Filter data sesuai resultType
@@ -124,10 +159,13 @@ async function getOdpDetailById(odpId, resultType = null) {
     // ODPS: Hapus children dari ODP
     if (resultType === ResultTypes.ODPS) {
       delete odpCopy.children;
-      return odpCopy;
+      return {
+        ...odpInfo,
+        odp: odpCopy
+      };
     }
     
-    return odpCopy;
+    return odpInfo;
   } catch (error) {
     console.error(`Error getting ODP detail with ID ${odpId}:`, error);
     throw error;

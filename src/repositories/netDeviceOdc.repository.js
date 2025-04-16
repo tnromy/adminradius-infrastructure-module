@@ -6,6 +6,7 @@ const { getCollection } = require('./database.connector');
 const { createNetDeviceOdpEntity } = require('../entities/netDeviceOdp.entity');
 const mongoose = require('mongoose');
 const { ObjectId } = mongoose.Types;
+const { DeletedFilterTypes } = require('./branch.repository');
 
 // Nama collection
 const COLLECTION = 'branches';
@@ -17,68 +18,98 @@ const ResultTypes = {
 };
 
 /**
- * Mencari ODC dan mendapatkan informasi path ke ODC
+ * Mendapatkan ODC berdasarkan ID
  * @param {string} odcId - ID ODC
- * @returns {Promise<Object>} - Data ODC dan path informasi
+ * @param {string} deletedFilter - Filter data yang dihapus (ONLY, WITH, WITHOUT)
+ * @returns {Promise<Object>} - Data ODC
  */
-async function getOdcById(odcId) {
+async function getOdcById(odcId, deletedFilter = DeletedFilterTypes.WITHOUT) {
   try {
-    const collection = getCollection(COLLECTION);
+    const branchCollection = getCollection('branches');
+    const objectId = new ObjectId(odcId);
     
-    // Mencari branch yang memiliki ODC berdasarkan ID
-    const branch = await collection.findOne({
-      'children.children.pon_port.children._id': new ObjectId(odcId)
-    });
+    // Pipeline aggregation untuk mencari branch yang berisi ODC dengan ID tertentu
+    const pipeline = [
+      // Match branches yang memiliki ODC dengan ID tertentu
+      {
+        $match: {
+          'children.children.pon_port.children._id': objectId
+        }
+      }
+    ];
     
-    if (!branch) {
+    // Tambahkan filter deleted
+    if (deletedFilter === DeletedFilterTypes.ONLY) {
+      pipeline[0].$match['children.children.pon_port.children.deleted_at'] = { $exists: true };
+    } else if (deletedFilter === DeletedFilterTypes.WITHOUT) {
+      pipeline[0].$match['children.children.pon_port.children.deleted_at'] = { $exists: false };
+    }
+    
+    // Eksekusi query untuk mendapatkan branch
+    const branches = await branchCollection.aggregate(pipeline).toArray();
+    
+    if (!branches || branches.length === 0) {
       return null;
     }
     
-    // Informasi path ke ODC
-    let foundOdc = null;
-    let branchId = branch._id;
+    // Ambil branch pertama yang memiliki ODC tersebut
+    const branch = branches[0];
+    
+    // Variabel untuk menyimpan indeks dan data
     let routerIndex = -1;
     let oltIndex = -1;
     let ponPortIndex = -1;
     let odcIndex = -1;
+    let odcData = null;
     
-    // Cari ODC dalam struktur bersarang
-    outerLoop:
-    for (let i = 0; i < branch.children.length; i++) {
+    // Loop melalui branch > router > olt > pon_port > odc
+    outerLoop: for (let i = 0; i < branch.children.length; i++) {
       const router = branch.children[i];
       
-      for (let j = 0; j < router.children.length; j++) {
-        const olt = router.children[j];
-        
-        for (let k = 0; k < olt.pon_port.length; k++) {
-          const ponPort = olt.pon_port[k];
+      if (router.children && Array.isArray(router.children)) {
+        for (let j = 0; j < router.children.length; j++) {
+          const olt = router.children[j];
           
-          for (let l = 0; l < ponPort.children.length; l++) {
-            const odc = ponPort.children[l];
-            
-            if (odc._id.toString() === odcId && odc.type === 'odc') {
-              foundOdc = odc;
-              routerIndex = i;
-              oltIndex = j;
-              ponPortIndex = k;
-              odcIndex = l;
-              break outerLoop;
+          if (olt.pon_port && Array.isArray(olt.pon_port)) {
+            for (let k = 0; k < olt.pon_port.length; k++) {
+              const ponPort = olt.pon_port[k];
+              
+              if (ponPort.children && Array.isArray(ponPort.children)) {
+                for (let l = 0; l < ponPort.children.length; l++) {
+                  const odc = ponPort.children[l];
+                  
+                  if (odc._id.toString() === odcId.toString()) {
+                    routerIndex = i;
+                    oltIndex = j;
+                    ponPortIndex = k;
+                    odcIndex = l;
+                    odcData = odc;
+                    break outerLoop;
+                  }
+                }
+              }
             }
           }
         }
       }
     }
     
+    // Jika ODC tidak ditemukan
+    if (!odcData) {
+      return null;
+    }
+    
+    // Return objek dengan data ODC dan indeksnya
     return {
-      odc: foundOdc,
-      branchId,
+      odc: odcData,
+      branchId: branch._id,
       routerIndex,
       oltIndex,
       ponPortIndex,
       odcIndex
     };
   } catch (error) {
-    console.error(`Error getting ODC with ID ${odcId}:`, error);
+    console.error('Error getting ODC by ID:', error);
     throw error;
   }
 }
@@ -102,7 +133,7 @@ async function getOdcDetailById(odcId, resultType = null) {
     
     // Jika resultType tidak dispesifikasikan, kembalikan data lengkap seperti biasa
     if (!resultType || !Object.values(ResultTypes).includes(resultType)) {
-      return odc;
+      return odcInfo;
     }
     
     // Filter data sesuai resultType
@@ -117,7 +148,10 @@ async function getOdcDetailById(odcId, resultType = null) {
           return trayCopy;
         });
       }
-      return odcCopy;
+      return {
+        ...odcInfo,
+        odc: odcCopy
+      };
     }
     
     // ODPS: Hapus children dari setiap ODP
@@ -137,10 +171,13 @@ async function getOdcDetailById(odcId, resultType = null) {
           return trayCopy;
         });
       }
-      return odcCopy;
+      return {
+        ...odcInfo,
+        odc: odcCopy
+      };
     }
     
-    return odcCopy;
+    return odcInfo;
   } catch (error) {
     console.error(`Error getting ODC detail with ID ${odcId}:`, error);
     throw error;

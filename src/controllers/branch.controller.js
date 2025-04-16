@@ -13,7 +13,7 @@ const { validateBranchEntity } = require('../entities/branch.entity');
 async function getAllBranches(req, res) {
   try {
     // Ambil parameter result dari query
-    const { result } = req.query;
+    const { result, deleted } = req.query;
     
     // Validasi parameter result jika ada
     if (result && !Object.values(branchRepository.ResultTypes).includes(result)) {
@@ -23,7 +23,13 @@ async function getAllBranches(req, res) {
       });
     }
     
-    const branches = await branchRepository.getAllBranches(result);
+    // Tentukan filter deleted (defaultnya WITHOUT)
+    let deletedFilter = branchRepository.DeletedFilterTypes.WITHOUT;
+    if (deleted && Object.values(branchRepository.DeletedFilterTypes).includes(deleted)) {
+      deletedFilter = deleted;
+    }
+    
+    const branches = await branchRepository.getAllBranches(result, deletedFilter);
     res.status(200).json({
       data: branches
     });
@@ -43,8 +49,8 @@ async function getAllBranches(req, res) {
 async function getBranchById(req, res) {
   try {
     const { id } = req.params;
-    // Ambil parameter result dari query
-    const { result } = req.query;
+    // Ambil parameter result dan deleted dari query
+    const { result, deleted } = req.query;
     
     // Validasi parameter result jika ada
     if (result && !Object.values(branchRepository.ResultTypes).includes(result)) {
@@ -54,7 +60,13 @@ async function getBranchById(req, res) {
       });
     }
     
-    const branch = await branchRepository.getBranchById(id, result);
+    // Tentukan filter deleted (defaultnya WITHOUT)
+    let deletedFilter = branchRepository.DeletedFilterTypes.WITHOUT;
+    if (deleted && Object.values(branchRepository.DeletedFilterTypes).includes(deleted)) {
+      deletedFilter = deleted;
+    }
+    
+    const branch = await branchRepository.getBranchById(id, result, deletedFilter);
     
     if (!branch) {
       return res.status(404).json({

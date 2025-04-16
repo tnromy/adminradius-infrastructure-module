@@ -6,6 +6,7 @@ const { getCollection } = require('./database.connector');
 const { createNetDeviceOltEntity } = require('../entities/netDeviceOlt.entity');
 const mongoose = require('mongoose');
 const { ObjectId } = mongoose.Types;
+const { DeletedFilterTypes } = require('./branch.repository');
 
 // Nama collection
 const COLLECTION = 'branches';
@@ -19,150 +20,44 @@ const ResultTypes = {
 };
 
 /**
- * Mendapatkan router berdasarkan ID dengan level detail tertentu
+ * Mendapatkan router berdasarkan ID
  * @param {string} routerId - ID router
- * @param {string} resultType - Tipe hasil (ROUTERS, OLTS, ODCS, ODPS)
- * @returns {Promise<Object>} - Data router sesuai level detail
+ * @param {string} deletedFilter - Filter data yang dihapus (ONLY, WITH, WITHOUT)
+ * @returns {Promise<Object>} - Data router
  */
-async function getRouterById(routerId, resultType = null) {
+async function getRouterById(routerId, deletedFilter = DeletedFilterTypes.WITHOUT) {
   try {
-    const collection = getCollection(COLLECTION);
-    // Mencari branch yang memiliki router dengan ID tertentu di dalam children
-    const branch = await collection.findOne({
-      'children._id': new ObjectId(routerId)
-    });
+    const branchCollection = getCollection('branches');
     
-    if (!branch) {
+    // Pipeline aggregation untuk mencari router berdasarkan ID
+    const pipeline = [
+      // Unwind array children (router)
+      { $unwind: { path: '$children', preserveNullAndEmptyArrays: true } },
+      
+      // Match router_id yang diinginkan
+      { $match: { 'children._id': new ObjectId(routerId) } },
+      
+      // Project hanya data router
+      { $project: { router: '$children', _id: 0 } }
+    ];
+    
+    // Tambahkan filter deleted
+    if (deletedFilter === DeletedFilterTypes.ONLY) {
+      pipeline[1].$match['children.deleted_at'] = { $exists: true };
+    } else if (deletedFilter === DeletedFilterTypes.WITHOUT) {
+      pipeline[1].$match['children.deleted_at'] = { $exists: false };
+    }
+    // Jika WITH, tidak perlu filter tambahan
+    
+    const result = await branchCollection.aggregate(pipeline).toArray();
+    
+    if (!result || result.length === 0 || !result[0].router) {
       return null;
     }
     
-    // Cari router dalam array children
-    const router = branch.children.find(child => 
-      child._id.toString() === routerId && child.type === 'router'
-    );
-    
-    if (!router) {
-      return null;
-    }
-    
-    // Jika resultType tidak dispesifikasikan, kembalikan data lengkap seperti biasa
-    if (!resultType || !Object.values(ResultTypes).includes(resultType)) {
-      return router;
-    }
-    
-    // Filter data sesuai resultType
-    const routerCopy = { ...router };
-    
-    // ROUTERS: Hapus children dari router
-    if (resultType === ResultTypes.ROUTERS) {
-      delete routerCopy.children;
-      return routerCopy;
-    }
-    
-    // Jika tidak ada children, kembalikan router apa adanya
-    if (!routerCopy.children || !Array.isArray(routerCopy.children)) {
-      return routerCopy;
-    }
-    
-    // OLTS: Pertahankan OLT dengan pon_port, tapi hapus children dari setiap port di pon_port
-    if (resultType === ResultTypes.OLTS) {
-      routerCopy.children = routerCopy.children.map(olt => {
-        const oltCopy = { ...olt };
-        
-        // Tetap menyertakan pon_port tapi hapus children dari setiap port
-        if (oltCopy.pon_port && Array.isArray(oltCopy.pon_port)) {
-          oltCopy.pon_port = oltCopy.pon_port.map(port => {
-            const portCopy = { ...port };
-            delete portCopy.children;
-            return portCopy;
-          });
-        }
-        
-        return oltCopy;
-      });
-      return routerCopy;
-    }
-    
-    // ODCS: Pertahankan OLT dan ODC dengan trays, tapi hapus children dari setiap tray
-    if (resultType === ResultTypes.ODCS) {
-      routerCopy.children = routerCopy.children.map(olt => {
-        const oltCopy = { ...olt };
-        
-        if (oltCopy.pon_port && Array.isArray(oltCopy.pon_port)) {
-          oltCopy.pon_port = oltCopy.pon_port.map(port => {
-            const portCopy = { ...port };
-            
-            if (portCopy.children && Array.isArray(portCopy.children)) {
-              portCopy.children = portCopy.children.map(odc => {
-                const odcCopy = { ...odc };
-                
-                // Tetap menyertakan trays tapi hapus children dari setiap tray
-                if (odcCopy.trays && Array.isArray(odcCopy.trays)) {
-                  odcCopy.trays = odcCopy.trays.map(tray => {
-                    const trayCopy = { ...tray };
-                    delete trayCopy.children;
-                    return trayCopy;
-                  });
-                }
-                
-                return odcCopy;
-              });
-            }
-            
-            return portCopy;
-          });
-        }
-        
-        return oltCopy;
-      });
-      return routerCopy;
-    }
-    
-    // ODPS: Pertahankan OLT, ODC, dan ODP tapi hapus children dari ODP
-    if (resultType === ResultTypes.ODPS) {
-      routerCopy.children = routerCopy.children.map(olt => {
-        const oltCopy = { ...olt };
-        
-        if (oltCopy.pon_port && Array.isArray(oltCopy.pon_port)) {
-          oltCopy.pon_port = oltCopy.pon_port.map(port => {
-            const portCopy = { ...port };
-            
-            if (portCopy.children && Array.isArray(portCopy.children)) {
-              portCopy.children = portCopy.children.map(odc => {
-                const odcCopy = { ...odc };
-                
-                if (odcCopy.trays && Array.isArray(odcCopy.trays)) {
-                  odcCopy.trays = odcCopy.trays.map(tray => {
-                    const trayCopy = { ...tray };
-                    
-                    if (trayCopy.children && Array.isArray(trayCopy.children)) {
-                      trayCopy.children = trayCopy.children.map(odp => {
-                        const odpCopy = { ...odp };
-                        delete odpCopy.children;
-                        return odpCopy;
-                      });
-                    }
-                    
-                    return trayCopy;
-                  });
-                }
-                
-                return odcCopy;
-              });
-            }
-            
-            return portCopy;
-          });
-        }
-        
-        return oltCopy;
-      });
-      return routerCopy;
-    }
-    
-    return routerCopy;
+    return result[0].router;
   } catch (error) {
-    console.error(`Error getting router with ID ${routerId}:`, error);
+    console.error('Error getting router by ID:', error);
     throw error;
   }
 }

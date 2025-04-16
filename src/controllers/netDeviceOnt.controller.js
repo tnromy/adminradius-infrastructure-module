@@ -4,6 +4,7 @@
 
 const odpRepository = require('../repositories/netDeviceOdp.repository');
 const ontRepository = require('../repositories/netDeviceOnt.repository');
+const branchRepository = require('../repositories/branch.repository'); // Untuk DeletedFilterTypes
 
 /**
  * Mendapatkan ONT berdasarkan ID
@@ -13,8 +14,15 @@ const ontRepository = require('../repositories/netDeviceOnt.repository');
 async function getOntById(req, res) {
   try {
     const { ont_id } = req.params;
+    const { deleted } = req.query;
     
-    const ont = await ontRepository.getOntById(ont_id);
+    // Tentukan filter deleted (defaultnya WITHOUT)
+    let deletedFilter = branchRepository.DeletedFilterTypes.WITHOUT;
+    if (deleted && Object.values(branchRepository.DeletedFilterTypes).includes(deleted)) {
+      deletedFilter = deleted;
+    }
+    
+    const ont = await ontRepository.getOntById(ont_id, deletedFilter);
     
     if (!ont) {
       return res.status(404).json({
@@ -27,6 +35,45 @@ async function getOntById(req, res) {
     });
   } catch (error) {
     console.error('Error in getOntById controller:', error);
+    res.status(500).json({
+      error: 'Internal server error'
+    });
+  }
+}
+
+/**
+ * Melakukan soft delete pada ONT berdasarkan ID
+ * @param {Object} req - Request object
+ * @param {Object} res - Response object
+ */
+async function deleteOnt(req, res) {
+  try {
+    const { ont_id } = req.params;
+    
+    // Periksa apakah ONT ada
+    const ont = await ontRepository.getOntById(ont_id, branchRepository.DeletedFilterTypes.WITHOUT);
+    if (!ont) {
+      return res.status(404).json({
+        error: 'ONT not found or already deleted'
+      });
+    }
+    
+    // Lakukan soft delete
+    const deletedOnt = await ontRepository.softDeleteOnt(ont_id);
+    
+    if (!deletedOnt) {
+      return res.status(500).json({
+        error: 'Failed to delete ONT'
+      });
+    }
+    
+    // Sukses, kembalikan status 200 dengan data ONT yang sudah di-soft delete
+    res.status(200).json({
+      message: 'ONT deleted successfully',
+      data: deletedOnt
+    });
+  } catch (error) {
+    console.error('Error in deleteOnt controller:', error);
     res.status(500).json({
       error: 'Internal server error'
     });
@@ -85,5 +132,6 @@ async function addOntToOdp(req, res) {
 
 module.exports = {
   getOntById,
-  addOntToOdp
+  addOntToOdp,
+  deleteOnt
 }; 

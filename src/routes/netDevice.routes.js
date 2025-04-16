@@ -14,21 +14,25 @@ const { validateAddOlt } = require('../validations/netDeviceOlt.validation');
 const { validateAddOdc } = require('../validations/netDeviceOdc.validation');
 const { validateAddOdp } = require('../validations/netDeviceOdp.validation');
 const { validateAddOnt } = require('../validations/netDeviceOnt.validation');
+const { validateDeletedParam } = require('../validations/validation.middleware');
 
 // Route GET /api/infra/router/:router_id
-router.get('/router/:router_id', netDeviceRouterController.getRouterById);
+router.get('/router/:router_id', validateDeletedParam, netDeviceRouterController.getRouterById);
 
 // Route GET /api/infra/olt/:olt_id
-router.get('/olt/:olt_id', netDeviceOltController.getOltById);
+router.get('/olt/:olt_id', validateDeletedParam, netDeviceOltController.getOltById);
 
 // Route GET /api/infra/odc/:odc_id
-router.get('/odc/:odc_id', netDeviceOdcController.getOdcById);
+router.get('/odc/:odc_id', validateDeletedParam, netDeviceOdcController.getOdcById);
 
 // Route GET /api/infra/odp/:odp_id
-router.get('/odp/:odp_id', netDeviceOdpController.getOdpById);
+router.get('/odp/:odp_id', validateDeletedParam, netDeviceOdpController.getOdpById);
 
 // Route GET /api/infra/ont/:ont_id
-router.get('/ont/:ont_id', netDeviceOntController.getOntById);
+router.get('/ont/:ont_id', validateDeletedParam, netDeviceOntController.getOntById);
+
+// Route DELETE /api/infra/ont/:ont_id
+router.delete('/ont/:ont_id', netDeviceOntController.deleteOnt);
 
 // Route POST /api/infra/branch/:branch_id/router
 router.post('/branch/:branch_id/router', validateAddRouter, netDeviceRouterController.addRouterToBranch);

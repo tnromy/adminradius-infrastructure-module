@@ -13,18 +13,15 @@ const routerRepository = require('../repositories/netDeviceRouter.repository');
 async function getRouterById(req, res) {
   try {
     const { router_id } = req.params;
-    // Ambil parameter result dari query
-    const { result } = req.query;
+    const { deleted } = req.query;
     
-    // Validasi parameter result jika ada
-    if (result && !Object.values(routerRepository.ResultTypes).includes(result)) {
-      return res.status(400).json({
-        error: 'Invalid result type',
-        valid_values: Object.values(routerRepository.ResultTypes)
-      });
+    // Tentukan filter deleted (defaultnya WITHOUT)
+    let deletedFilter = branchRepository.DeletedFilterTypes.WITHOUT;
+    if (deleted && Object.values(branchRepository.DeletedFilterTypes).includes(deleted)) {
+      deletedFilter = deleted;
     }
     
-    const router = await routerRepository.getRouterById(router_id, result);
+    const router = await routerRepository.getRouterById(router_id, deletedFilter);
     
     if (!router) {
       return res.status(404).json({

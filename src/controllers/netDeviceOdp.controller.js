@@ -4,6 +4,7 @@
 
 const odcRepository = require('../repositories/netDeviceOdc.repository');
 const odpRepository = require('../repositories/netDeviceOdp.repository');
+const branchRepository = require('../repositories/branch.repository'); // Untuk DeletedFilterTypes
 
 /**
  * Mendapatkan ODP berdasarkan ID
@@ -13,18 +14,15 @@ const odpRepository = require('../repositories/netDeviceOdp.repository');
 async function getOdpById(req, res) {
   try {
     const { odp_id } = req.params;
-    // Ambil parameter result dari query
-    const { result } = req.query;
+    const { deleted } = req.query;
     
-    // Validasi parameter result jika ada
-    if (result && !Object.values(odpRepository.ResultTypes).includes(result)) {
-      return res.status(400).json({
-        error: 'Invalid result type',
-        valid_values: Object.values(odpRepository.ResultTypes)
-      });
+    // Tentukan filter deleted (defaultnya WITHOUT)
+    let deletedFilter = branchRepository.DeletedFilterTypes.WITHOUT;
+    if (deleted && Object.values(branchRepository.DeletedFilterTypes).includes(deleted)) {
+      deletedFilter = deleted;
     }
     
-    const odp = await odpRepository.getOdpDetailById(odp_id, result);
+    const odp = await odpRepository.getOdpById(odp_id, deletedFilter);
     
     if (!odp) {
       return res.status(404).json({

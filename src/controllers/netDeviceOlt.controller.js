@@ -4,6 +4,7 @@
 
 const routerRepository = require('../repositories/netDeviceRouter.repository');
 const oltRepository = require('../repositories/netDeviceOlt.repository');
+const branchRepository = require('../repositories/branch.repository'); // Untuk DeletedFilterTypes
 
 /**
  * Mendapatkan OLT berdasarkan ID
@@ -13,18 +14,16 @@ const oltRepository = require('../repositories/netDeviceOlt.repository');
 async function getOltById(req, res) {
   try {
     const { olt_id } = req.params;
-    // Ambil parameter result dari query
-    const { result } = req.query;
+    // Ambil parameter dari query
+    const { deleted } = req.query;
     
-    // Validasi parameter result jika ada
-    if (result && !Object.values(oltRepository.ResultTypes).includes(result)) {
-      return res.status(400).json({
-        error: 'Invalid result type',
-        valid_values: Object.values(oltRepository.ResultTypes)
-      });
+    // Tentukan filter deleted (defaultnya WITHOUT)
+    let deletedFilter = branchRepository.DeletedFilterTypes.WITHOUT;
+    if (deleted && Object.values(branchRepository.DeletedFilterTypes).includes(deleted)) {
+      deletedFilter = deleted;
     }
     
-    const olt = await oltRepository.getOltDetailById(olt_id, result);
+    const olt = await oltRepository.getOltById(olt_id, deletedFilter);
     
     if (!olt) {
       return res.status(404).json({
