@@ -3,6 +3,35 @@
  */
 
 const odpRepository = require('../repositories/netDeviceOdp.repository');
+const ontRepository = require('../repositories/netDeviceOnt.repository');
+
+/**
+ * Mendapatkan ONT berdasarkan ID
+ * @param {Object} req - Request object
+ * @param {Object} res - Response object
+ */
+async function getOntById(req, res) {
+  try {
+    const { ont_id } = req.params;
+    
+    const ont = await ontRepository.getOntById(ont_id);
+    
+    if (!ont) {
+      return res.status(404).json({
+        error: 'ONT not found'
+      });
+    }
+    
+    res.status(200).json({
+      data: ont
+    });
+  } catch (error) {
+    console.error('Error in getOntById controller:', error);
+    res.status(500).json({
+      error: 'Internal server error'
+    });
+  }
+}
 
 /**
  * Menambahkan ONT ke ODP
@@ -55,5 +84,6 @@ async function addOntToOdp(req, res) {
 }
 
 module.exports = {
+  getOntById,
   addOntToOdp
 }; 

@@ -27,6 +27,9 @@ router.get('/odc/:odc_id', netDeviceOdcController.getOdcById);
 // Route GET /api/infra/odp/:odp_id
 router.get('/odp/:odp_id', netDeviceOdpController.getOdpById);
 
+// Route GET /api/infra/ont/:ont_id
+router.get('/ont/:ont_id', netDeviceOntController.getOntById);
+
 // Route POST /api/infra/branch/:branch_id/router
 router.post('/branch/:branch_id/router', validateAddRouter, netDeviceRouterController.addRouterToBranch);
 
