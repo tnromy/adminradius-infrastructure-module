@@ -12,7 +12,18 @@ const { validateBranchEntity } = require('../entities/branch.entity');
  */
 async function getAllBranches(req, res) {
   try {
-    const branches = await branchRepository.getAllBranches();
+    // Ambil parameter result dari query
+    const { result } = req.query;
+    
+    // Validasi parameter result jika ada
+    if (result && !Object.values(branchRepository.ResultTypes).includes(result)) {
+      return res.status(400).json({
+        error: 'Invalid result type',
+        valid_values: Object.values(branchRepository.ResultTypes)
+      });
+    }
+    
+    const branches = await branchRepository.getAllBranches(result);
     res.status(200).json({
       data: branches
     });

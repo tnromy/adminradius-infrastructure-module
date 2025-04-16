@@ -11,15 +11,159 @@ const { ObjectId } = mongoose.Types;
 // Nama collection
 const COLLECTION = 'branches';
 
+// Enum untuk tipe result
+const ResultTypes = {
+  BRANCHES: 'BRANCHES',
+  ROUTERS: 'ROUTERS',
+  OLTS: 'OLTS',
+  ODCS: 'ODCS',
+  ODPS: 'ODPS'
+};
+
 /**
- * Mendapatkan semua branches
- * @returns {Promise<Array>} - Array berisi data branches
+ * Mendapatkan semua branches dengan level detail tertentu
+ * @param {string} resultType - Tipe hasil (BRANCHES, ROUTERS, OLTS, ODCS, ODPS)
+ * @returns {Promise<Array>} - Array berisi data branches sesuai level detail
  */
-async function getAllBranches() {
+async function getAllBranches(resultType = null) {
   try {
     const collection = getCollection(COLLECTION);
     const branches = await collection.find({}).toArray();
-    return branches.map(branch => createBranchEntity(branch));
+    
+    // Jika resultType tidak dispesifikasikan, kembalikan data lengkap seperti biasa
+    if (!resultType || !Object.values(ResultTypes).includes(resultType)) {
+      return branches.map(branch => createBranchEntity(branch));
+    }
+    
+    // Filter data sesuai resultType
+    return branches.map(branch => {
+      const branchCopy = { ...branch };
+      
+      // BRANCHES: Hapus children dari branch
+      if (resultType === ResultTypes.BRANCHES) {
+        delete branchCopy.children;
+        return branchCopy;
+      }
+      
+      // Jika tidak ada children, kembalikan branch apa adanya
+      if (!branchCopy.children || !Array.isArray(branchCopy.children)) {
+        return branchCopy;
+      }
+      
+      // ROUTERS: Pertahankan children (router) tapi hapus children dari router
+      if (resultType === ResultTypes.ROUTERS) {
+        branchCopy.children = branchCopy.children.map(router => {
+          const routerCopy = { ...router };
+          delete routerCopy.children;
+          return routerCopy;
+        });
+        return branchCopy;
+      }
+      
+      // OLTS: Pertahankan router dan OLT tapi hapus pon_port dari OLT
+      if (resultType === ResultTypes.OLTS) {
+        branchCopy.children = branchCopy.children.map(router => {
+          const routerCopy = { ...router };
+          
+          if (routerCopy.children && Array.isArray(routerCopy.children)) {
+            routerCopy.children = routerCopy.children.map(olt => {
+              const oltCopy = { ...olt };
+              delete oltCopy.pon_port;
+              return oltCopy;
+            });
+          }
+          
+          return routerCopy;
+        });
+        return branchCopy;
+      }
+      
+      // ODCS: Pertahankan router, OLT, dan ODC tapi hapus trays dari ODC
+      if (resultType === ResultTypes.ODCS) {
+        branchCopy.children = branchCopy.children.map(router => {
+          const routerCopy = { ...router };
+          
+          if (routerCopy.children && Array.isArray(routerCopy.children)) {
+            routerCopy.children = routerCopy.children.map(olt => {
+              const oltCopy = { ...olt };
+              
+              if (oltCopy.pon_port && Array.isArray(oltCopy.pon_port)) {
+                oltCopy.pon_port = oltCopy.pon_port.map(port => {
+                  const portCopy = { ...port };
+                  
+                  if (portCopy.children && Array.isArray(portCopy.children)) {
+                    portCopy.children = portCopy.children.map(odc => {
+                      const odcCopy = { ...odc };
+                      delete odcCopy.trays;
+                      return odcCopy;
+                    });
+                  }
+                  
+                  return portCopy;
+                });
+              }
+              
+              return oltCopy;
+            });
+          }
+          
+          return routerCopy;
+        });
+        return branchCopy;
+      }
+      
+      // ODPS: Pertahankan router, OLT, ODC, dan ODP tapi hapus children dari ODP
+      if (resultType === ResultTypes.ODPS) {
+        branchCopy.children = branchCopy.children.map(router => {
+          const routerCopy = { ...router };
+          
+          if (routerCopy.children && Array.isArray(routerCopy.children)) {
+            routerCopy.children = routerCopy.children.map(olt => {
+              const oltCopy = { ...olt };
+              
+              if (oltCopy.pon_port && Array.isArray(oltCopy.pon_port)) {
+                oltCopy.pon_port = oltCopy.pon_port.map(port => {
+                  const portCopy = { ...port };
+                  
+                  if (portCopy.children && Array.isArray(portCopy.children)) {
+                    portCopy.children = portCopy.children.map(odc => {
+                      const odcCopy = { ...odc };
+                      
+                      if (odcCopy.trays && Array.isArray(odcCopy.trays)) {
+                        odcCopy.trays = odcCopy.trays.map(tray => {
+                          const trayCopy = { ...tray };
+                          
+                          if (trayCopy.children && Array.isArray(trayCopy.children)) {
+                            trayCopy.children = trayCopy.children.map(odp => {
+                              const odpCopy = { ...odp };
+                              delete odpCopy.children;
+                              return odpCopy;
+                            });
+                          }
+                          
+                          return trayCopy;
+                        });
+                      }
+                      
+                      return odcCopy;
+                    });
+                  }
+                  
+                  return portCopy;
+                });
+              }
+              
+              return oltCopy;
+            });
+          }
+          
+          return routerCopy;
+        });
+        return branchCopy;
+      }
+      
+      return branchCopy;
+    });
   } catch (error) {
     console.error('Error getting branches:', error);
     throw error;
@@ -142,5 +286,6 @@ module.exports = {
   createBranch,
   updateBranch,
   deleteBranch,
-  addRouterToBranch
+  addRouterToBranch,
+  ResultTypes
 };
