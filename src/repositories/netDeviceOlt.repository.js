@@ -10,10 +10,17 @@ const { ObjectId } = mongoose.Types;
 // Nama collection
 const COLLECTION = 'branches';
 
+// Enum untuk tipe result
+const ResultTypes = {
+  OLTS: 'OLTS',
+  ODCS: 'ODCS',
+  ODPS: 'ODPS'
+};
+
 /**
  * Mendapatkan OLT berdasarkan ID
  * @param {string} oltId - ID OLT
- * @returns {Promise<Object>} - Data OLT
+ * @returns {Promise<Object>} - Data OLT dengan info path
  */
 async function getOltById(oltId) {
   try {
@@ -59,6 +66,115 @@ async function getOltById(oltId) {
     };
   } catch (error) {
     console.error(`Error getting OLT with ID ${oltId}:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Mendapatkan detail OLT berdasarkan ID dengan level detail tertentu
+ * @param {string} oltId - ID OLT
+ * @param {string} resultType - Tipe hasil (OLTS, ODCS, ODPS)
+ * @returns {Promise<Object>} - Data OLT sesuai level detail
+ */
+async function getOltDetailById(oltId, resultType = null) {
+  try {
+    const oltInfo = await getOltById(oltId);
+    
+    if (!oltInfo || !oltInfo.olt) {
+      return null;
+    }
+    
+    // Ambil data OLT
+    const olt = oltInfo.olt;
+    
+    // Jika resultType tidak dispesifikasikan, kembalikan data lengkap seperti biasa
+    if (!resultType || !Object.values(ResultTypes).includes(resultType)) {
+      return olt;
+    }
+    
+    // Filter data sesuai resultType
+    const oltCopy = { ...olt };
+    
+    // OLTS: Hapus children dari setiap port di pon_port
+    if (resultType === ResultTypes.OLTS) {
+      if (oltCopy.pon_port && Array.isArray(oltCopy.pon_port)) {
+        oltCopy.pon_port = oltCopy.pon_port.map(port => {
+          const portCopy = { ...port };
+          delete portCopy.children;
+          return portCopy;
+        });
+      }
+      return oltCopy;
+    }
+    
+    // ODCS: Hapus children dari setiap tray di trays dari ODC
+    if (resultType === ResultTypes.ODCS) {
+      if (oltCopy.pon_port && Array.isArray(oltCopy.pon_port)) {
+        oltCopy.pon_port = oltCopy.pon_port.map(port => {
+          const portCopy = { ...port };
+          
+          if (portCopy.children && Array.isArray(portCopy.children)) {
+            portCopy.children = portCopy.children.map(odc => {
+              const odcCopy = { ...odc };
+              
+              // Tetap menyertakan trays tapi hapus children dari setiap tray
+              if (odcCopy.trays && Array.isArray(odcCopy.trays)) {
+                odcCopy.trays = odcCopy.trays.map(tray => {
+                  const trayCopy = { ...tray };
+                  delete trayCopy.children;
+                  return trayCopy;
+                });
+              }
+              
+              return odcCopy;
+            });
+          }
+          
+          return portCopy;
+        });
+      }
+      return oltCopy;
+    }
+    
+    // ODPS: Hapus children dari setiap ODP
+    if (resultType === ResultTypes.ODPS) {
+      if (oltCopy.pon_port && Array.isArray(oltCopy.pon_port)) {
+        oltCopy.pon_port = oltCopy.pon_port.map(port => {
+          const portCopy = { ...port };
+          
+          if (portCopy.children && Array.isArray(portCopy.children)) {
+            portCopy.children = portCopy.children.map(odc => {
+              const odcCopy = { ...odc };
+              
+              if (odcCopy.trays && Array.isArray(odcCopy.trays)) {
+                odcCopy.trays = odcCopy.trays.map(tray => {
+                  const trayCopy = { ...tray };
+                  
+                  if (trayCopy.children && Array.isArray(trayCopy.children)) {
+                    trayCopy.children = trayCopy.children.map(odp => {
+                      const odpCopy = { ...odp };
+                      delete odpCopy.children;
+                      return odpCopy;
+                    });
+                  }
+                  
+                  return trayCopy;
+                });
+              }
+              
+              return odcCopy;
+            });
+          }
+          
+          return portCopy;
+        });
+      }
+      return oltCopy;
+    }
+    
+    return oltCopy;
+  } catch (error) {
+    console.error(`Error getting OLT detail with ID ${oltId}:`, error);
     throw error;
   }
 }
@@ -139,5 +255,7 @@ async function addOdcToOlt(oltId, odcData) {
 
 module.exports = {
   getOltById,
-  addOdcToOlt
+  getOltDetailById,
+  addOdcToOlt,
+  ResultTypes
 }; 
