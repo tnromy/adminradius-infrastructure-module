@@ -28,6 +28,17 @@ function isValidIPv4(ip) {
 }
 
 /**
+ * Fungsi untuk memeriksa tipe anak yang valid
+ * @param {Object} child - Objek anak yang akan diperiksa
+ * @returns {boolean} - True jika valid
+ */
+function isValidChild(child) {
+  // Hanya menerima netDeviceOlt
+  const validTypes = ['olt'];
+  return child && child.type && validTypes.includes(child.type);
+}
+
+/**
  * Fungsi untuk membuat objek netDeviceRouter
  * @param {Object} data - Data router
  * @returns {Object} - Objek netDeviceRouter
@@ -44,7 +55,7 @@ function createNetDeviceRouterEntity(data = {}) {
     ...baseEntity,
     connection_type: data.connection_type || ConnectionTypes.PUBLIC,
     ip_addr: data.ip_addr || '',
-    // Children hanya bisa berisi OLT, ODC, ODP, atau ONT
+    // Children hanya bisa berisi OLT
     children: data.children || []
   };
 }
@@ -70,9 +81,18 @@ function validateNetDeviceRouterEntity(data) {
     return false;
   }
   
-  // Validasi children (jika akan ditambahkan validasi khusus)
-  if (data.children && !Array.isArray(data.children)) {
-    return false;
+  // Validasi children
+  if (data.children) {
+    if (!Array.isArray(data.children)) {
+      return false;
+    }
+    
+    // Validasi setiap anak, pastikan tipenya valid
+    for (const child of data.children) {
+      if (!isValidChild(child)) {
+        return false;
+      }
+    }
   }
   
   return true;
@@ -81,5 +101,6 @@ function validateNetDeviceRouterEntity(data) {
 module.exports = {
   createNetDeviceRouterEntity,
   validateNetDeviceRouterEntity,
-  ConnectionTypes
+  ConnectionTypes,
+  isValidChild
 };
