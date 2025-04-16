@@ -17,7 +17,6 @@ function createNetDeviceEntity(data = {}) {
     type: data.type || '',
     location: data.location ? createLocationEntity(data.location) : createLocationEntity(),
     address: data.address ? createAddressEntity(data.address) : createAddressEntity(),
-    children: data.children || [],
     createdAt: data.createdAt || new Date(),
     updatedAt: data.updatedAt || new Date()
   };
@@ -44,11 +43,6 @@ function validateNetDeviceEntity(data) {
   
   // Validasi address jika ada
   if (data.address && !validateAddressEntity(data.address)) {
-    return false;
-  }
-  
-  // Validasi children jika ada
-  if (data.children && !Array.isArray(data.children)) {
     return false;
   }
   
