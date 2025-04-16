@@ -43,7 +43,18 @@ async function getAllBranches(req, res) {
 async function getBranchById(req, res) {
   try {
     const { id } = req.params;
-    const branch = await branchRepository.getBranchById(id);
+    // Ambil parameter result dari query
+    const { result } = req.query;
+    
+    // Validasi parameter result jika ada
+    if (result && !Object.values(branchRepository.ResultTypes).includes(result)) {
+      return res.status(400).json({
+        error: 'Invalid result type',
+        valid_values: Object.values(branchRepository.ResultTypes)
+      });
+    }
+    
+    const branch = await branchRepository.getBranchById(id, result);
     
     if (!branch) {
       return res.status(404).json({
