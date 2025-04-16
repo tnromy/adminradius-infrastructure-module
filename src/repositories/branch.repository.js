@@ -60,7 +60,7 @@ async function getAllBranches(resultType = null) {
         return branchCopy;
       }
       
-      // OLTS: Pertahankan router dan OLT tapi hapus pon_port dari OLT
+      // OLTS: Pertahankan router dan OLT dengan pon_port, tapi hapus children dari setiap port di pon_port
       if (resultType === ResultTypes.OLTS) {
         branchCopy.children = branchCopy.children.map(router => {
           const routerCopy = { ...router };
@@ -68,7 +68,16 @@ async function getAllBranches(resultType = null) {
           if (routerCopy.children && Array.isArray(routerCopy.children)) {
             routerCopy.children = routerCopy.children.map(olt => {
               const oltCopy = { ...olt };
-              delete oltCopy.pon_port;
+              
+              // Tetap menyertakan pon_port tapi hapus children dari setiap port
+              if (oltCopy.pon_port && Array.isArray(oltCopy.pon_port)) {
+                oltCopy.pon_port = oltCopy.pon_port.map(port => {
+                  const portCopy = { ...port };
+                  delete portCopy.children;
+                  return portCopy;
+                });
+              }
+              
               return oltCopy;
             });
           }
@@ -78,7 +87,7 @@ async function getAllBranches(resultType = null) {
         return branchCopy;
       }
       
-      // ODCS: Pertahankan router, OLT, dan ODC tapi hapus trays dari ODC
+      // ODCS: Pertahankan router, OLT, dan ODC dengan trays, tapi hapus children dari setiap tray
       if (resultType === ResultTypes.ODCS) {
         branchCopy.children = branchCopy.children.map(router => {
           const routerCopy = { ...router };
@@ -94,7 +103,16 @@ async function getAllBranches(resultType = null) {
                   if (portCopy.children && Array.isArray(portCopy.children)) {
                     portCopy.children = portCopy.children.map(odc => {
                       const odcCopy = { ...odc };
-                      delete odcCopy.trays;
+                      
+                      // Tetap menyertakan trays tapi hapus children dari setiap tray
+                      if (odcCopy.trays && Array.isArray(odcCopy.trays)) {
+                        odcCopy.trays = odcCopy.trays.map(tray => {
+                          const trayCopy = { ...tray };
+                          delete trayCopy.children;
+                          return trayCopy;
+                        });
+                      }
+                      
                       return odcCopy;
                     });
                   }
