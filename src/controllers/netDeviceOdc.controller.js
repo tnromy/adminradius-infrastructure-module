@@ -3,6 +3,45 @@
  */
 
 const oltRepository = require('../repositories/netDeviceOlt.repository');
+const odcRepository = require('../repositories/netDeviceOdc.repository');
+
+/**
+ * Mendapatkan ODC berdasarkan ID
+ * @param {Object} req - Request object
+ * @param {Object} res - Response object
+ */
+async function getOdcById(req, res) {
+  try {
+    const { odc_id } = req.params;
+    // Ambil parameter result dari query
+    const { result } = req.query;
+    
+    // Validasi parameter result jika ada
+    if (result && !Object.values(odcRepository.ResultTypes).includes(result)) {
+      return res.status(400).json({
+        error: 'Invalid result type',
+        valid_values: Object.values(odcRepository.ResultTypes)
+      });
+    }
+    
+    const odc = await odcRepository.getOdcDetailById(odc_id, result);
+    
+    if (!odc) {
+      return res.status(404).json({
+        error: 'ODC not found'
+      });
+    }
+    
+    res.status(200).json({
+      data: odc
+    });
+  } catch (error) {
+    console.error('Error in getOdcById controller:', error);
+    res.status(500).json({
+      error: 'Internal server error'
+    });
+  }
+}
 
 /**
  * Menambahkan ODC ke OLT pada port tertentu
@@ -53,5 +92,6 @@ async function addOdcToOlt(req, res) {
 }
 
 module.exports = {
+  getOdcById,
   addOdcToOlt
 }; 

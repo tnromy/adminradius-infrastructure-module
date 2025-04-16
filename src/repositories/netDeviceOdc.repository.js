@@ -10,6 +10,12 @@ const { ObjectId } = mongoose.Types;
 // Nama collection
 const COLLECTION = 'branches';
 
+// Enum untuk tipe result
+const ResultTypes = {
+  ODCS: 'ODCS',
+  ODPS: 'ODPS'
+};
+
 /**
  * Mencari ODC dan mendapatkan informasi path ke ODC
  * @param {string} odcId - ID ODC
@@ -73,6 +79,70 @@ async function getOdcById(odcId) {
     };
   } catch (error) {
     console.error(`Error getting ODC with ID ${odcId}:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Mendapatkan detail ODC berdasarkan ID dengan level detail tertentu
+ * @param {string} odcId - ID ODC
+ * @param {string} resultType - Tipe hasil (ODCS, ODPS)
+ * @returns {Promise<Object>} - Data ODC sesuai level detail
+ */
+async function getOdcDetailById(odcId, resultType = null) {
+  try {
+    const odcInfo = await getOdcById(odcId);
+    
+    if (!odcInfo || !odcInfo.odc) {
+      return null;
+    }
+    
+    // Ambil data ODC
+    const odc = odcInfo.odc;
+    
+    // Jika resultType tidak dispesifikasikan, kembalikan data lengkap seperti biasa
+    if (!resultType || !Object.values(ResultTypes).includes(resultType)) {
+      return odc;
+    }
+    
+    // Filter data sesuai resultType
+    const odcCopy = { ...odc };
+    
+    // ODCS: Hapus children dari setiap tray di trays
+    if (resultType === ResultTypes.ODCS) {
+      if (odcCopy.trays && Array.isArray(odcCopy.trays)) {
+        odcCopy.trays = odcCopy.trays.map(tray => {
+          const trayCopy = { ...tray };
+          delete trayCopy.children;
+          return trayCopy;
+        });
+      }
+      return odcCopy;
+    }
+    
+    // ODPS: Hapus children dari setiap ODP
+    if (resultType === ResultTypes.ODPS) {
+      if (odcCopy.trays && Array.isArray(odcCopy.trays)) {
+        odcCopy.trays = odcCopy.trays.map(tray => {
+          const trayCopy = { ...tray };
+          
+          if (trayCopy.children && Array.isArray(trayCopy.children)) {
+            trayCopy.children = trayCopy.children.map(odp => {
+              const odpCopy = { ...odp };
+              delete odpCopy.children;
+              return odpCopy;
+            });
+          }
+          
+          return trayCopy;
+        });
+      }
+      return odcCopy;
+    }
+    
+    return odcCopy;
+  } catch (error) {
+    console.error(`Error getting ODC detail with ID ${odcId}:`, error);
     throw error;
   }
 }
@@ -145,5 +215,7 @@ async function addOdpToOdc(odcId, odpData) {
 
 module.exports = {
   getOdcById,
-  addOdpToOdc
+  getOdcDetailById,
+  addOdpToOdc,
+  ResultTypes
 }; 
