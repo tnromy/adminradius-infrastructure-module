@@ -15,6 +15,9 @@ const { validateAddOdc } = require('../validations/netDeviceOdc.validation');
 const { validateAddOdp } = require('../validations/netDeviceOdp.validation');
 const { validateAddOnt } = require('../validations/netDeviceOnt.validation');
 
+// Route GET /api/infra/router/:router_id
+router.get('/router/:router_id', netDeviceRouterController.getRouterById);
+
 // Route POST /api/infra/branch/:branch_id/router
 router.post('/branch/:branch_id/router', validateAddRouter, netDeviceRouterController.addRouterToBranch);
 

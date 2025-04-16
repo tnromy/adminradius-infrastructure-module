@@ -10,12 +10,21 @@ const { ObjectId } = mongoose.Types;
 // Nama collection
 const COLLECTION = 'branches';
 
+// Enum untuk tipe result
+const ResultTypes = {
+  ROUTERS: 'ROUTERS',
+  OLTS: 'OLTS',
+  ODCS: 'ODCS',
+  ODPS: 'ODPS'
+};
+
 /**
- * Mendapatkan router berdasarkan ID
+ * Mendapatkan router berdasarkan ID dengan level detail tertentu
  * @param {string} routerId - ID router
- * @returns {Promise<Object>} - Data router
+ * @param {string} resultType - Tipe hasil (ROUTERS, OLTS, ODCS, ODPS)
+ * @returns {Promise<Object>} - Data router sesuai level detail
  */
-async function getRouterById(routerId) {
+async function getRouterById(routerId, resultType = null) {
   try {
     const collection = getCollection(COLLECTION);
     // Mencari branch yang memiliki router dengan ID tertentu di dalam children
@@ -32,7 +41,126 @@ async function getRouterById(routerId) {
       child._id.toString() === routerId && child.type === 'router'
     );
     
-    return router || null;
+    if (!router) {
+      return null;
+    }
+    
+    // Jika resultType tidak dispesifikasikan, kembalikan data lengkap seperti biasa
+    if (!resultType || !Object.values(ResultTypes).includes(resultType)) {
+      return router;
+    }
+    
+    // Filter data sesuai resultType
+    const routerCopy = { ...router };
+    
+    // ROUTERS: Hapus children dari router
+    if (resultType === ResultTypes.ROUTERS) {
+      delete routerCopy.children;
+      return routerCopy;
+    }
+    
+    // Jika tidak ada children, kembalikan router apa adanya
+    if (!routerCopy.children || !Array.isArray(routerCopy.children)) {
+      return routerCopy;
+    }
+    
+    // OLTS: Pertahankan OLT dengan pon_port, tapi hapus children dari setiap port di pon_port
+    if (resultType === ResultTypes.OLTS) {
+      routerCopy.children = routerCopy.children.map(olt => {
+        const oltCopy = { ...olt };
+        
+        // Tetap menyertakan pon_port tapi hapus children dari setiap port
+        if (oltCopy.pon_port && Array.isArray(oltCopy.pon_port)) {
+          oltCopy.pon_port = oltCopy.pon_port.map(port => {
+            const portCopy = { ...port };
+            delete portCopy.children;
+            return portCopy;
+          });
+        }
+        
+        return oltCopy;
+      });
+      return routerCopy;
+    }
+    
+    // ODCS: Pertahankan OLT dan ODC dengan trays, tapi hapus children dari setiap tray
+    if (resultType === ResultTypes.ODCS) {
+      routerCopy.children = routerCopy.children.map(olt => {
+        const oltCopy = { ...olt };
+        
+        if (oltCopy.pon_port && Array.isArray(oltCopy.pon_port)) {
+          oltCopy.pon_port = oltCopy.pon_port.map(port => {
+            const portCopy = { ...port };
+            
+            if (portCopy.children && Array.isArray(portCopy.children)) {
+              portCopy.children = portCopy.children.map(odc => {
+                const odcCopy = { ...odc };
+                
+                // Tetap menyertakan trays tapi hapus children dari setiap tray
+                if (odcCopy.trays && Array.isArray(odcCopy.trays)) {
+                  odcCopy.trays = odcCopy.trays.map(tray => {
+                    const trayCopy = { ...tray };
+                    delete trayCopy.children;
+                    return trayCopy;
+                  });
+                }
+                
+                return odcCopy;
+              });
+            }
+            
+            return portCopy;
+          });
+        }
+        
+        return oltCopy;
+      });
+      return routerCopy;
+    }
+    
+    // ODPS: Pertahankan OLT, ODC, dan ODP tapi hapus children dari ODP
+    if (resultType === ResultTypes.ODPS) {
+      routerCopy.children = routerCopy.children.map(olt => {
+        const oltCopy = { ...olt };
+        
+        if (oltCopy.pon_port && Array.isArray(oltCopy.pon_port)) {
+          oltCopy.pon_port = oltCopy.pon_port.map(port => {
+            const portCopy = { ...port };
+            
+            if (portCopy.children && Array.isArray(portCopy.children)) {
+              portCopy.children = portCopy.children.map(odc => {
+                const odcCopy = { ...odc };
+                
+                if (odcCopy.trays && Array.isArray(odcCopy.trays)) {
+                  odcCopy.trays = odcCopy.trays.map(tray => {
+                    const trayCopy = { ...tray };
+                    
+                    if (trayCopy.children && Array.isArray(trayCopy.children)) {
+                      trayCopy.children = trayCopy.children.map(odp => {
+                        const odpCopy = { ...odp };
+                        delete odpCopy.children;
+                        return odpCopy;
+                      });
+                    }
+                    
+                    return trayCopy;
+                  });
+                }
+                
+                return odcCopy;
+              });
+            }
+            
+            return portCopy;
+          });
+        }
+        
+        return oltCopy;
+      });
+      return routerCopy;
+    }
+    
+    return routerCopy;
   } catch (error) {
     console.error(`Error getting router with ID ${routerId}:`, error);
     throw error;
@@ -85,7 +213,7 @@ async function addOltToRouter(routerId, oltData) {
     }
     
     // Dapatkan router yang sudah diupdate
-    return getRouterById(routerId);
+    return getRouterById(routerId, null);
   } catch (error) {
     console.error(`Error adding OLT to router with ID ${routerId}:`, error);
     throw error;
@@ -94,5 +222,6 @@ async function addOltToRouter(routerId, oltData) {
 
 module.exports = {
   getRouterById,
-  addOltToRouter
+  addOltToRouter,
+  ResultTypes
 }; 
