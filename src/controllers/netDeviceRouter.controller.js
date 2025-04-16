@@ -4,6 +4,7 @@
 
 const branchRepository = require('../repositories/branch.repository');
 const routerRepository = require('../repositories/netDeviceRouter.repository');
+const { softDeleteRouter } = require('../utils/recursiveSoftDelete.util');
 
 /**
  * Mendapatkan router berdasarkan ID
@@ -72,7 +73,53 @@ async function addRouterToBranch(req, res) {
   }
 }
 
+/**
+ * Melakukan soft delete pada Router dan semua OLT, ODC, ODP, serta ONT di dalamnya
+ * @param {Object} req - Request object
+ * @param {Object} res - Response object
+ */
+async function deleteRouter(req, res) {
+  try {
+    const { router_id } = req.params;
+    
+    // Periksa apakah Router ada
+    const routerInfo = await routerRepository.getRouterById(router_id, branchRepository.DeletedFilterTypes.WITHOUT);
+    if (!routerInfo || !routerInfo.router) {
+      return res.status(404).json({
+        error: 'Router not found or already deleted'
+      });
+    }
+    
+    // Lakukan soft delete rekursif pada Router dan semua OLT, ODC, ODP, serta ONT di dalamnya
+    const result = await softDeleteRouter({
+      branchId: routerInfo.branchId,
+      routerIndex: routerInfo.routerIndex
+    });
+    
+    if (!result) {
+      return res.status(500).json({
+        error: 'Failed to delete Router'
+      });
+    }
+    
+    // Dapatkan Router yang sudah di-soft delete
+    const deletedRouter = await routerRepository.getRouterById(router_id, branchRepository.DeletedFilterTypes.WITH);
+    
+    // Sukses, kembalikan status 200 dengan data Router yang sudah di-soft delete
+    res.status(200).json({
+      message: 'Router and all OLTs, ODCs, ODPs, and ONTs deleted successfully',
+      data: deletedRouter.router
+    });
+  } catch (error) {
+    console.error('Error in deleteRouter controller:', error);
+    res.status(500).json({
+      error: 'Internal server error'
+    });
+  }
+}
+
 module.exports = {
   getRouterById,
-  addRouterToBranch
+  addRouterToBranch,
+  deleteRouter
 }; 

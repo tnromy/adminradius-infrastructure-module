@@ -5,6 +5,7 @@
 const odcRepository = require('../repositories/netDeviceOdc.repository');
 const odpRepository = require('../repositories/netDeviceOdp.repository');
 const branchRepository = require('../repositories/branch.repository'); // Untuk DeletedFilterTypes
+const { softDeleteOdp } = require('../utils/recursiveSoftDelete.util');
 
 /**
  * Mendapatkan ODP berdasarkan ID
@@ -96,7 +97,58 @@ async function addOdpToOdc(req, res) {
   }
 }
 
+/**
+ * Melakukan soft delete pada ODP dan semua ONT di dalamnya
+ * @param {Object} req - Request object
+ * @param {Object} res - Response object
+ */
+async function deleteOdp(req, res) {
+  try {
+    const { odp_id } = req.params;
+    
+    // Periksa apakah ODP ada
+    const odpInfo = await odpRepository.getOdpById(odp_id, branchRepository.DeletedFilterTypes.WITHOUT);
+    if (!odpInfo || !odpInfo.odp) {
+      return res.status(404).json({
+        error: 'ODP not found or already deleted'
+      });
+    }
+    
+    // Lakukan soft delete rekursif pada ODP dan semua ONT di dalamnya
+    const result = await softDeleteOdp({
+      branchId: odpInfo.branchId,
+      routerIndex: odpInfo.routerIndex,
+      oltIndex: odpInfo.oltIndex,
+      ponPortIndex: odpInfo.ponPortIndex,
+      odcIndex: odpInfo.odcIndex,
+      trayIndex: odpInfo.trayIndex,
+      odpIndex: odpInfo.odpIndex
+    });
+    
+    if (!result) {
+      return res.status(500).json({
+        error: 'Failed to delete ODP'
+      });
+    }
+    
+    // Dapatkan ODP yang sudah di-soft delete
+    const deletedOdp = await odpRepository.getOdpById(odp_id, branchRepository.DeletedFilterTypes.WITH);
+    
+    // Sukses, kembalikan status 200 dengan data ODP yang sudah di-soft delete
+    res.status(200).json({
+      message: 'ODP and all ONTs deleted successfully',
+      data: deletedOdp.odp
+    });
+  } catch (error) {
+    console.error('Error in deleteOdp controller:', error);
+    res.status(500).json({
+      error: 'Internal server error'
+    });
+  }
+}
+
 module.exports = {
   getOdpById,
-  addOdpToOdc
+  addOdpToOdc,
+  deleteOdp
 }; 

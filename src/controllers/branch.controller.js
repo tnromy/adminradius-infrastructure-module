@@ -141,15 +141,35 @@ async function updateBranch(req, res) {
 async function deleteBranch(req, res) {
   try {
     const { id } = req.params;
-    const deleted = await branchRepository.deleteBranch(id);
     
-    if (!deleted) {
+    // Periksa apakah Branch ada
+    const branch = await branchRepository.getBranchById(id, null, branchRepository.DeletedFilterTypes.WITHOUT);
+    if (!branch) {
       return res.status(404).json({
-        error: 'Branch not found'
+        error: 'Branch not found or already deleted'
       });
     }
     
-    res.status(204).end();
+    // Import soft delete function
+    const { softDeleteBranch } = require('../utils/recursiveSoftDelete.util');
+    
+    // Lakukan soft delete rekursif pada Branch dan semua Router, OLT, ODC, ODP, serta ONT di dalamnya
+    const result = await softDeleteBranch(branch._id);
+    
+    if (!result) {
+      return res.status(500).json({
+        error: 'Failed to delete Branch'
+      });
+    }
+    
+    // Dapatkan Branch yang sudah di-soft delete
+    const deletedBranch = await branchRepository.getBranchById(id, null, branchRepository.DeletedFilterTypes.WITH);
+    
+    // Sukses, kembalikan status 200 dengan data Branch yang sudah di-soft delete
+    res.status(200).json({
+      message: 'Branch and all Routers, OLTs, ODCs, ODPs, and ONTs deleted successfully',
+      data: deletedBranch
+    });
   } catch (error) {
     console.error('Error in deleteBranch controller:', error);
     res.status(500).json({

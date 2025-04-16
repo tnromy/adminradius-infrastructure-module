@@ -31,6 +31,18 @@ router.get('/odp/:odp_id', validateDeletedParam, netDeviceOdpController.getOdpBy
 // Route GET /api/infra/ont/:ont_id
 router.get('/ont/:ont_id', validateDeletedParam, netDeviceOntController.getOntById);
 
+// Route DELETE /api/infra/router/:router_id
+router.delete('/router/:router_id', netDeviceRouterController.deleteRouter);
+
+// Route DELETE /api/infra/olt/:olt_id
+router.delete('/olt/:olt_id', netDeviceOltController.deleteOlt);
+
+// Route DELETE /api/infra/odc/:odc_id
+router.delete('/odc/:odc_id', netDeviceOdcController.deleteOdc);
+
+// Route DELETE /api/infra/odp/:odp_id
+router.delete('/odp/:odp_id', netDeviceOdpController.deleteOdp);
+
 // Route DELETE /api/infra/ont/:ont_id
 router.delete('/ont/:ont_id', netDeviceOntController.deleteOnt);
 

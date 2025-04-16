@@ -5,6 +5,7 @@
 const oltRepository = require('../repositories/netDeviceOlt.repository');
 const odcRepository = require('../repositories/netDeviceOdc.repository');
 const branchRepository = require('../repositories/branch.repository'); // Untuk DeletedFilterTypes
+const { softDeleteOdc } = require('../utils/recursiveSoftDelete.util');
 
 /**
  * Mendapatkan ODC berdasarkan ID
@@ -90,7 +91,56 @@ async function addOdcToOlt(req, res) {
   }
 }
 
+/**
+ * Melakukan soft delete pada ODC dan semua ODP serta ONT di dalamnya
+ * @param {Object} req - Request object
+ * @param {Object} res - Response object
+ */
+async function deleteOdc(req, res) {
+  try {
+    const { odc_id } = req.params;
+    
+    // Periksa apakah ODC ada
+    const odcInfo = await odcRepository.getOdcById(odc_id, branchRepository.DeletedFilterTypes.WITHOUT);
+    if (!odcInfo || !odcInfo.odc) {
+      return res.status(404).json({
+        error: 'ODC not found or already deleted'
+      });
+    }
+    
+    // Lakukan soft delete rekursif pada ODC dan semua ODP serta ONT di dalamnya
+    const result = await softDeleteOdc({
+      branchId: odcInfo.branchId,
+      routerIndex: odcInfo.routerIndex,
+      oltIndex: odcInfo.oltIndex,
+      ponPortIndex: odcInfo.ponPortIndex,
+      odcIndex: odcInfo.odcIndex
+    });
+    
+    if (!result) {
+      return res.status(500).json({
+        error: 'Failed to delete ODC'
+      });
+    }
+    
+    // Dapatkan ODC yang sudah di-soft delete
+    const deletedOdc = await odcRepository.getOdcById(odc_id, branchRepository.DeletedFilterTypes.WITH);
+    
+    // Sukses, kembalikan status 200 dengan data ODC yang sudah di-soft delete
+    res.status(200).json({
+      message: 'ODC and all ODPs and ONTs deleted successfully',
+      data: deletedOdc.odc
+    });
+  } catch (error) {
+    console.error('Error in deleteOdc controller:', error);
+    res.status(500).json({
+      error: 'Internal server error'
+    });
+  }
+}
+
 module.exports = {
   getOdcById,
-  addOdcToOlt
+  addOdcToOlt,
+  deleteOdc
 }; 
