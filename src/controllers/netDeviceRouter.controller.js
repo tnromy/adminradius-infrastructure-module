@@ -84,7 +84,7 @@ async function deleteRouter(req, res) {
     
     // Periksa apakah Router ada
     const routerInfo = await routerRepository.getRouterById(router_id, branchRepository.DeletedFilterTypes.WITHOUT);
-    if (!routerInfo || !routerInfo.router) {
+    if (!routerInfo) {
       return res.status(404).json({
         error: 'Router not found or already deleted'
       });
@@ -108,7 +108,7 @@ async function deleteRouter(req, res) {
     // Sukses, kembalikan status 200 dengan data Router yang sudah di-soft delete
     res.status(200).json({
       message: 'Router and all OLTs, ODCs, ODPs, and ONTs deleted successfully',
-      data: deletedRouter.router
+      data: deletedRouter
     });
   } catch (error) {
     console.error('Error in deleteRouter controller:', error);

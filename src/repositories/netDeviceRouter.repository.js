@@ -28,34 +28,51 @@ const ResultTypes = {
 async function getRouterById(routerId, deletedFilter = DeletedFilterTypes.WITHOUT) {
   try {
     const branchCollection = getCollection('branches');
+    const objectIdRouter = new ObjectId(routerId);
     
-    // Pipeline aggregation untuk mencari router berdasarkan ID
-    const pipeline = [
-      // Unwind array children (router)
-      { $unwind: { path: '$children', preserveNullAndEmptyArrays: true } },
-      
-      // Match router_id yang diinginkan
-      { $match: { 'children._id': new ObjectId(routerId) } },
-      
-      // Project hanya data router
-      { $project: { router: '$children', _id: 0 } }
-    ];
+    // Gunakan pendekatan sederhana yang lebih andal
+    // Ambil branch yang berisi router dengan ID yang sesuai
+    const query = { 'children._id': objectIdRouter };
     
-    // Tambahkan filter deleted
-    if (deletedFilter === DeletedFilterTypes.ONLY) {
-      pipeline[1].$match['children.deleted_at'] = { $exists: true };
-    } else if (deletedFilter === DeletedFilterTypes.WITHOUT) {
-      pipeline[1].$match['children.deleted_at'] = { $exists: false };
-    }
-    // Jika WITH, tidak perlu filter tambahan
+    const branches = await branchCollection.find(query).toArray();
     
-    const result = await branchCollection.aggregate(pipeline).toArray();
-    
-    if (!result || result.length === 0 || !result[0].router) {
+    if (!branches || branches.length === 0) {
       return null;
     }
     
-    return result[0].router;
+    // Ambil branch pertama yang memiliki router
+    const branch = branches[0];
+    let routerIndex = -1;
+    let routerData = null;
+    
+    // Cari router dengan ID yang sesuai
+    for (let i = 0; i < branch.children.length; i++) {
+      if (branch.children[i]._id && branch.children[i]._id.toString() === objectIdRouter.toString()) {
+        // Filter berdasarkan status deleted
+        const hasDeletedAt = !!branch.children[i].deleted_at;
+        
+        if (
+          (deletedFilter === DeletedFilterTypes.ONLY && !hasDeletedAt) ||
+          (deletedFilter === DeletedFilterTypes.WITHOUT && hasDeletedAt)
+        ) {
+          continue; // Skip jika tidak sesuai filter
+        }
+        
+        routerIndex = i;
+        routerData = branch.children[i];
+        break;
+      }
+    }
+    
+    if (!routerData) {
+      return null;
+    }
+    
+    // Tambahkan metadata yang dibutuhkan oleh fungsi soft delete
+    routerData.branchId = branch._id;
+    routerData.routerIndex = routerIndex;
+    
+    return routerData;
   } catch (error) {
     console.error('Error getting router by ID:', error);
     throw error;
