@@ -11,9 +11,16 @@ const {
   validateUpdateBranch 
 } = require('../validations/branch.validation');
 const { validateDeletedParam, validateScopeLevelParam } = require('../validations/validation.middleware');
+const { authenticateJWT, authorizeRoles } = require('../middlewares/auth.middleware');
 
 // Route GET /api/infra/branches
-router.get('/branches', validateDeletedParam, validateScopeLevelParam, branchController.getAllBranches);
+router.get('/branches', 
+  authenticateJWT,
+  authorizeRoles,
+  validateDeletedParam, 
+  validateScopeLevelParam, 
+  branchController.getAllBranches
+);
 
 // Route GET /api/infra/branch/:id
 router.get('/branch/:id', validateBranchId, validateDeletedParam, validateScopeLevelParam, branchController.getBranchById);
