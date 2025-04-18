@@ -35,7 +35,24 @@ const validateDeletedParam = [
   validationMiddleware
 ];
 
+/**
+ * Middleware untuk memvalidasi parameter scope_level
+ * BRANCHES - Hanya data branch tanpa children
+ * ROUTERS - Data branch dengan router tanpa children
+ * OLTS - Data branch dengan router dan OLT (tanpa children di pon_port)
+ * ODCS - Data branch dengan router, OLT, dan ODC (tanpa children di tray)
+ * ODPS - Data branch dengan router, OLT, ODC, dan ODP (tanpa children)
+ */
+const validateScopeLevelParam = [
+  query('scope_level')
+    .optional()
+    .isIn(['BRANCHES', 'ROUTERS', 'OLTS', 'ODCS', 'ODPS', 'ONTS'])
+    .withMessage('Parameter scope_level harus bernilai BRANCHES, ROUTERS, OLTS, ODCS, ODPS, atau ONTS'),
+  validationMiddleware
+];
+
 module.exports = {
   validationMiddleware,
-  validateDeletedParam
+  validateDeletedParam,
+  validateScopeLevelParam
 }; 

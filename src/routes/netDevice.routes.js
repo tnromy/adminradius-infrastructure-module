@@ -14,22 +14,22 @@ const { validateAddOlt } = require('../validations/netDeviceOlt.validation');
 const { validateAddOdc } = require('../validations/netDeviceOdc.validation');
 const { validateAddOdp } = require('../validations/netDeviceOdp.validation');
 const { validateAddOnt } = require('../validations/netDeviceOnt.validation');
-const { validateDeletedParam } = require('../validations/validation.middleware');
+const { validateDeletedParam, validateScopeLevelParam } = require('../validations/validation.middleware');
 
 // Route GET /api/infra/router/:router_id
-router.get('/router/:router_id', validateDeletedParam, netDeviceRouterController.getRouterById);
+router.get('/router/:router_id', validateDeletedParam, validateScopeLevelParam, netDeviceRouterController.getRouterById);
 
 // Route GET /api/infra/olt/:olt_id
-router.get('/olt/:olt_id', validateDeletedParam, netDeviceOltController.getOltById);
+router.get('/olt/:olt_id', validateDeletedParam, validateScopeLevelParam, netDeviceOltController.getOltById);
 
 // Route GET /api/infra/odc/:odc_id
-router.get('/odc/:odc_id', validateDeletedParam, netDeviceOdcController.getOdcById);
+router.get('/odc/:odc_id', validateDeletedParam, validateScopeLevelParam, netDeviceOdcController.getOdcById);
 
 // Route GET /api/infra/odp/:odp_id
-router.get('/odp/:odp_id', validateDeletedParam, netDeviceOdpController.getOdpById);
+router.get('/odp/:odp_id', validateDeletedParam, validateScopeLevelParam, netDeviceOdpController.getOdpById);
 
 // Route GET /api/infra/ont/:ont_id
-router.get('/ont/:ont_id', validateDeletedParam, netDeviceOntController.getOntById);
+router.get('/ont/:ont_id', validateDeletedParam, validateScopeLevelParam, netDeviceOntController.getOntById);
 
 // Route DELETE /api/infra/router/:router_id
 router.delete('/router/:router_id', netDeviceRouterController.deleteRouter);

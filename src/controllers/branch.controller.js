@@ -12,13 +12,13 @@ const { validateBranchEntity } = require('../entities/branch.entity');
  */
 async function getAllBranches(req, res) {
   try {
-    // Ambil parameter result dari query
-    const { result, deleted } = req.query;
+    // Ambil parameter scope_level dari query
+    const { scope_level, deleted } = req.query;
     
-    // Validasi parameter result jika ada
-    if (result && !Object.values(branchRepository.ResultTypes).includes(result)) {
+    // Validasi parameter scope_level jika ada
+    if (scope_level && !Object.values(branchRepository.ResultTypes).includes(scope_level)) {
       return res.status(400).json({
-        error: 'Invalid result type',
+        error: 'Invalid scope_level type',
         valid_values: Object.values(branchRepository.ResultTypes)
       });
     }
@@ -29,7 +29,7 @@ async function getAllBranches(req, res) {
       deletedFilter = deleted;
     }
     
-    const branches = await branchRepository.getAllBranches(result, deletedFilter);
+    const branches = await branchRepository.getAllBranches(scope_level, deletedFilter);
     res.status(200).json({
       data: branches
     });
@@ -49,13 +49,13 @@ async function getAllBranches(req, res) {
 async function getBranchById(req, res) {
   try {
     const { id } = req.params;
-    // Ambil parameter result dan deleted dari query
-    const { result, deleted } = req.query;
+    // Ambil parameter scope_level dan deleted dari query
+    const { scope_level, deleted } = req.query;
     
-    // Validasi parameter result jika ada
-    if (result && !Object.values(branchRepository.ResultTypes).includes(result)) {
+    // Validasi parameter scope_level jika ada
+    if (scope_level && !Object.values(branchRepository.ResultTypes).includes(scope_level)) {
       return res.status(400).json({
-        error: 'Invalid result type',
+        error: 'Invalid scope_level type',
         valid_values: Object.values(branchRepository.ResultTypes)
       });
     }
@@ -66,7 +66,7 @@ async function getBranchById(req, res) {
       deletedFilter = deleted;
     }
     
-    const branch = await branchRepository.getBranchById(id, result, deletedFilter);
+    const branch = await branchRepository.getBranchById(id, scope_level, deletedFilter);
     
     if (!branch) {
       return res.status(404).json({

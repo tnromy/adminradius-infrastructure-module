@@ -11,13 +11,14 @@ const { ObjectId } = mongoose.Types;
 // Nama collection
 const COLLECTION = 'branches';
 
-// Enum untuk tipe result
+// Enum untuk tipe scope level
 const ResultTypes = {
   BRANCHES: 'BRANCHES',
   ROUTERS: 'ROUTERS',
   OLTS: 'OLTS',
   ODCS: 'ODCS',
-  ODPS: 'ODPS'
+  ODPS: 'ODPS',
+  ONTS: 'ONTS'
 };
 
 // Enum untuk tipe deleted filter
@@ -29,11 +30,11 @@ const DeletedFilterTypes = {
 
 /**
  * Mendapatkan semua branches dengan level detail tertentu
- * @param {string} resultType - Tipe hasil (BRANCHES, ROUTERS, OLTS, ODCS, ODPS)
+ * @param {string} scopeLevel - Level scope data (BRANCHES, ROUTERS, OLTS, ODCS, ODPS, ONTS)
  * @param {string} deletedFilter - Filter data yang dihapus (ONLY, WITH, WITHOUT)
  * @returns {Promise<Array>} - Array berisi data branches sesuai level detail dan filter
  */
-async function getAllBranches(resultType = null, deletedFilter = DeletedFilterTypes.WITHOUT) {
+async function getAllBranches(scopeLevel = null, deletedFilter = DeletedFilterTypes.WITHOUT) {
   try {
     const collection = getCollection(COLLECTION);
     
@@ -48,17 +49,17 @@ async function getAllBranches(resultType = null, deletedFilter = DeletedFilterTy
     
     const branches = await collection.find(query).toArray();
     
-    // Jika resultType tidak dispesifikasikan, kembalikan data lengkap seperti biasa
-    if (!resultType || !Object.values(ResultTypes).includes(resultType)) {
+    // Jika scopeLevel tidak dispesifikasikan, kembalikan data lengkap seperti biasa
+    if (!scopeLevel || !Object.values(ResultTypes).includes(scopeLevel)) {
       return branches.map(branch => createBranchEntity(branch));
     }
     
-    // Filter data sesuai resultType
+    // Filter data sesuai scopeLevel
     return branches.map(branch => {
       const branchCopy = { ...branch };
       
       // BRANCHES: Hapus children dari branch
-      if (resultType === ResultTypes.BRANCHES) {
+      if (scopeLevel === ResultTypes.BRANCHES) {
         delete branchCopy.children;
         return branchCopy;
       }
@@ -69,7 +70,7 @@ async function getAllBranches(resultType = null, deletedFilter = DeletedFilterTy
       }
       
       // ROUTERS: Pertahankan children (router) tapi hapus children dari router
-      if (resultType === ResultTypes.ROUTERS) {
+      if (scopeLevel === ResultTypes.ROUTERS) {
         branchCopy.children = branchCopy.children.map(router => {
           const routerCopy = { ...router };
           delete routerCopy.children;
@@ -79,7 +80,7 @@ async function getAllBranches(resultType = null, deletedFilter = DeletedFilterTy
       }
       
       // OLTS: Pertahankan router dan OLT dengan pon_port, tapi hapus children dari setiap port di pon_port
-      if (resultType === ResultTypes.OLTS) {
+      if (scopeLevel === ResultTypes.OLTS) {
         branchCopy.children = branchCopy.children.map(router => {
           const routerCopy = { ...router };
           
@@ -106,7 +107,7 @@ async function getAllBranches(resultType = null, deletedFilter = DeletedFilterTy
       }
       
       // ODCS: Pertahankan router, OLT, dan ODC dengan trays, tapi hapus children dari setiap tray
-      if (resultType === ResultTypes.ODCS) {
+      if (scopeLevel === ResultTypes.ODCS) {
         branchCopy.children = branchCopy.children.map(router => {
           const routerCopy = { ...router };
           
@@ -149,7 +150,7 @@ async function getAllBranches(resultType = null, deletedFilter = DeletedFilterTy
       }
       
       // ODPS: Pertahankan router, OLT, ODC, dan ODP tapi hapus children dari ODP
-      if (resultType === ResultTypes.ODPS) {
+      if (scopeLevel === ResultTypes.ODPS) {
         branchCopy.children = branchCopy.children.map(router => {
           const routerCopy = { ...router };
           
@@ -201,7 +202,7 @@ async function getAllBranches(resultType = null, deletedFilter = DeletedFilterTy
       return branchCopy;
     });
   } catch (error) {
-    console.error('Error getting branches:', error);
+    console.error('Error getting all branches:', error);
     throw error;
   }
 }
@@ -209,11 +210,11 @@ async function getAllBranches(resultType = null, deletedFilter = DeletedFilterTy
 /**
  * Mendapatkan branch berdasarkan ID dengan level detail tertentu
  * @param {string} id - ID branch
- * @param {string} resultType - Tipe hasil (BRANCHES, ROUTERS, OLTS, ODCS, ODPS)
+ * @param {string} scopeLevel - Level scope data (BRANCHES, ROUTERS, OLTS, ODCS, ODPS, ONTS)
  * @param {string} deletedFilter - Filter data yang dihapus (ONLY, WITH, WITHOUT)
  * @returns {Promise<Object>} - Data branch sesuai level detail dan filter
  */
-async function getBranchById(id, resultType = null, deletedFilter = DeletedFilterTypes.WITHOUT) {
+async function getBranchById(id, scopeLevel = null, deletedFilter = DeletedFilterTypes.WITHOUT) {
   try {
     const collection = getCollection(COLLECTION);
     
@@ -232,16 +233,16 @@ async function getBranchById(id, resultType = null, deletedFilter = DeletedFilte
       return null;
     }
     
-    // Jika resultType tidak dispesifikasikan, kembalikan data lengkap seperti biasa
-    if (!resultType || !Object.values(ResultTypes).includes(resultType)) {
+    // Jika scopeLevel tidak dispesifikasikan, kembalikan data lengkap seperti biasa
+    if (!scopeLevel || !Object.values(ResultTypes).includes(scopeLevel)) {
       return createBranchEntity(branch);
     }
     
-    // Filter data sesuai resultType
+    // Filter data sesuai scopeLevel
     const branchCopy = { ...branch };
     
     // BRANCHES: Hapus children dari branch
-    if (resultType === ResultTypes.BRANCHES) {
+    if (scopeLevel === ResultTypes.BRANCHES) {
       delete branchCopy.children;
       return branchCopy;
     }
@@ -252,7 +253,7 @@ async function getBranchById(id, resultType = null, deletedFilter = DeletedFilte
     }
     
     // ROUTERS: Pertahankan children (router) tapi hapus children dari router
-    if (resultType === ResultTypes.ROUTERS) {
+    if (scopeLevel === ResultTypes.ROUTERS) {
       branchCopy.children = branchCopy.children.map(router => {
         const routerCopy = { ...router };
         delete routerCopy.children;
@@ -262,7 +263,7 @@ async function getBranchById(id, resultType = null, deletedFilter = DeletedFilte
     }
     
     // OLTS: Pertahankan router dan OLT dengan pon_port, tapi hapus children dari setiap port di pon_port
-    if (resultType === ResultTypes.OLTS) {
+    if (scopeLevel === ResultTypes.OLTS) {
       branchCopy.children = branchCopy.children.map(router => {
         const routerCopy = { ...router };
         
@@ -289,7 +290,7 @@ async function getBranchById(id, resultType = null, deletedFilter = DeletedFilte
     }
     
     // ODCS: Pertahankan router, OLT, dan ODC dengan trays, tapi hapus children dari setiap tray
-    if (resultType === ResultTypes.ODCS) {
+    if (scopeLevel === ResultTypes.ODCS) {
       branchCopy.children = branchCopy.children.map(router => {
         const routerCopy = { ...router };
         
@@ -332,7 +333,7 @@ async function getBranchById(id, resultType = null, deletedFilter = DeletedFilte
     }
     
     // ODPS: Pertahankan router, OLT, ODC, dan ODP tapi hapus children dari ODP
-    if (resultType === ResultTypes.ODPS) {
+    if (scopeLevel === ResultTypes.ODPS) {
       branchCopy.children = branchCopy.children.map(router => {
         const routerCopy = { ...router };
         
