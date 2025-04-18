@@ -309,8 +309,101 @@ async function restoreOdc(odcId) {
   }
 }
 
+/**
+ * Melakukan restore pada OLT dan semua ODC, ODP, dan ONT di dalamnya
+ * @param {string} oltId - ID OLT yang akan di-restore
+ * @returns {Promise<Object>} - Hasil restore
+ */
+async function restoreOlt(oltId) {
+  try {
+    console.log(`[recursiveRestore.restoreOlt] Mencoba restore OLT dengan ID: ${oltId}`);
+    const collection = getCollection('branches');
+    
+    // Cari OLT dan dapatkan timestamp deleted_at nya
+    const branch = await collection.findOne({
+      'children.children._id': new ObjectId(oltId)
+    });
+    
+    console.log(`[recursiveRestore.restoreOlt] Branch ditemukan: ${branch ? 'Ya' : 'Tidak'}`);
+    
+    if (!branch) return null;
+    
+    // Cari OLT dalam struktur nested
+    let foundOlt = null;
+    let oltPath = '';
+    const searchOlt = (obj, path = '') => {
+      if (obj._id && obj._id.toString() === oltId.toString()) {
+        console.log('[recursiveRestore.restoreOlt] OLT ditemukan dalam struktur');
+        foundOlt = obj;
+        oltPath = path;
+        return;
+      }
+      if (obj.children && Array.isArray(obj.children)) {
+        obj.children.forEach((child, idx) => searchOlt(child, path ? `${path}.children.${idx}` : `children.${idx}`));
+      }
+    };
+    
+    searchOlt(branch);
+    
+    console.log(`[recursiveRestore.restoreOlt] Status OLT:`, {
+      found: !!foundOlt,
+      hasDeletedAt: foundOlt ? !!foundOlt.deleted_at : false,
+      path: oltPath
+    });
+    
+    if (!foundOlt || !foundOlt.deleted_at) return null;
+    
+    const deletedAt = foundOlt.deleted_at;
+    
+    // 1. Restore OLT
+    console.log('[recursiveRestore.restoreOlt] Mencoba update OLT di database');
+    const oltResult = await collection.updateOne(
+      {
+        _id: branch._id,
+        [`${oltPath}.deleted_at`]: deletedAt // Pastikan kita update OLT dengan deleted_at yang tepat
+      },
+      {
+        $unset: {
+          [`${oltPath}.deleted_at`]: ""
+        },
+        $set: {
+          updatedAt: new Date()
+        }
+      }
+    );
+    
+    console.log(`[recursiveRestore.restoreOlt] Hasil update OLT:`, {
+      matchedCount: oltResult.matchedCount,
+      modifiedCount: oltResult.modifiedCount
+    });
+    
+    // 2. Restore ODCs yang memiliki deleted_at yang sama
+    if (foundOlt.pon_port && Array.isArray(foundOlt.pon_port)) {
+      console.log('[recursiveRestore.restoreOlt] Mencoba restore ODCs');
+      for (const [ponPortIndex, ponPort] of foundOlt.pon_port.entries()) {
+        if (ponPort.children && Array.isArray(ponPort.children)) {
+          const odcRestorePromises = ponPort.children
+            .filter(odc => odc.deleted_at && odc.deleted_at.getTime() === deletedAt.getTime())
+            .map(odc => restoreOdc(odc._id.toString()));
+          
+          if (odcRestorePromises.length > 0) {
+            console.log(`[recursiveRestore.restoreOlt] Merestore ${odcRestorePromises.length} ODC di port ${ponPort.port}`);
+            await Promise.all(odcRestorePromises);
+          }
+        }
+      }
+    }
+    
+    return oltResult.modifiedCount > 0 ? oltResult : null;
+  } catch (error) {
+    console.error('Error restoring OLT:', error);
+    throw error;
+  }
+}
+
 module.exports = {
   restoreOnt,
   restoreOdp,
-  restoreOdc
+  restoreOdc,
+  restoreOlt
 }; 

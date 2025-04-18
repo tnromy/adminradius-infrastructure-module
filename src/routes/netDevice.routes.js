@@ -55,6 +55,9 @@ router.post('/odp/:odp_id/restore', netDeviceOdpController.restoreOdp);
 // Route POST /api/infra/odc/:odc_id/restore
 router.post('/odc/:odc_id/restore', netDeviceOdcController.restoreOdc);
 
+// Route POST /api/infra/olt/:olt_id/restore
+router.post('/olt/:olt_id/restore', netDeviceOltController.restoreOlt);
+
 // Route POST /api/infra/branch/:branch_id/router
 router.post('/branch/:branch_id/router', validateAddRouter, netDeviceRouterController.addRouterToBranch);
 

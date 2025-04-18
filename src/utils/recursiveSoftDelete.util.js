@@ -154,203 +154,151 @@ async function softDeleteOdp(odpInfo, deletedAt = new Date()) {
 }
 
 /**
- * Melakukan soft delete pada ODC dan semua ODP dan ONT di dalamnya
+ * Melakukan soft delete pada ODC dan semua ODP serta ONT di dalamnya
  * @param {Object} odcInfo - Data ODC yang akan di-soft delete
- * @param {Date} [deletedAt] - Timestamp untuk deleted_at yang akan digunakan
- * @returns {Promise<boolean>} - True jika berhasil di-soft delete
+ * @param {Date} deletedAt - Timestamp untuk soft delete, opsional
+ * @returns {Promise<boolean>} - True jika berhasil
  */
 async function softDeleteOdc(odcInfo, deletedAt = new Date()) {
   try {
-    console.log(`[softDeleteOdc] Mencoba soft delete ODC dengan timestamp: ${deletedAt.toISOString()}`);
+    console.log(`[softDeleteOdc] Mencoba soft delete ODC dengan ID: ${odcInfo.branchId}`);
+    
     const collection = getCollection('branches');
     
-    const {
-      branchId,
-      routerIndex,
-      oltIndex,
-      ponPortIndex,
-      odcIndex
-    } = odcInfo;
-    
-    // 1. Soft delete ODC jika belum memiliki deleted_at
-    const odcResult = await collection.updateOne(
-      { 
-        _id: branchId,
-        [`children.${routerIndex}.children.${oltIndex}.pon_port.${ponPortIndex}.children.${odcIndex}.deleted_at`]: { $exists: false }
-      },
+    // Update ODC dengan menambahkan deleted_at
+    const result = await collection.updateOne(
+      { _id: new ObjectId(odcInfo.branchId) },
       {
         $set: {
-          [`children.${routerIndex}.children.${oltIndex}.pon_port.${ponPortIndex}.children.${odcIndex}.deleted_at`]: deletedAt,
+          [`children.${odcInfo.routerIndex}.children.${odcInfo.oltIndex}.pon_port.${odcInfo.ponPortIndex}.children.${odcInfo.odcIndex}.deleted_at`]: deletedAt,
           updatedAt: new Date()
         }
       }
     );
-    
-    if (odcResult.modifiedCount === 0) {
-      console.log('[softDeleteOdc] ODC sudah memiliki deleted_at atau tidak ditemukan');
+
+    if (result.matchedCount === 0) {
+      console.log('[softDeleteOdc] ODC tidak ditemukan');
       return false;
     }
-    
-    // 2. Dapatkan data ODC untuk soft delete ODP dan ONT
-    const branch = await collection.findOne({ _id: branchId });
+
+    // Dapatkan data ODC untuk proses ODP
+    const branch = await collection.findOne({ _id: new ObjectId(odcInfo.branchId) });
     if (!branch) {
-      console.log('[softDeleteOdc] Branch tidak ditemukan setelah update ODC');
+      console.log('[softDeleteOdc] Branch tidak ditemukan');
       return false;
     }
-    
-    const odc = branch.children[routerIndex]
-      ?.children[oltIndex]
-      ?.pon_port[ponPortIndex]
-      ?.children[odcIndex];
-    
+
+    const odc = branch.children[odcInfo.routerIndex]?.children[odcInfo.oltIndex]?.pon_port[odcInfo.ponPortIndex]?.children[odcInfo.odcIndex];
     if (!odc) {
-      console.log('[softDeleteOdc] ODC tidak ditemukan dalam struktur setelah update');
+      console.log('[softDeleteOdc] ODC tidak ditemukan di struktur');
       return false;
     }
-    
-    // 3. Soft delete ODP yang belum memiliki deleted_at di setiap tray
+
+    // Proses soft delete untuk setiap ODP yang belum dihapus
     if (odc.trays && Array.isArray(odc.trays)) {
       for (let trayIndex = 0; trayIndex < odc.trays.length; trayIndex++) {
         const tray = odc.trays[trayIndex];
-        
-        if (!tray || !tray.children || !Array.isArray(tray.children)) {
-          console.log(`[softDeleteOdc] Tray ${trayIndex} tidak valid, melanjutkan ke tray berikutnya`);
-          continue;
-        }
-        
-        const odpsToUpdate = tray.children
-          .map((odp, idx) => ({ odp, idx }))
-          .filter(({ odp }) => !odp.deleted_at);
-        
-        console.log(`[softDeleteOdc] Ditemukan ${odpsToUpdate.length} ODP yang belum memiliki deleted_at di tray ${trayIndex} dari total ${tray.children.length} ODP`);
-        
-        for (const { odp, idx } of odpsToUpdate) {
-          try {
-            await softDeleteOdp({
-              branchId,
-              routerIndex,
-              oltIndex,
-              ponPortIndex,
-              odcIndex,
-              trayIndex,
-              odpIndex: idx
-            }, deletedAt);
-          } catch (error) {
-            console.error(`[softDeleteOdc] Error saat soft delete ODP di tray ${trayIndex}, index ${idx}:`, error);
+        if (tray.children && Array.isArray(tray.children)) {
+          for (let odpIndex = 0; odpIndex < tray.children.length; odpIndex++) {
+            const odp = tray.children[odpIndex];
+            // Hanya proses ODP yang belum memiliki deleted_at
+            if (!odp.deleted_at) {
+              await softDeleteOdp({
+                branchId: odcInfo.branchId,
+                routerIndex: odcInfo.routerIndex,
+                oltIndex: odcInfo.oltIndex,
+                ponPortIndex: odcInfo.ponPortIndex,
+                odcIndex: odcInfo.odcIndex,
+                trayIndex,
+                odpIndex
+              }, deletedAt); // Gunakan timestamp yang sama
+            }
           }
         }
       }
     }
-    
+
+    console.log('[softDeleteOdc] ODC dan semua device di bawahnya berhasil di-soft delete');
     return true;
   } catch (error) {
-    console.error('Error in softDeleteOdc:', error);
+    console.error('Error soft deleting ODC:', error);
     throw error;
   }
 }
 
 /**
- * Melakukan soft delete pada OLT dan semua ODC, ODP, dan ONT di dalamnya
- * @param {Object} oltData - Data OLT yang akan di-soft delete (berisi branchId dan semua indeks)
- * @returns {Promise<Object>} - Hasil update
+ * Melakukan soft delete pada OLT dan semua ODC, ODP, serta ONT di dalamnya
+ * @param {Object} oltInfo - Informasi OLT yang akan di-soft delete
+ * @param {Date} deletedAt - Timestamp untuk soft delete
+ * @returns {Promise<boolean>} - True jika berhasil
  */
-async function softDeleteOlt(oltData) {
+async function softDeleteOlt(oltInfo, deletedAt = new Date()) {
   try {
-    const { branchId, routerIndex, oltIndex } = oltData;
+    console.log(`[softDeleteOlt] Mencoba soft delete OLT dengan ID: ${oltInfo.branchId}`);
     
     const collection = getCollection('branches');
-    const oltPath = buildDevicePath('olt', oltData);
     
-    // 1. Update OLT dengan deleted_at jika belum ada
-    const updateResult = await collection.updateOne(
-      { 
-        _id: new ObjectId(branchId), 
-        [`${oltPath}.deleted_at`]: { $exists: false } 
-      },
-      { 
-        $set: { 
-          [`${oltPath}.deleted_at`]: new Date(),
+    // Update OLT dengan menambahkan deleted_at
+    const result = await collection.updateOne(
+      { _id: new ObjectId(oltInfo.branchId) },
+      {
+        $set: {
+          [`children.${oltInfo.routerIndex}.children.${oltInfo.oltIndex}.deleted_at`]: deletedAt,
           updatedAt: new Date()
-        } 
+        }
       }
     );
-    
-    if (updateResult.matchedCount === 0) {
-      console.log('OLT not found or already has deleted_at property');
+
+    if (result.matchedCount === 0) {
+      console.log('[softDeleteOlt] OLT tidak ditemukan');
+      return false;
     }
-    
-    // 2. Dapatkan data branch untuk memproses pon_ports dan ODCs
-    const branch = await collection.findOne({ _id: new ObjectId(branchId) });
-    
+
+    // Dapatkan data OLT untuk proses ODC
+    const branch = await collection.findOne({ _id: new ObjectId(oltInfo.branchId) });
     if (!branch) {
-      console.error('Branch not found with ID:', branchId);
-      return { success: true, message: 'OLT marked as deleted, but branch not found for recursive delete' };
+      console.log('[softDeleteOlt] Branch tidak ditemukan');
+      return false;
     }
-    
-    // 3. Navigasikan ke OLT dengan penanganan error yang lebih baik
-    if (!branch.children || !Array.isArray(branch.children) || routerIndex < 0 || routerIndex >= branch.children.length) {
-      console.error('Invalid router index or children structure:', { routerIndex, hasChildren: !!branch.children });
-      return { success: true, message: 'OLT marked as deleted, but cannot find router for recursive delete' };
-    }
-    
-    const router = branch.children[routerIndex];
-    if (!router || !router.children || !Array.isArray(router.children) || 
-        oltIndex < 0 || oltIndex >= router.children.length) {
-      console.error('Invalid OLT index or router children structure:', { oltIndex, hasChildren: !!(router && router.children) });
-      return { success: true, message: 'OLT marked as deleted, but cannot find OLT for recursive delete' };
-    }
-    
-    const olt = router.children[oltIndex];
+
+    const olt = branch.children[oltInfo.routerIndex]?.children[oltInfo.oltIndex];
     if (!olt) {
-      console.error('OLT not found at specified index:', oltIndex);
-      return { success: true, message: 'OLT marked as deleted, but OLT object not found for recursive delete' };
+      console.log('[softDeleteOlt] OLT tidak ditemukan di struktur');
+      return false;
     }
-    
-    // 4. Periksa apakah pon_port ada dan merupakan array
-    if (!olt.pon_port || !Array.isArray(olt.pon_port)) {
-      console.error('OLT does not have pon_port or pon_port is not an array:', { hasPort: !!olt.pon_port, isArray: Array.isArray(olt.pon_port) });
-      return { success: true, message: 'OLT marked as deleted, but has no pon_ports for recursive delete' };
-    }
-    
-    // 5. Lakukan update untuk setiap pon_port dan ODC di dalamnya
-    for (let ponPortIndex = 0; ponPortIndex < olt.pon_port.length; ponPortIndex++) {
-      const ponPort = olt.pon_port[ponPortIndex];
-      
-      if (!ponPort) {
-        console.log(`Skipping null/undefined pon_port at index ${ponPortIndex}`);
-        continue;
-      }
-      
-      if (!ponPort.children || !Array.isArray(ponPort.children)) {
-        console.log(`Skipping pon_port at index ${ponPortIndex} with no children array`);
-        continue;
-      }
-      
-      for (let odcIndex = 0; odcIndex < ponPort.children.length; odcIndex++) {
-        const odc = ponPort.children[odcIndex];
-        
-        if (!odc) {
-          console.log(`Skipping null/undefined ODC at pon_port ${ponPortIndex}, index ${odcIndex}`);
-          continue;
-        }
-        
-        // Soft delete ODC jika belum di-delete
-        if (!odc.deleted_at) {
-          try {
-            await softDeleteOdc({
-              branchId, routerIndex, oltIndex, ponPortIndex, odcIndex
-            });
-          } catch (odcError) {
-            console.error(`Error soft deleting ODC at pon_port ${ponPortIndex}, index ${odcIndex}:`, odcError);
-            // Lanjutkan proses meskipun ada error pada satu ODC
+
+    // Proses soft delete untuk setiap ODC di setiap PON port yang belum dihapus
+    if (olt.pon_port && Array.isArray(olt.pon_port)) {
+      for (let ponPortIndex = 0; ponPortIndex < olt.pon_port.length; ponPortIndex++) {
+        const ponPort = olt.pon_port[ponPortIndex];
+        if (ponPort.children && Array.isArray(ponPort.children)) {
+          for (let odcIndex = 0; odcIndex < ponPort.children.length; odcIndex++) {
+            const odc = ponPort.children[odcIndex];
+            // Hanya proses ODC yang belum memiliki deleted_at
+            if (!odc.deleted_at) {
+              const odcResult = await softDeleteOdc({
+                branchId: oltInfo.branchId,
+                routerIndex: oltInfo.routerIndex,
+                oltIndex: oltInfo.oltIndex,
+                ponPortIndex,
+                odcIndex
+              }, deletedAt);
+
+              if (!odcResult) {
+                console.log(`[softDeleteOlt] Gagal melakukan soft delete pada ODC di port ${ponPortIndex}`);
+                // Lanjutkan ke ODC berikutnya
+                continue;
+              }
+            }
           }
         }
       }
     }
-    
-    return { success: true };
+
+    console.log('[softDeleteOlt] OLT dan semua device di bawahnya berhasil di-soft delete');
+    return true;
   } catch (error) {
-    console.error('Error in softDeleteOlt:', error);
+    console.error('Error soft deleting OLT:', error);
     throw error;
   }
 }

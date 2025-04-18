@@ -7,6 +7,7 @@ const { createNetDeviceOdcEntity } = require('../entities/netDeviceOdc.entity');
 const mongoose = require('mongoose');
 const { ObjectId } = mongoose.Types;
 const { DeletedFilterTypes } = require('./branch.repository');
+const { restoreOlt } = require('../utils/recursiveRestore.util');
 
 // Nama collection
 const COLLECTION = 'branches';
@@ -26,43 +27,26 @@ const ResultTypes = {
  */
 async function getOltById(oltId, deletedFilter = DeletedFilterTypes.WITHOUT) {
   try {
-    const branchCollection = getCollection('branches');
+    console.log(`[getOltById] Mencari OLT dengan ID: ${oltId}, filter: ${deletedFilter}`);
+    const collection = getCollection(COLLECTION);
     const objectId = new ObjectId(oltId);
     
-    // Pipeline aggregation untuk mencari OLT berdasarkan ID
-    const pipeline = [
-      // Match branches yang memiliki OLT dengan ID tertentu
-      {
-        $match: {
-          'children.children._id': objectId
-        }
-      }
-    ];
+    // Cari branch yang memiliki OLT dengan ID tertentu
+    const branch = await collection.findOne({
+      'children.children._id': objectId
+    });
     
-    // Tambahkan filter deleted
-    if (deletedFilter === DeletedFilterTypes.ONLY) {
-      pipeline[0].$match['children.children.deleted_at'] = { $exists: true };
-    } else if (deletedFilter === DeletedFilterTypes.WITHOUT) {
-      pipeline[0].$match['children.children.deleted_at'] = { $exists: false };
-    }
+    console.log(`[getOltById] Branch ditemukan: ${branch ? 'Ya' : 'Tidak'}`);
     
-    // Eksekusi query untuk mendapatkan branch
-    const branches = await branchCollection.aggregate(pipeline).toArray();
+    if (!branch) return null;
     
-    if (!branches || branches.length === 0) {
-      return null;
-    }
-    
-    // Ambil branch pertama yang memiliki OLT tersebut
-    const branch = branches[0];
-    
-    // Loop setiap router untuk menemukan OLT
+    // Variabel untuk menyimpan indeks dan data
     let routerIndex = -1;
     let oltIndex = -1;
     let oltData = null;
     
-    // Loop untuk menemukan router dan OLT
-    for (let i = 0; i < branch.children.length; i++) {
+    // Loop melalui branch > router > olt
+    outerLoop: for (let i = 0; i < branch.children.length; i++) {
       const router = branch.children[i];
       
       if (router.children && Array.isArray(router.children)) {
@@ -70,29 +54,39 @@ async function getOltById(oltId, deletedFilter = DeletedFilterTypes.WITHOUT) {
           const olt = router.children[j];
           
           if (olt._id.toString() === oltId.toString()) {
+            console.log(`[getOltById] OLT ditemukan dengan deleted_at: ${olt.deleted_at || 'tidak ada'}`);
+            
+            // Periksa filter
+            if (deletedFilter === DeletedFilterTypes.ONLY && !olt.deleted_at) {
+              console.log('[getOltById] OLT tidak memiliki deleted_at, tapi filter ONLY');
+              continue;
+            }
+            if (deletedFilter === DeletedFilterTypes.WITHOUT && olt.deleted_at) {
+              console.log('[getOltById] OLT memiliki deleted_at, tapi filter WITHOUT');
+              continue;
+            }
+            
             routerIndex = i;
             oltIndex = j;
             oltData = olt;
-            break;
+            break outerLoop;
           }
         }
       }
-      
-      if (oltData) break;
     }
     
-    // Jika OLT tidak ditemukan
+    // Jika OLT tidak ditemukan atau tidak memenuhi filter
     if (!oltData) {
+      console.log('[getOltById] OLT tidak ditemukan atau tidak memenuhi filter');
       return null;
     }
     
-    // Return objek dengan data OLT, branch, dan indeks
+    console.log('[getOltById] OLT berhasil ditemukan dan memenuhi filter');
+    
+    // Return objek dengan data OLT dan indeksnya
     return {
       olt: oltData,
-      branch: {
-        _id: branch._id,
-        name: branch.name
-      },
+      branchId: branch._id,
       routerIndex,
       oltIndex
     };
@@ -294,9 +288,40 @@ async function addOdcToOlt(oltId, odcData) {
   }
 }
 
+/**
+ * Melakukan restore pada OLT yang telah di-soft delete
+ * @param {string} oltId - ID OLT yang akan di-restore
+ * @returns {Promise<Object|null>} - Hasil restore atau null jika OLT tidak ditemukan/tidak bisa di-restore
+ */
+async function restore(oltId) {
+  try {
+    console.log(`[restore] Mencoba restore OLT dengan ID: ${oltId}`);
+    
+    // Cari OLT yang memiliki deleted_at
+    const oltInfo = await getOltById(oltId, DeletedFilterTypes.ONLY);
+    console.log(`[restore] Status pencarian OLT yang dihapus:`, oltInfo);
+    
+    if (!oltInfo || !oltInfo.olt) {
+      console.log('[restore] OLT tidak ditemukan atau sudah di-restore');
+      return null;
+    }
+    
+    // Lakukan restore
+    console.log('[restore] Memanggil fungsi restoreOlt');
+    const result = await restoreOlt(oltId);
+    console.log(`[restore] Hasil restore:`, result);
+    
+    return result;
+  } catch (error) {
+    console.error('Error in OLT repository - restore:', error);
+    throw error;
+  }
+}
+
 module.exports = {
   getOltById,
   getOltDetailById,
   addOdcToOlt,
+  restore,
   ResultTypes
 }; 
