@@ -8,6 +8,7 @@ const routes = require('./routes/index.routes');
 const config = require('../config/app.config');
 const { initializeJwks } = require('./services/jwks.service');
 const { initializeRequestContext } = require('./services/requestContext.service');
+const { requestLoggingMiddleware, logError, logInfo } = require('./services/logger.service');
 
 // Inisialisasi aplikasi Express
 const app = express();
@@ -16,21 +17,23 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Logging middleware untuk debugging
-app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  next();
-});
-
 // Initialize request context untuk setiap request
 app.use(initializeRequestContext);
+
+// Logging middleware
+app.use(requestLoggingMiddleware);
 
 // Gunakan routes dengan prefix /api/infra
 app.use(config.api.prefix, routes);
 
 // 404 handler
 app.use((req, res, next) => {
-  console.log(`[404] Route not found: ${req.method} ${req.url}`);
+  logError(`Route not found: ${req.method} ${req.url}`, {
+    method: req.method,
+    url: req.url,
+    statusCode: 404
+  });
+  
   res.status(404).json({
     error: 'Route not found'
   });
@@ -38,7 +41,14 @@ app.use((req, res, next) => {
 
 // Error handler sederhana
 app.use((err, req, res, next) => {
-  console.error(`[Error] ${err.stack}`);
+  logError('Internal Server Error', {
+    error: err.message,
+    stack: err.stack,
+    method: req.method,
+    url: req.url,
+    statusCode: 500
+  });
+  
   res.status(500).json({
     error: 'Internal Server Error'
   });
@@ -49,32 +59,43 @@ async function startServer() {
   try {
     // Connect ke MongoDB
     await connectDB();
-    console.log('MongoDB connection pool initialized');
+    logInfo('MongoDB connection pool initialized');
 
     // Inisialisasi JWKS
     await initializeJwks();
-    console.log('JWKS initialized successfully');
+    logInfo('JWKS initialized successfully');
 
     // Jalankan server
     const PORT = config.server.port;
     const HOST = config.server.host;
     
     app.listen(PORT, HOST, () => {
-      console.log(`Server running on http://${HOST}:${PORT}`);
-      console.log(`API base URL: ${config.api.prefix}`);
+      logInfo(`Server running on http://${HOST}:${PORT}`, {
+        port: PORT,
+        host: HOST
+      });
+      logInfo(`API base URL: ${config.api.prefix}`);
     });
   } catch (error) {
-    console.error('Failed to start server:', error);
+    logError('Failed to start server', {
+      error: error.message,
+      stack: error.stack
+    });
     process.exit(1);
   }
 }
 
 // Jalankan server
-startServer().catch(console.error);
+startServer().catch(error => {
+  logError('Unhandled error during server startup', {
+    error: error.message,
+    stack: error.stack
+  });
+});
 
 // Handle server shutdown
 process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully');
+  logInfo('SIGTERM received, shutting down gracefully');
   process.exit(0);
 });
 
