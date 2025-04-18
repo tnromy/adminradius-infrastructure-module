@@ -26,35 +26,18 @@ const ResultTypes = {
  */
 async function getOdcById(odcId, deletedFilter = DeletedFilterTypes.WITHOUT) {
   try {
-    const branchCollection = getCollection('branches');
+    console.log(`[getOdcById] Mencari ODC dengan ID: ${odcId}, filter: ${deletedFilter}`);
+    const collection = getCollection('branches');
     const objectId = new ObjectId(odcId);
     
-    // Pipeline aggregation untuk mencari branch yang berisi ODC dengan ID tertentu
-    const pipeline = [
-      // Match branches yang memiliki ODC dengan ID tertentu
-      {
-        $match: {
-          'children.children.pon_port.children._id': objectId
-        }
-      }
-    ];
+    // Cari branch yang memiliki ODC dengan ID tertentu
+    const branch = await collection.findOne({
+      'children.children.pon_port.children._id': objectId
+    });
     
-    // Tambahkan filter deleted
-    if (deletedFilter === DeletedFilterTypes.ONLY) {
-      pipeline[0].$match['children.children.pon_port.children.deleted_at'] = { $exists: true };
-    } else if (deletedFilter === DeletedFilterTypes.WITHOUT) {
-      pipeline[0].$match['children.children.pon_port.children.deleted_at'] = { $exists: false };
-    }
+    console.log(`[getOdcById] Branch ditemukan: ${branch ? 'Ya' : 'Tidak'}`);
     
-    // Eksekusi query untuk mendapatkan branch
-    const branches = await branchCollection.aggregate(pipeline).toArray();
-    
-    if (!branches || branches.length === 0) {
-      return null;
-    }
-    
-    // Ambil branch pertama yang memiliki ODC tersebut
-    const branch = branches[0];
+    if (!branch) return null;
     
     // Variabel untuk menyimpan indeks dan data
     let routerIndex = -1;
@@ -80,6 +63,18 @@ async function getOdcById(odcId, deletedFilter = DeletedFilterTypes.WITHOUT) {
                   const odc = ponPort.children[l];
                   
                   if (odc._id.toString() === odcId.toString()) {
+                    console.log(`[getOdcById] ODC ditemukan dengan deleted_at: ${odc.deleted_at || 'tidak ada'}`);
+                    
+                    // Periksa filter
+                    if (deletedFilter === DeletedFilterTypes.ONLY && !odc.deleted_at) {
+                      console.log('[getOdcById] ODC tidak memiliki deleted_at, tapi filter ONLY');
+                      continue;
+                    }
+                    if (deletedFilter === DeletedFilterTypes.WITHOUT && odc.deleted_at) {
+                      console.log('[getOdcById] ODC memiliki deleted_at, tapi filter WITHOUT');
+                      continue;
+                    }
+                    
                     routerIndex = i;
                     oltIndex = j;
                     ponPortIndex = k;
@@ -95,10 +90,13 @@ async function getOdcById(odcId, deletedFilter = DeletedFilterTypes.WITHOUT) {
       }
     }
     
-    // Jika ODC tidak ditemukan
+    // Jika ODC tidak ditemukan atau tidak memenuhi filter
     if (!odcData) {
+      console.log('[getOdcById] ODC tidak ditemukan atau tidak memenuhi filter');
       return null;
     }
+    
+    console.log('[getOdcById] ODC berhasil ditemukan dan memenuhi filter');
     
     // Return objek dengan data ODC dan indeksnya
     return {

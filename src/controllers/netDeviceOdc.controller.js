@@ -139,8 +139,59 @@ async function deleteOdc(req, res) {
   }
 }
 
+/**
+ * Melakukan restore pada ODC yang sudah di-soft delete
+ * @param {Object} req - Request object
+ * @param {Object} res - Response object
+ */
+async function restoreOdc(req, res) {
+  try {
+    const { odc_id } = req.params;
+    console.log(`[restoreOdc] Mencoba restore ODC dengan ID: ${odc_id}`);
+    
+    // Periksa status ODC terlebih dahulu - gunakan filter ONLY untuk mencari yang sudah dihapus
+    const odcInfo = await odcRepository.getOdcById(odc_id, branchRepository.DeletedFilterTypes.ONLY);
+    console.log(`[restoreOdc] Status pencarian ODC yang dihapus:`, odcInfo);
+    
+    if (!odcInfo || !odcInfo.odc) {
+      console.log(`[restoreOdc] ODC dengan ID ${odc_id} tidak ditemukan atau sudah di-restore`);
+      return res.status(404).json({
+        error: 'ODC not found or already restored'
+      });
+    }
+    
+    // Coba restore ODC
+    console.log(`[restoreOdc] Mencoba melakukan restore ODC`);
+    const result = await odcRepository.restore(odc_id);
+    console.log(`[restoreOdc] Hasil restore:`, result);
+    
+    if (!result) {
+      console.log(`[restoreOdc] Gagal melakukan restore ODC`);
+      return res.status(404).json({
+        error: 'Failed to restore ODC'
+      });
+    }
+    
+    // Dapatkan data ODC yang sudah di-restore menggunakan filter WITH untuk memastikan kita bisa menemukannya
+    console.log(`[restoreOdc] Mengambil data ODC yang sudah di-restore`);
+    const restoredOdc = await odcRepository.getOdcById(odc_id, branchRepository.DeletedFilterTypes.WITH);
+    console.log(`[restoreOdc] Data ODC yang sudah di-restore:`, restoredOdc);
+    
+    res.status(200).json({
+      message: 'ODC restored successfully',
+      data: restoredOdc
+    });
+  } catch (error) {
+    console.error('Error in restoreOdc controller:', error);
+    res.status(500).json({
+      error: 'Internal server error'
+    });
+  }
+}
+
 module.exports = {
   getOdcById,
   addOdcToOlt,
-  deleteOdc
+  deleteOdc,
+  restoreOdc
 }; 
