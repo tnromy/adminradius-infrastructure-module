@@ -5,6 +5,7 @@
 const odpRepository = require('../repositories/netDeviceOdp.repository');
 const ontRepository = require('../repositories/netDeviceOnt.repository');
 const branchRepository = require('../repositories/branch.repository'); // Untuk DeletedFilterTypes
+const netDeviceOntService = require('../services/netDeviceOnt.service');
 
 /**
  * Mendapatkan ONT berdasarkan ID
@@ -16,28 +17,21 @@ async function getOntById(req, res) {
     const { ont_id } = req.params;
     const { deleted } = req.query;
     
-    // Tentukan filter deleted (defaultnya WITHOUT)
-    let deletedFilter = branchRepository.DeletedFilterTypes.WITHOUT;
-    if (deleted && Object.values(branchRepository.DeletedFilterTypes).includes(deleted)) {
-      deletedFilter = deleted;
-    }
-    
-    const ont = await ontRepository.getOntById(ont_id, deletedFilter);
-    
-    if (!ont) {
-      return res.status(404).json({
-        error: 'ONT not found'
-      });
-    }
-    
+    const ont = await netDeviceOntService.getOntById(ont_id, deleted);
     res.status(200).json({
       data: ont
     });
   } catch (error) {
     console.error('Error in getOntById controller:', error);
-    res.status(500).json({
-      error: 'Internal server error'
-    });
+    if (error.message === 'ONT not found') {
+      res.status(404).json({
+        error: error.message
+      });
+    } else {
+      res.status(500).json({
+        error: 'Internal server error'
+      });
+    }
   }
 }
 
@@ -130,8 +124,37 @@ async function addOntToOdp(req, res) {
   }
 }
 
+/**
+ * Melakukan restore pada ONT yang sudah di-soft delete
+ * @param {Object} req - Request object
+ * @param {Object} res - Response object
+ */
+async function restoreOnt(req, res) {
+  try {
+    const { ont_id } = req.params;
+    
+    const ont = await netDeviceOntService.restoreOnt(ont_id);
+    res.status(200).json({
+      message: 'ONT restored successfully',
+      data: ont
+    });
+  } catch (error) {
+    console.error('Error in restoreOnt controller:', error);
+    if (error.message === 'ONT not found or already restored') {
+      res.status(404).json({
+        error: error.message
+      });
+    } else {
+      res.status(500).json({
+        error: 'Internal server error'
+      });
+    }
+  }
+}
+
 module.exports = {
   getOntById,
   addOntToOdp,
-  deleteOnt
+  deleteOnt,
+  restoreOnt
 }; 

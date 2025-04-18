@@ -6,6 +6,7 @@ const { getCollection } = require('./database.connector');
 const mongoose = require('mongoose');
 const { ObjectId } = mongoose.Types;
 const { DeletedFilterTypes } = require('./branch.repository');
+const { recursiveDeletedCheck } = require('../utils/recursiveDeletedCheck.util');
 
 // Nama collection
 const COLLECTION = 'branches';
@@ -14,120 +15,93 @@ const COLLECTION = 'branches';
  * Mendapatkan ONT berdasarkan ID
  * @param {string} ontId - ID ONT
  * @param {string} deletedFilter - Filter data yang dihapus (ONLY, WITH, WITHOUT)
- * @returns {Promise<Object>} - Data ONT
+ * @returns {Promise<Object|null>} ONT yang ditemukan atau null
  */
 async function getOntById(ontId, deletedFilter = DeletedFilterTypes.WITHOUT) {
   try {
-    const branchCollection = getCollection('branches');
-    const objectId = new ObjectId(ontId);
+    console.log(`[getOntById] Mencari ONT dengan ID: ${ontId}, filter: ${deletedFilter}`);
     
-    // Pipeline aggregation untuk mencari branch yang berisi ONT dengan ID tertentu
-    const pipeline = [
-      // Match branches yang memiliki ONT dengan ID tertentu
-      {
-        $match: {
-          'children.children.pon_port.children.trays.children.children._id': objectId
-        }
+    const collection = getCollection(COLLECTION);
+    
+    // Cari branch yang memiliki ONT dengan ID yang sesuai
+    const query = {
+      $or: [
+        { 'children.children.pon_port.children.trays.children.children.children._id': new ObjectId(ontId) },
+        { 'children.children.pon_port.children.trays.children.children._id': new ObjectId(ontId) }
+      ]
+    };
+    
+    console.log('[getOntById] Query MongoDB:', JSON.stringify(query, null, 2));
+    
+    const branch = await collection.findOne(query);
+    
+    console.log(`[getOntById] Branch ditemukan: ${branch ? 'Ya' : 'Tidak'}`);
+    
+    if (!branch) return null;
+
+    // Cari ONT dalam struktur nested
+    let foundOnt = null;
+    const searchOnt = (obj) => {
+      // Log untuk debugging
+      if (obj._id) {
+        console.log(`[searchOnt] Memeriksa object dengan ID: ${obj._id.toString()}`);
       }
-    ];
-    
-    // Tambahkan filter deleted
-    if (deletedFilter === DeletedFilterTypes.ONLY) {
-      pipeline[0].$match['children.children.pon_port.children.trays.children.children.deleted_at'] = { $exists: true };
-    } else if (deletedFilter === DeletedFilterTypes.WITHOUT) {
-      pipeline[0].$match['children.children.pon_port.children.trays.children.children.deleted_at'] = { $exists: false };
-    }
-    
-    // Eksekusi query untuk mendapatkan branch
-    const branches = await branchCollection.aggregate(pipeline).toArray();
-    
-    if (!branches || branches.length === 0) {
-      return null;
-    }
-    
-    // Ambil branch pertama yang memiliki ONT tersebut
-    const branch = branches[0];
-    
-    // Variabel untuk menyimpan indeks dan data
-    let routerIndex = -1;
-    let oltIndex = -1;
-    let ponPortIndex = -1;
-    let odcIndex = -1;
-    let trayIndex = -1;
-    let odpIndex = -1;
-    let ontIndex = -1;
-    let ontData = null;
-    
-    // Loop melalui branch > router > olt > pon_port > odc > tray > odp > ont
-    outerLoop: for (let i = 0; i < branch.children.length; i++) {
-      const router = branch.children[i];
       
-      if (router.children && Array.isArray(router.children)) {
-        for (let j = 0; j < router.children.length; j++) {
-          const olt = router.children[j];
-          
-          if (olt.pon_port && Array.isArray(olt.pon_port)) {
-            for (let k = 0; k < olt.pon_port.length; k++) {
-              const ponPort = olt.pon_port[k];
-              
-              if (ponPort.children && Array.isArray(ponPort.children)) {
-                for (let l = 0; l < ponPort.children.length; l++) {
-                  const odc = ponPort.children[l];
-                  
-                  if (odc.trays && Array.isArray(odc.trays)) {
-                    for (let m = 0; m < odc.trays.length; m++) {
-                      const tray = odc.trays[m];
-                      
-                      if (tray.children && Array.isArray(tray.children)) {
-                        for (let n = 0; n < tray.children.length; n++) {
-                          const odp = tray.children[n];
-                          
-                          if (odp.children && Array.isArray(odp.children)) {
-                            for (let o = 0; o < odp.children.length; o++) {
-                              const ont = odp.children[o];
-                              
-                              if (ont._id.toString() === ontId.toString()) {
-                                routerIndex = i;
-                                oltIndex = j;
-                                ponPortIndex = k;
-                                odcIndex = l;
-                                trayIndex = m;
-                                odpIndex = n;
-                                ontIndex = o;
-                                ontData = ont;
-                                break outerLoop;
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
+      if (obj._id && obj._id.toString() === ontId.toString()) {
+        console.log('[searchOnt] ONT ditemukan!');
+        foundOnt = { ...obj };
+        return;
       }
-    }
+      
+      // Cek children
+      if (obj.children && Array.isArray(obj.children)) {
+        obj.children.forEach(child => searchOnt(child));
+      }
+      
+      // Cek pon_port dan children-nya
+      if (obj.pon_port && Array.isArray(obj.pon_port)) {
+        obj.pon_port.forEach(port => {
+          if (port.children) {
+            port.children.forEach(child => searchOnt(child));
+          }
+        });
+      }
+      
+      // Cek trays dan children-nya
+      if (obj.trays && Array.isArray(obj.trays)) {
+        obj.trays.forEach(tray => {
+          if (tray.children) {
+            tray.children.forEach(child => searchOnt(child));
+          }
+        });
+      }
+    };
+
+    searchOnt(branch);
+    
+    console.log(`[getOntById] ONT ditemukan setelah pencarian: ${foundOnt ? 'Ya' : 'Tidak'}`);
     
     // Jika ONT tidak ditemukan
-    if (!ontData) {
+    if (!foundOnt) {
+      console.log('[getOntById] ONT tidak ditemukan setelah pencarian mendalam');
+      return null;
+    }
+
+    // Log status deleted
+    console.log(`[getOntById] Status deleted_at ONT: ${foundOnt.deleted_at ? 'Ada' : 'Tidak ada'}`);
+    
+    // Terapkan filter deleted
+    if (deletedFilter === DeletedFilterTypes.ONLY && !foundOnt.deleted_at) {
+      console.log('[getOntById] ONT tidak memiliki deleted_at, tapi filter ONLY');
+      return null;
+    }
+    if (deletedFilter === DeletedFilterTypes.WITHOUT && foundOnt.deleted_at) {
+      console.log('[getOntById] ONT memiliki deleted_at, tapi filter WITHOUT');
       return null;
     }
     
-    // Return objek dengan data ONT dan indeksnya
-    return {
-      ont: ontData,
-      branchId: branch._id,
-      routerIndex,
-      oltIndex,
-      ponPortIndex,
-      odcIndex,
-      trayIndex,
-      odpIndex,
-      ontIndex
-    };
+    console.log('[getOntById] ONT berhasil ditemukan dan memenuhi filter');
+    return foundOnt;
   } catch (error) {
     console.error('Error getting ONT by ID:', error);
     throw error;
@@ -141,46 +115,119 @@ async function getOntById(ontId, deletedFilter = DeletedFilterTypes.WITHOUT) {
  */
 async function softDeleteOnt(ontId) {
   try {
-    // Dapatkan informasi ONT
-    const ontInfo = await getOntById(ontId, DeletedFilterTypes.WITHOUT);
+    console.log(`[softDeleteOnt] Mencoba soft delete ONT dengan ID: ${ontId}`);
     
-    if (!ontInfo || !ontInfo.ont) {
+    // Dapatkan informasi ONT
+    const ont = await getOntById(ontId, DeletedFilterTypes.WITHOUT);
+    if (!ont) {
+      console.log('[softDeleteOnt] ONT tidak ditemukan atau sudah dihapus');
       return null;
     }
-    
-    const { 
-      branchId, routerIndex, oltIndex, ponPortIndex, odcIndex, trayIndex, odpIndex, ontIndex 
-    } = ontInfo;
-    
+
     const collection = getCollection(COLLECTION);
     
-    // Path untuk update
-    const ontPath = `children.${routerIndex}.children.${oltIndex}.pon_port.${ponPortIndex}.children.${odcIndex}.trays.${trayIndex}.children.${odpIndex}.children.${ontIndex}.deleted_at`;
-    
-    // Update branch, tambahkan timestamp deleted_at ke ONT
+    // Update ONT menggunakan array filters
     const result = await collection.updateOne(
-      { _id: branchId },
-      { 
-        $set: { 
-          [ontPath]: new Date(),
+      {
+        $or: [
+          { 'children.children.pon_port.children.trays.children.children.children._id': new ObjectId(ontId) },
+          { 'children.children.pon_port.children.trays.children.children._id': new ObjectId(ontId) }
+        ]
+      },
+      {
+        $set: {
+          'children.$[].children.$[].pon_port.$[].children.$[].trays.$[].children.$[].children.$[ont].deleted_at': new Date(),
           updatedAt: new Date()
-        } 
+        }
+      },
+      {
+        arrayFilters: [
+          { 'ont._id': new ObjectId(ontId) }
+        ]
       }
     );
+
+    console.log(`[softDeleteOnt] Update result: matchedCount=${result.matchedCount}, modifiedCount=${result.modifiedCount}`);
     
-    if (result.matchedCount === 0) {
+    if (result.modifiedCount === 0) {
+      console.log('[softDeleteOnt] Gagal melakukan soft delete ONT');
       return null;
     }
-    
+
     // Dapatkan ONT yang sudah diupdate (dengan WITH filter karena sudah di-soft delete)
-    return getOntById(ontId, DeletedFilterTypes.WITH);
+    const updatedOnt = await getOntById(ontId, DeletedFilterTypes.WITH);
+    console.log('[softDeleteOnt] ONT berhasil di-soft delete');
+    
+    return updatedOnt;
   } catch (error) {
     console.error('Error soft deleting ONT:', error);
     throw error;
   }
 }
 
+/**
+ * Melakukan restore pada ONT yang sudah di-soft delete
+ * @param {string} ontId - ID ONT yang akan di-restore
+ * @returns {Promise<Object|null>} ONT yang sudah di-restore atau null jika tidak ditemukan
+ */
+async function restoreOnt(ontId) {
+  try {
+    console.log(`[restoreOnt] Mencoba restore ONT dengan ID: ${ontId}`);
+    
+    const collection = getCollection(COLLECTION);
+    
+    // Cari ONT yang memiliki deleted_at
+    const ont = await getOntById(ontId, DeletedFilterTypes.ONLY);
+    console.log(`[restoreOnt] ONT ditemukan dengan filter ONLY: ${ont ? 'Ya' : 'Tidak'}`);
+    
+    if (!ont) {
+      console.log('[restoreOnt] ONT tidak ditemukan atau sudah di-restore');
+      return null;
+    }
+
+    // Update ONT dengan menghapus field deleted_at menggunakan array filters
+    const result = await collection.updateOne(
+      {
+        $or: [
+          { 'children.children.pon_port.children.trays.children.children.children._id': new ObjectId(ontId) },
+          { 'children.children.pon_port.children.trays.children.children._id': new ObjectId(ontId) }
+        ]
+      },
+      {
+        $unset: {
+          'children.$[].children.$[].pon_port.$[].children.$[].trays.$[].children.$[].children.$[ont].deleted_at': ""
+        },
+        $set: {
+          updatedAt: new Date()
+        }
+      },
+      {
+        arrayFilters: [
+          { 'ont._id': new ObjectId(ontId) }
+        ]
+      }
+    );
+
+    console.log(`[restoreOnt] Update result: matchedCount=${result.matchedCount}, modifiedCount=${result.modifiedCount}`);
+
+    if (result.modifiedCount === 0) {
+      console.log('[restoreOnt] Gagal melakukan restore ONT');
+      return null;
+    }
+
+    // Ambil data ONT yang sudah di-restore
+    const restoredOnt = await getOntById(ontId, DeletedFilterTypes.WITHOUT);
+    console.log('[restoreOnt] ONT berhasil di-restore');
+    
+    return restoredOnt;
+  } catch (error) {
+    console.error('Error restoring ONT:', error);
+    throw error;
+  }
+}
+
 module.exports = {
   getOntById,
-  softDeleteOnt
+  softDeleteOnt,
+  restoreOnt
 }; 
