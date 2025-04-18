@@ -5,7 +5,7 @@
 const express = require('express');
 const { connectDB } = require('../connections/mongodb_conn');
 const routes = require('./routes/index.routes');
-const config = require('./config/app.config');
+const config = require('../config/app.config');
 
 // Inisialisasi aplikasi Express
 const app = express();

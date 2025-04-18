@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const dbConfig = require('../src/config/database.config');
+const dbConfig = require('../config/database.config');
 
 let connection = null;
 

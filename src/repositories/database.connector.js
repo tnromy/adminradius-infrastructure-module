@@ -3,7 +3,7 @@
  */
 
 const { getConnection } = require('../../connections/mongodb_conn');
-const dbConfig = require('../config/database.config');
+const dbConfig = require('../../config/database.config');
 
 /**
  * Mendapatkan referensi ke database
