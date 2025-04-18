@@ -23,18 +23,45 @@ router.get('/branches',
 );
 
 // Route GET /api/infra/branch/:id
-router.get('/branch/:id', validateBranchId, validateDeletedParam, validateScopeLevelParam, branchController.getBranchById);
+router.get('/branch/:id', 
+  authenticateJWT,
+  authorizeRoles,
+  validateBranchId, 
+  validateDeletedParam, 
+  validateScopeLevelParam, 
+  branchController.getBranchById
+);
 
 // Route POST /api/infra/branch
-router.post('/branch', validateCreateBranch, branchController.createBranch);
+router.post('/branch', 
+  authenticateJWT,
+  authorizeRoles,
+  validateCreateBranch, 
+  branchController.createBranch
+);
 
 // Route PUT /api/infra/branch/:id
-router.put('/branch/:id', validateUpdateBranch, branchController.updateBranch);
+router.put('/branch/:id', 
+  authenticateJWT,
+  authorizeRoles,
+  validateUpdateBranch, 
+  branchController.updateBranch
+);
 
 // Route DELETE /api/infra/branch/:id
-router.delete('/branch/:id', validateBranchId, branchController.deleteBranch);
+router.delete('/branch/:id', 
+  authenticateJWT,
+  authorizeRoles,
+  validateBranchId, 
+  branchController.deleteBranch
+);
 
 // Route POST /api/infra/branch/:id/restore
-router.post('/branch/:id/restore', validateBranchId, branchController.restoreBranch);
+router.post('/branch/:id/restore', 
+  authenticateJWT,
+  authorizeRoles,
+  validateBranchId, 
+  branchController.restoreBranch
+);
 
 module.exports = router;
