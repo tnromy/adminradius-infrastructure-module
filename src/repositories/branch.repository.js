@@ -7,6 +7,7 @@ const { createBranchEntity } = require('../entities/branch.entity');
 const { createNetDeviceRouterEntity } = require('../entities/netDeviceRouter.entity');
 const mongoose = require('mongoose');
 const { ObjectId } = mongoose.Types;
+const { recursiveDeletedCheck, DeletedFilterTypes } = require('../utils/recursiveDeletedCheck.util');
 
 // Nama collection
 const COLLECTION = 'branches';
@@ -21,13 +22,6 @@ const ResultTypes = {
   ONTS: 'ONTS'
 };
 
-// Enum untuk tipe deleted filter
-const DeletedFilterTypes = {
-  ONLY: 'ONLY',    // Hanya data yang dihapus (memiliki deleted_at)
-  WITH: 'WITH',    // Semua data, termasuk yang dihapus
-  WITHOUT: 'WITHOUT' // Hanya data yang tidak dihapus (default)
-};
-
 /**
  * Mendapatkan semua branches dengan level detail tertentu
  * @param {string} scopeLevel - Level scope data (BRANCHES, ROUTERS, OLTS, ODCS, ODPS, ONTS)
@@ -37,170 +31,14 @@ const DeletedFilterTypes = {
 async function getAllBranches(scopeLevel = null, deletedFilter = DeletedFilterTypes.WITHOUT) {
   try {
     const collection = getCollection(COLLECTION);
+    const branches = await collection.find({}).toArray();
     
-    // Buat query berdasarkan deleted filter
-    let query = {};
-    if (deletedFilter === DeletedFilterTypes.ONLY) {
-      query.deleted_at = { $exists: true };
-    } else if (deletedFilter === DeletedFilterTypes.WITHOUT) {
-      query.deleted_at = { $exists: false };
-    }
-    // Jika WITH, tidak perlu filter (tampilkan semua)
+    // Terapkan recursive deleted check pada setiap branch
+    const filteredBranches = branches
+      .map(branch => recursiveDeletedCheck(branch, deletedFilter, scopeLevel))
+      .filter(branch => branch !== null);
     
-    const branches = await collection.find(query).toArray();
-    
-    // Jika scopeLevel tidak dispesifikasikan, kembalikan data lengkap seperti biasa
-    if (!scopeLevel || !Object.values(ResultTypes).includes(scopeLevel)) {
-      return branches.map(branch => createBranchEntity(branch));
-    }
-    
-    // Filter data sesuai scopeLevel
-    return branches.map(branch => {
-      const branchCopy = { ...branch };
-      
-      // BRANCHES: Hapus children dari branch
-      if (scopeLevel === ResultTypes.BRANCHES) {
-        delete branchCopy.children;
-        return branchCopy;
-      }
-      
-      // Jika tidak ada children, kembalikan branch apa adanya
-      if (!branchCopy.children || !Array.isArray(branchCopy.children)) {
-        return branchCopy;
-      }
-      
-      // ROUTERS: Pertahankan children (router) tapi hapus children dari router
-      if (scopeLevel === ResultTypes.ROUTERS) {
-        branchCopy.children = branchCopy.children.map(router => {
-          const routerCopy = { ...router };
-          delete routerCopy.children;
-          return routerCopy;
-        });
-        return branchCopy;
-      }
-      
-      // OLTS: Pertahankan router dan OLT dengan pon_port, tapi hapus children dari setiap port di pon_port
-      if (scopeLevel === ResultTypes.OLTS) {
-        branchCopy.children = branchCopy.children.map(router => {
-          const routerCopy = { ...router };
-          
-          if (routerCopy.children && Array.isArray(routerCopy.children)) {
-            routerCopy.children = routerCopy.children.map(olt => {
-              const oltCopy = { ...olt };
-              
-              // Tetap menyertakan pon_port tapi hapus children dari setiap port
-              if (oltCopy.pon_port && Array.isArray(oltCopy.pon_port)) {
-                oltCopy.pon_port = oltCopy.pon_port.map(port => {
-                  const portCopy = { ...port };
-                  delete portCopy.children;
-                  return portCopy;
-                });
-              }
-              
-              return oltCopy;
-            });
-          }
-          
-          return routerCopy;
-        });
-        return branchCopy;
-      }
-      
-      // ODCS: Pertahankan router, OLT, dan ODC dengan trays, tapi hapus children dari setiap tray
-      if (scopeLevel === ResultTypes.ODCS) {
-        branchCopy.children = branchCopy.children.map(router => {
-          const routerCopy = { ...router };
-          
-          if (routerCopy.children && Array.isArray(routerCopy.children)) {
-            routerCopy.children = routerCopy.children.map(olt => {
-              const oltCopy = { ...olt };
-              
-              if (oltCopy.pon_port && Array.isArray(oltCopy.pon_port)) {
-                oltCopy.pon_port = oltCopy.pon_port.map(port => {
-                  const portCopy = { ...port };
-                  
-                  if (portCopy.children && Array.isArray(portCopy.children)) {
-                    portCopy.children = portCopy.children.map(odc => {
-                      const odcCopy = { ...odc };
-                      
-                      // Tetap menyertakan trays tapi hapus children dari setiap tray
-                      if (odcCopy.trays && Array.isArray(odcCopy.trays)) {
-                        odcCopy.trays = odcCopy.trays.map(tray => {
-                          const trayCopy = { ...tray };
-                          delete trayCopy.children;
-                          return trayCopy;
-                        });
-                      }
-                      
-                      return odcCopy;
-                    });
-                  }
-                  
-                  return portCopy;
-                });
-              }
-              
-              return oltCopy;
-            });
-          }
-          
-          return routerCopy;
-        });
-        return branchCopy;
-      }
-      
-      // ODPS: Pertahankan router, OLT, ODC, dan ODP tapi hapus children dari ODP
-      if (scopeLevel === ResultTypes.ODPS) {
-        branchCopy.children = branchCopy.children.map(router => {
-          const routerCopy = { ...router };
-          
-          if (routerCopy.children && Array.isArray(routerCopy.children)) {
-            routerCopy.children = routerCopy.children.map(olt => {
-              const oltCopy = { ...olt };
-              
-              if (oltCopy.pon_port && Array.isArray(oltCopy.pon_port)) {
-                oltCopy.pon_port = oltCopy.pon_port.map(port => {
-                  const portCopy = { ...port };
-                  
-                  if (portCopy.children && Array.isArray(portCopy.children)) {
-                    portCopy.children = portCopy.children.map(odc => {
-                      const odcCopy = { ...odc };
-                      
-                      if (odcCopy.trays && Array.isArray(odcCopy.trays)) {
-                        odcCopy.trays = odcCopy.trays.map(tray => {
-                          const trayCopy = { ...tray };
-                          
-                          if (trayCopy.children && Array.isArray(trayCopy.children)) {
-                            trayCopy.children = trayCopy.children.map(odp => {
-                              const odpCopy = { ...odp };
-                              delete odpCopy.children;
-                              return odpCopy;
-                            });
-                          }
-                          
-                          return trayCopy;
-                        });
-                      }
-                      
-                      return odcCopy;
-                    });
-                  }
-                  
-                  return portCopy;
-                });
-              }
-              
-              return oltCopy;
-            });
-          }
-          
-          return routerCopy;
-        });
-        return branchCopy;
-      }
-      
-      return branchCopy;
-    });
+    return filteredBranches;
   } catch (error) {
     console.error('Error getting all branches:', error);
     throw error;
@@ -217,172 +55,14 @@ async function getAllBranches(scopeLevel = null, deletedFilter = DeletedFilterTy
 async function getBranchById(id, scopeLevel = null, deletedFilter = DeletedFilterTypes.WITHOUT) {
   try {
     const collection = getCollection(COLLECTION);
-    
-    // Buat query berdasarkan ID dan deleted filter
-    let query = { _id: new ObjectId(id) };
-    if (deletedFilter === DeletedFilterTypes.ONLY) {
-      query.deleted_at = { $exists: true };
-    } else if (deletedFilter === DeletedFilterTypes.WITHOUT) {
-      query.deleted_at = { $exists: false };
-    }
-    // Jika WITH, tidak perlu tambahan filter, cukup filter berdasarkan ID saja
-    
-    const branch = await collection.findOne(query);
+    const branch = await collection.findOne({ _id: new ObjectId(id) });
     
     if (!branch) {
       return null;
     }
     
-    // Jika scopeLevel tidak dispesifikasikan, kembalikan data lengkap seperti biasa
-    if (!scopeLevel || !Object.values(ResultTypes).includes(scopeLevel)) {
-      return createBranchEntity(branch);
-    }
-    
-    // Filter data sesuai scopeLevel
-    const branchCopy = { ...branch };
-    
-    // BRANCHES: Hapus children dari branch
-    if (scopeLevel === ResultTypes.BRANCHES) {
-      delete branchCopy.children;
-      return branchCopy;
-    }
-    
-    // Jika tidak ada children, kembalikan branch apa adanya
-    if (!branchCopy.children || !Array.isArray(branchCopy.children)) {
-      return branchCopy;
-    }
-    
-    // ROUTERS: Pertahankan children (router) tapi hapus children dari router
-    if (scopeLevel === ResultTypes.ROUTERS) {
-      branchCopy.children = branchCopy.children.map(router => {
-        const routerCopy = { ...router };
-        delete routerCopy.children;
-        return routerCopy;
-      });
-      return branchCopy;
-    }
-    
-    // OLTS: Pertahankan router dan OLT dengan pon_port, tapi hapus children dari setiap port di pon_port
-    if (scopeLevel === ResultTypes.OLTS) {
-      branchCopy.children = branchCopy.children.map(router => {
-        const routerCopy = { ...router };
-        
-        if (routerCopy.children && Array.isArray(routerCopy.children)) {
-          routerCopy.children = routerCopy.children.map(olt => {
-            const oltCopy = { ...olt };
-            
-            // Tetap menyertakan pon_port tapi hapus children dari setiap port
-            if (oltCopy.pon_port && Array.isArray(oltCopy.pon_port)) {
-              oltCopy.pon_port = oltCopy.pon_port.map(port => {
-                const portCopy = { ...port };
-                delete portCopy.children;
-                return portCopy;
-              });
-            }
-            
-            return oltCopy;
-          });
-        }
-        
-        return routerCopy;
-      });
-      return branchCopy;
-    }
-    
-    // ODCS: Pertahankan router, OLT, dan ODC dengan trays, tapi hapus children dari setiap tray
-    if (scopeLevel === ResultTypes.ODCS) {
-      branchCopy.children = branchCopy.children.map(router => {
-        const routerCopy = { ...router };
-        
-        if (routerCopy.children && Array.isArray(routerCopy.children)) {
-          routerCopy.children = routerCopy.children.map(olt => {
-            const oltCopy = { ...olt };
-            
-            if (oltCopy.pon_port && Array.isArray(oltCopy.pon_port)) {
-              oltCopy.pon_port = oltCopy.pon_port.map(port => {
-                const portCopy = { ...port };
-                
-                if (portCopy.children && Array.isArray(portCopy.children)) {
-                  portCopy.children = portCopy.children.map(odc => {
-                    const odcCopy = { ...odc };
-                    
-                    // Tetap menyertakan trays tapi hapus children dari setiap tray
-                    if (odcCopy.trays && Array.isArray(odcCopy.trays)) {
-                      odcCopy.trays = odcCopy.trays.map(tray => {
-                        const trayCopy = { ...tray };
-                        delete trayCopy.children;
-                        return trayCopy;
-                      });
-                    }
-                    
-                    return odcCopy;
-                  });
-                }
-                
-                return portCopy;
-              });
-            }
-            
-            return oltCopy;
-          });
-        }
-        
-        return routerCopy;
-      });
-      return branchCopy;
-    }
-    
-    // ODPS: Pertahankan router, OLT, ODC, dan ODP tapi hapus children dari ODP
-    if (scopeLevel === ResultTypes.ODPS) {
-      branchCopy.children = branchCopy.children.map(router => {
-        const routerCopy = { ...router };
-        
-        if (routerCopy.children && Array.isArray(routerCopy.children)) {
-          routerCopy.children = routerCopy.children.map(olt => {
-            const oltCopy = { ...olt };
-            
-            if (oltCopy.pon_port && Array.isArray(oltCopy.pon_port)) {
-              oltCopy.pon_port = oltCopy.pon_port.map(port => {
-                const portCopy = { ...port };
-                
-                if (portCopy.children && Array.isArray(portCopy.children)) {
-                  portCopy.children = portCopy.children.map(odc => {
-                    const odcCopy = { ...odc };
-                    
-                    if (odcCopy.trays && Array.isArray(odcCopy.trays)) {
-                      odcCopy.trays = odcCopy.trays.map(tray => {
-                        const trayCopy = { ...tray };
-                        
-                        if (trayCopy.children && Array.isArray(trayCopy.children)) {
-                          trayCopy.children = trayCopy.children.map(odp => {
-                            const odpCopy = { ...odp };
-                            delete odpCopy.children;
-                            return odpCopy;
-                          });
-                        }
-                        
-                        return trayCopy;
-                      });
-                    }
-                    
-                    return odcCopy;
-                  });
-                }
-                
-                return portCopy;
-              });
-            }
-            
-            return oltCopy;
-          });
-        }
-        
-        return routerCopy;
-      });
-      return branchCopy;
-    }
-    
-    return branchCopy;
+    // Terapkan recursive deleted check
+    return recursiveDeletedCheck(branch, deletedFilter, scopeLevel);
   } catch (error) {
     console.error('Error getting branch by ID:', error);
     throw error;
