@@ -128,23 +128,31 @@ async function restoreOdp(odpId) {
     
     // Cari ODP dalam struktur nested
     let foundOdp = null;
-    const searchOdp = (obj) => {
+    let odpPath = '';
+    const searchOdp = (obj, path = '') => {
       if (obj._id && obj._id.toString() === odpId.toString()) {
         console.log('[recursiveRestore.restoreOdp] ODP ditemukan dalam struktur');
         foundOdp = obj;
+        odpPath = path;
         return;
       }
       if (obj.children && Array.isArray(obj.children)) {
-        obj.children.forEach(searchOdp);
+        obj.children.forEach((child, idx) => searchOdp(child, path ? `${path}.children.${idx}` : `children.${idx}`));
       }
       if (obj.pon_port && Array.isArray(obj.pon_port)) {
-        obj.pon_port.forEach(port => {
-          if (port.children) port.children.forEach(searchOdp);
+        obj.pon_port.forEach((port, idx) => {
+          if (port.children) {
+            port.children.forEach((child, childIdx) => 
+              searchOdp(child, path ? `${path}.pon_port.${idx}.children.${childIdx}` : `pon_port.${idx}.children.${childIdx}`));
+          }
         });
       }
       if (obj.trays && Array.isArray(obj.trays)) {
-        obj.trays.forEach(tray => {
-          if (tray.children) tray.children.forEach(searchOdp);
+        obj.trays.forEach((tray, idx) => {
+          if (tray.children) {
+            tray.children.forEach((child, childIdx) => 
+              searchOdp(child, path ? `${path}.trays.${idx}.children.${childIdx}` : `trays.${idx}.children.${childIdx}`));
+          }
         });
       }
     };
@@ -153,7 +161,8 @@ async function restoreOdp(odpId) {
     
     console.log(`[recursiveRestore.restoreOdp] Status ODP:`, {
       found: !!foundOdp,
-      hasDeletedAt: foundOdp ? !!foundOdp.deleted_at : false
+      hasDeletedAt: foundOdp ? !!foundOdp.deleted_at : false,
+      path: odpPath
     });
     
     if (!foundOdp || !foundOdp.deleted_at) return null;
@@ -164,20 +173,16 @@ async function restoreOdp(odpId) {
     console.log('[recursiveRestore.restoreOdp] Mencoba update ODP di database');
     const odpResult = await collection.updateOne(
       {
-        'children.children.pon_port.children.trays.children._id': new ObjectId(odpId)
+        _id: branch._id,
+        [`${odpPath}.deleted_at`]: deletedAt // Pastikan kita update ODP dengan deleted_at yang tepat
       },
       {
         $unset: {
-          'children.$[].children.$[].pon_port.$[].children.$[].trays.$[].children.$[odp].deleted_at': ""
+          [`${odpPath}.deleted_at`]: ""
         },
         $set: {
           updatedAt: new Date()
         }
-      },
-      {
-        arrayFilters: [
-          { 'odp._id': new ObjectId(odpId) }
-        ]
       }
     );
     
@@ -186,14 +191,35 @@ async function restoreOdp(odpId) {
       modifiedCount: odpResult.modifiedCount
     });
     
-    // 2. Restore ONTs yang memiliki deleted_at yang sama
+    // 2. Restore ONTs yang memiliki deleted_at yang sama persis
     if (foundOdp.children && Array.isArray(foundOdp.children)) {
       console.log('[recursiveRestore.restoreOdp] Mencoba restore ONTs');
       const ontRestorePromises = foundOdp.children
-        .filter(ont => ont.deleted_at && ont.deleted_at.getTime() === deletedAt.getTime())
-        .map(ont => restoreOnt(ont._id.toString()));
+        .map((ont, idx) => {
+          if (ont.deleted_at && ont.deleted_at.getTime() === deletedAt.getTime()) {
+            return collection.updateOne(
+              {
+                _id: branch._id,
+                [`${odpPath}.children.${idx}.deleted_at`]: deletedAt
+              },
+              {
+                $unset: {
+                  [`${odpPath}.children.${idx}.deleted_at`]: ""
+                },
+                $set: {
+                  updatedAt: new Date()
+                }
+              }
+            );
+          }
+          return null;
+        })
+        .filter(Boolean);
       
-      await Promise.all(ontRestorePromises);
+      if (ontRestorePromises.length > 0) {
+        console.log(`[recursiveRestore.restoreOdp] Merestore ${ontRestorePromises.length} ONT`);
+        await Promise.all(ontRestorePromises);
+      }
     }
     
     return odpResult.modifiedCount > 0 ? odpResult : null;
