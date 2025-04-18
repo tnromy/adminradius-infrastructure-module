@@ -363,49 +363,68 @@ async function softDeleteRouter(routerData, deletedAt = new Date()) {
 }
 
 /**
- * Melakukan soft delete pada Branch dan semua Router, OLT, ODC, ODP, dan ONT di dalamnya
- * @param {string} branchId - ID Branch yang akan di-soft delete
- * @returns {Promise<Object>} - Hasil update
+ * Melakukan soft delete pada branch dan semua device di dalamnya
+ * @param {string} branchId - ID branch yang akan di-soft delete
+ * @param {Date} deletedAt - Timestamp untuk soft delete (opsional)
+ * @returns {Promise<boolean>} - True jika berhasil
  */
-async function softDeleteBranch(branchId) {
-  const collection = getCollection('branches');
-  
-  // 1. Update Branch dengan deleted_at jika belum ada
-  await collection.updateOne(
-    { 
-      _id: new ObjectId(branchId), 
-      deleted_at: { $exists: false } 
-    },
-    { 
-      $set: { 
-        deleted_at: new Date(),
-        updatedAt: new Date()
-      } 
-    }
-  );
-  
-  // 2. Dapatkan data branch untuk memproses Routers
-  const branch = await collection.findOne({ _id: new ObjectId(branchId) });
-  
-  if (!branch) return null;
-  
-  if (!branch.children) return { success: true };
-  
-  // Lakukan update untuk setiap Router di dalamnya
-  for (let routerIndex = 0; routerIndex < branch.children.length; routerIndex++) {
-    const router = branch.children[routerIndex];
+async function softDeleteBranch(branchId, deletedAt = new Date()) {
+  try {
+    console.log(`[softDeleteBranch] Mencoba soft delete branch dengan ID: ${branchId}`);
+    const collection = getCollection('branches');
     
-    if (!router) continue;
-    
-    // Soft delete Router jika belum di-delete
-    if (!router.deleted_at) {
-      await softDeleteRouter({
-        branchId, routerIndex
-      });
+    // Update branch dengan menambahkan deleted_at
+    const result = await collection.updateOne(
+      { 
+        _id: new ObjectId(branchId),
+        deleted_at: { $exists: false } // Hanya update jika belum memiliki deleted_at
+      },
+      {
+        $set: {
+          deleted_at: deletedAt,
+          updatedAt: new Date()
+        }
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      console.log('[softDeleteBranch] Branch tidak ditemukan atau sudah memiliki deleted_at');
+      return false;
     }
+
+    // Dapatkan data branch untuk proses router
+    const branch = await collection.findOne({ _id: new ObjectId(branchId) });
+    if (!branch) {
+      console.log('[softDeleteBranch] Branch tidak ditemukan setelah update');
+      return false;
+    }
+
+    // Proses soft delete untuk setiap router yang belum dihapus
+    if (branch.children && Array.isArray(branch.children)) {
+      for (let routerIndex = 0; routerIndex < branch.children.length; routerIndex++) {
+        const router = branch.children[routerIndex];
+        // Hanya proses router yang belum memiliki deleted_at
+        if (!router.deleted_at) {
+          const routerResult = await softDeleteRouter({
+            branchId: branchId,
+            routerIndex
+          }, deletedAt); // Gunakan timestamp yang sama
+
+          if (!routerResult) {
+            console.log(`[softDeleteBranch] Gagal melakukan soft delete pada router di index ${routerIndex}`);
+            // Lanjutkan ke router berikutnya
+            continue;
+          }
+        }
+      }
+    }
+
+    console.log('[softDeleteBranch] Branch dan semua device di dalamnya berhasil di-soft delete');
+    return true;
+  } catch (error) {
+    console.error('Error soft deleting branch:', error);
+    throw error;
   }
-  
-  return { success: true };
 }
 
 module.exports = {

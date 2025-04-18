@@ -165,6 +165,52 @@ async function addRouterToBranch(id, routerData) {
   }
 }
 
+/**
+ * Melakukan restore pada branch yang telah di-soft delete
+ * @param {string} branchId - ID branch yang akan di-restore
+ * @returns {Promise<Object|null>} - Hasil restore atau null jika branch tidak ditemukan/tidak bisa di-restore
+ */
+async function restore(branchId) {
+  try {
+    console.log(`[restore] Mencoba restore branch dengan ID: ${branchId}`);
+    
+    // Import fungsi restore
+    const { restoreBranch } = require('../utils/recursiveRestore.util');
+    
+    // Cari branch yang memiliki deleted_at
+    const branch = await getBranchById(branchId, null, DeletedFilterTypes.ONLY);
+    console.log(`[restore] Status pencarian branch yang dihapus:`, branch ? 'Ditemukan' : 'Tidak ditemukan');
+    
+    if (!branch) {
+      console.log('[restore] Branch tidak ditemukan atau sudah di-restore');
+      return null;
+    }
+
+    // Simpan timestamp deleted_at untuk digunakan dalam restore
+    const deletedAt = branch.deleted_at;
+    console.log(`[restore] Branch ditemukan dengan deleted_at: ${deletedAt}`);
+    
+    // Lakukan restore
+    console.log('[restore] Memanggil fungsi restoreBranch');
+    const result = await restoreBranch(branchId, deletedAt);
+    console.log(`[restore] Hasil restore:`, result ? 'Berhasil' : 'Gagal');
+    
+    if (!result) {
+      console.log('[restore] Gagal melakukan restore branch');
+      return null;
+    }
+    
+    // Ambil data branch yang sudah di-restore
+    const restoredBranch = await getBranchById(branchId, null, DeletedFilterTypes.WITHOUT);
+    console.log('[restore] Berhasil mengambil data branch yang sudah di-restore');
+    
+    return restoredBranch;
+  } catch (error) {
+    console.error('[restore] Error saat melakukan restore branch:', error);
+    throw error;
+  }
+}
+
 module.exports = {
   getAllBranches,
   getBranchById,
@@ -173,5 +219,6 @@ module.exports = {
   deleteBranch,
   addRouterToBranch,
   ResultTypes,
-  DeletedFilterTypes
+  DeletedFilterTypes,
+  restore
 };

@@ -27,4 +27,7 @@ router.put('/branch/:id', validateUpdateBranch, branchController.updateBranch);
 // Route DELETE /api/infra/branch/:id
 router.delete('/branch/:id', validateBranchId, branchController.deleteBranch);
 
+// Route POST /api/infra/branch/:id/restore
+router.post('/branch/:id/restore', validateBranchId, branchController.restoreBranch);
+
 module.exports = router;

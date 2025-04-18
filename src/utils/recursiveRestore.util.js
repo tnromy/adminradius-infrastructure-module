@@ -551,10 +551,75 @@ async function restoreRouter(routerId) {
   }
 }
 
+/**
+ * Melakukan restore pada branch dan semua device di dalamnya
+ * @param {string} branchId - ID branch yang akan di-restore
+ * @returns {Promise<Object|null>} - Branch yang sudah di-restore atau null jika gagal
+ */
+async function restoreBranch(branchId) {
+  try {
+    console.log(`[restoreBranch] Mencoba restore branch dengan ID: ${branchId}`);
+    const collection = getCollection('branches');
+
+    // Cari branch yang memiliki deleted_at
+    const branch = await collection.findOne({ 
+      _id: new ObjectId(branchId),
+      deleted_at: { $exists: true }
+    });
+
+    if (!branch) {
+      console.log('[restoreBranch] Branch tidak ditemukan atau sudah di-restore');
+      return null;
+    }
+
+    // Simpan timestamp deleted_at untuk digunakan dalam restore device
+    const deletedAt = branch.deleted_at;
+    console.log(`[restoreBranch] Timestamp deleted_at branch: ${deletedAt}`);
+
+    // Restore branch dengan menghapus field deleted_at
+    const result = await collection.updateOne(
+      { _id: new ObjectId(branchId) },
+      {
+        $unset: { deleted_at: "" },
+        $set: { updatedAt: new Date() }
+      }
+    );
+
+    if (result.modifiedCount === 0) {
+      console.log('[restoreBranch] Gagal melakukan restore branch');
+      return null;
+    }
+
+    // Restore semua router yang memiliki deleted_at yang sama
+    if (branch.children && Array.isArray(branch.children)) {
+      for (let routerIndex = 0; routerIndex < branch.children.length; routerIndex++) {
+        const router = branch.children[routerIndex];
+        if (router.deleted_at && router.deleted_at.getTime() === deletedAt.getTime()) {
+          const routerId = router._id.toString();
+          console.log(`[restoreBranch] Mencoba restore router dengan ID: ${routerId}`);
+          
+          await restoreRouter(routerId);
+        }
+      }
+    }
+
+    // Ambil data branch yang sudah di-restore
+    const restoredBranch = await collection.findOne({ _id: new ObjectId(branchId) });
+    console.log('[restoreBranch] Branch dan semua device berhasil di-restore');
+    
+    return restoredBranch;
+  } catch (error) {
+    console.error('Error restoring branch:', error);
+    throw error;
+  }
+}
+
 module.exports = {
+  restoreDeviceAndChildren,
   restoreOnt,
   restoreOdp,
   restoreOdc,
   restoreOlt,
-  restoreRouter
+  restoreRouter,
+  restoreBranch
 }; 

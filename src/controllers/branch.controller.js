@@ -178,10 +178,61 @@ async function deleteBranch(req, res) {
   }
 }
 
+/**
+ * Melakukan restore pada branch yang sudah di-soft delete
+ * @param {Object} req - Request object
+ * @param {Object} res - Response object
+ */
+async function restoreBranch(req, res) {
+  try {
+    const { id } = req.params;
+    console.log(`[restoreBranch] Mencoba restore branch dengan ID: ${id}`);
+    
+    // Periksa status branch terlebih dahulu
+    const branch = await branchRepository.getBranchById(id, null, branchRepository.DeletedFilterTypes.ONLY);
+    console.log(`[restoreBranch] Status pencarian branch yang dihapus:`, branch ? 'Ditemukan' : 'Tidak ditemukan');
+    
+    if (!branch) {
+      console.log(`[restoreBranch] Branch dengan ID ${id} tidak ditemukan atau sudah di-restore`);
+      return res.status(404).json({
+        error: 'Branch not found or already restored'
+      });
+    }
+    
+    // Coba restore branch
+    console.log(`[restoreBranch] Mencoba melakukan restore branch`);
+    const result = await branchRepository.restore(id);
+    console.log(`[restoreBranch] Hasil restore:`, result ? 'Berhasil' : 'Gagal');
+    
+    if (!result) {
+      console.log(`[restoreBranch] Gagal melakukan restore branch`);
+      return res.status(404).json({
+        error: 'Failed to restore branch'
+      });
+    }
+    
+    // Dapatkan data branch yang sudah di-restore
+    console.log(`[restoreBranch] Mengambil data branch yang sudah di-restore`);
+    const restoredBranch = await branchRepository.getBranchById(id, null, branchRepository.DeletedFilterTypes.WITH);
+    console.log(`[restoreBranch] Data branch yang sudah di-restore:`, restoredBranch ? 'Ditemukan' : 'Tidak ditemukan');
+    
+    res.status(200).json({
+      message: 'Branch restored successfully',
+      data: restoredBranch
+    });
+  } catch (error) {
+    console.error('Error in restoreBranch controller:', error);
+    res.status(500).json({
+      error: 'Internal server error'
+    });
+  }
+}
+
 module.exports = {
   getAllBranches,
   getBranchById,
   createBranch,
   updateBranch,
-  deleteBranch
+  deleteBranch,
+  restoreBranch
 };
