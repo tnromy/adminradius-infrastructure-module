@@ -401,9 +401,160 @@ async function restoreOlt(oltId) {
   }
 }
 
+/**
+ * Melakukan restore pada Router dan semua OLT, ODC, ODP, serta ONT di dalamnya
+ * @param {string} routerId - ID Router yang akan di-restore
+ * @returns {Promise<Object|null>} - Router yang sudah di-restore atau null jika gagal
+ */
+async function restoreRouter(routerId) {
+  try {
+    console.log(`[restoreRouter] Mencoba restore Router dengan ID: ${routerId}`);
+    const collection = getCollection('branches');
+    
+    // Cari branch yang memiliki Router dengan ID yang sesuai
+    const branch = await collection.findOne({
+      'children._id': new ObjectId(routerId)
+    });
+    
+    if (!branch) {
+      console.log('[restoreRouter] Branch tidak ditemukan');
+      return null;
+    }
+    
+    // Cari Router dan dapatkan informasi lengkapnya
+    let routerIndex = -1;
+    let routerData = null;
+    let routerDeletedAt = null;
+    
+    for (let i = 0; i < branch.children.length; i++) {
+      const router = branch.children[i];
+      if (router._id.toString() === routerId.toString()) {
+        routerIndex = i;
+        routerData = router;
+        routerDeletedAt = router.deleted_at;
+        break;
+      }
+    }
+    
+    if (!routerData || !routerDeletedAt) {
+      console.log('[restoreRouter] Router tidak ditemukan atau tidak memiliki deleted_at');
+      return null;
+    }
+    
+    console.log(`[restoreRouter] Router ditemukan dengan deleted_at: ${routerDeletedAt}`);
+    
+    // Restore Router dengan menghapus deleted_at
+    const routerResult = await restoreDeviceAndChildren(
+      { _id: branch._id },
+      'router',
+      `children.${routerIndex}`,
+      routerDeletedAt
+    );
+    
+    if (!routerResult) {
+      console.log('[restoreRouter] Gagal melakukan restore Router');
+      return null;
+    }
+    
+    // Restore semua OLT yang memiliki deleted_at yang sama
+    if (routerData.children && Array.isArray(routerData.children)) {
+      for (let oltIndex = 0; oltIndex < routerData.children.length; oltIndex++) {
+        const olt = routerData.children[oltIndex];
+        
+        // Hanya restore OLT yang memiliki deleted_at yang sama dengan Router
+        if (olt.deleted_at && olt.deleted_at.getTime() === routerDeletedAt.getTime()) {
+          console.log(`[restoreRouter] Mencoba restore OLT di index ${oltIndex}`);
+          
+          // Restore OLT dan semua device di bawahnya
+          await restoreDeviceAndChildren(
+            { _id: branch._id },
+            'olt',
+            `children.${routerIndex}.children.${oltIndex}`,
+            routerDeletedAt
+          );
+          
+          // Restore ODCs
+          if (olt.pon_port && Array.isArray(olt.pon_port)) {
+            for (let ponPortIndex = 0; ponPortIndex < olt.pon_port.length; ponPortIndex++) {
+              const ponPort = olt.pon_port[ponPortIndex];
+              if (ponPort.children && Array.isArray(ponPort.children)) {
+                for (let odcIndex = 0; odcIndex < ponPort.children.length; odcIndex++) {
+                  const odc = ponPort.children[odcIndex];
+                  
+                  // Hanya restore ODC yang memiliki deleted_at yang sama
+                  if (odc.deleted_at && odc.deleted_at.getTime() === routerDeletedAt.getTime()) {
+                    console.log(`[restoreRouter] Mencoba restore ODC di port ${ponPortIndex}, index ${odcIndex}`);
+                    
+                    await restoreDeviceAndChildren(
+                      { _id: branch._id },
+                      'odc',
+                      `children.${routerIndex}.children.${oltIndex}.pon_port.${ponPortIndex}.children.${odcIndex}`,
+                      routerDeletedAt
+                    );
+                    
+                    // Restore ODPs
+                    if (odc.trays && Array.isArray(odc.trays)) {
+                      for (let trayIndex = 0; trayIndex < odc.trays.length; trayIndex++) {
+                        const tray = odc.trays[trayIndex];
+                        if (tray.children && Array.isArray(tray.children)) {
+                          for (let odpIndex = 0; odpIndex < tray.children.length; odpIndex++) {
+                            const odp = tray.children[odpIndex];
+                            
+                            // Hanya restore ODP yang memiliki deleted_at yang sama
+                            if (odp.deleted_at && odp.deleted_at.getTime() === routerDeletedAt.getTime()) {
+                              console.log(`[restoreRouter] Mencoba restore ODP di tray ${trayIndex}, index ${odpIndex}`);
+                              
+                              await restoreDeviceAndChildren(
+                                { _id: branch._id },
+                                'odp',
+                                `children.${routerIndex}.children.${oltIndex}.pon_port.${ponPortIndex}.children.${odcIndex}.trays.${trayIndex}.children.${odpIndex}`,
+                                routerDeletedAt
+                              );
+                              
+                              // Restore ONTs
+                              if (odp.children && Array.isArray(odp.children)) {
+                                for (let ontIndex = 0; ontIndex < odp.children.length; ontIndex++) {
+                                  const ont = odp.children[ontIndex];
+                                  
+                                  // Hanya restore ONT yang memiliki deleted_at yang sama
+                                  if (ont.deleted_at && ont.deleted_at.getTime() === routerDeletedAt.getTime()) {
+                                    console.log(`[restoreRouter] Mencoba restore ONT di index ${ontIndex}`);
+                                    
+                                    await restoreDeviceAndChildren(
+                                      { _id: branch._id },
+                                      'ont',
+                                      `children.${routerIndex}.children.${oltIndex}.pon_port.${ponPortIndex}.children.${odcIndex}.trays.${trayIndex}.children.${odpIndex}.children.${ontIndex}`,
+                                      routerDeletedAt
+                                    );
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    console.log('[restoreRouter] Router dan semua device di bawahnya berhasil di-restore');
+    return true;
+  } catch (error) {
+    console.error('Error in restoreRouter:', error);
+    throw error;
+  }
+}
+
 module.exports = {
   restoreOnt,
   restoreOdp,
   restoreOdc,
-  restoreOlt
+  restoreOlt,
+  restoreRouter
 }; 
