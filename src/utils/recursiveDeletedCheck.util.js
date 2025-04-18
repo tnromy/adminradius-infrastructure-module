@@ -25,9 +25,10 @@ function isMatchingDeletedFilter(obj, deletedFilter) {
  * Memeriksa dan memfilter children dari pon_port OLT
  * @param {Array} ponPorts - Array port dari OLT
  * @param {string} deletedFilter - Tipe filter yang digunakan
+ * @param {string} scopeLevel - Level scope data yang akan dikembalikan
  * @returns {Array} - Array port yang sudah difilter
  */
-function checkPonPorts(ponPorts, deletedFilter) {
+function checkPonPorts(ponPorts, deletedFilter, scopeLevel) {
   if (!ponPorts || !Array.isArray(ponPorts)) return [];
   
   return ponPorts
@@ -47,12 +48,24 @@ function checkPonPorts(ponPorts, deletedFilter) {
                 .map(tray => {
                   const trayCopy = { ...tray };
                   
+                  // Jika scopeLevel adalah ODCS, hapus children dari tray (yang berisi ODP)
+                  if (scopeLevel === 'ODCS') {
+                    delete trayCopy.children;
+                    return trayCopy;
+                  }
+                  
                   if (trayCopy.children && Array.isArray(trayCopy.children)) {
                     // Filter ODP
                     trayCopy.children = trayCopy.children
                       .filter(odp => isMatchingDeletedFilter(odp, deletedFilter))
                       .map(odp => {
                         const odpCopy = { ...odp };
+                        
+                        // Jika scopeLevel adalah ODPS, hapus children (ONT)
+                        if (scopeLevel === 'ODPS') {
+                          delete odpCopy.children;
+                          return odpCopy;
+                        }
                         
                         if (odpCopy.children && Array.isArray(odpCopy.children)) {
                           // Filter ONT
@@ -130,7 +143,7 @@ function recursiveDeletedCheck(branch, deletedFilter = DeletedFilterTypes.WITHOU
             
             // Proses pon_port dan children-nya (ODC, ODP, ONT)
             if (oltCopy.pon_port && Array.isArray(oltCopy.pon_port)) {
-              oltCopy.pon_port = checkPonPorts(oltCopy.pon_port, deletedFilter);
+              oltCopy.pon_port = checkPonPorts(oltCopy.pon_port, deletedFilter, scopeLevel);
             }
             
             return oltCopy;
