@@ -81,7 +81,10 @@ async function softDeleteOdp(odpInfo, deletedAt = new Date()) {
     
     // 1. Soft delete ODP
     const odpResult = await collection.updateOne(
-      { _id: branchId },
+      { 
+        _id: branchId,
+        [`children.${routerIndex}.children.${oltIndex}.pon_port.${ponPortIndex}.children.${odcIndex}.trays.${trayIndex}.children.${odpIndex}.deleted_at`]: { $exists: false }
+      },
       {
         $set: {
           [`children.${routerIndex}.children.${oltIndex}.pon_port.${ponPortIndex}.children.${odcIndex}.trays.${trayIndex}.children.${odpIndex}.deleted_at`]: deletedAt,
@@ -91,7 +94,7 @@ async function softDeleteOdp(odpInfo, deletedAt = new Date()) {
     );
     
     if (odpResult.modifiedCount === 0) {
-      console.log('[softDeleteOdp] Gagal melakukan soft delete pada ODP');
+      console.log('[softDeleteOdp] ODP sudah memiliki deleted_at atau tidak ditemukan');
       return false;
     }
     
@@ -114,23 +117,33 @@ async function softDeleteOdp(odpInfo, deletedAt = new Date()) {
       return false;
     }
     
-    // 3. Soft delete semua ONT yang ada di ODP
+    // 3. Soft delete hanya ONT yang belum memiliki deleted_at
     if (odp.children && Array.isArray(odp.children)) {
-      console.log(`[softDeleteOdp] Melakukan soft delete pada ${odp.children.length} ONT dengan timestamp yang sama`);
+      const ontsToUpdate = odp.children
+        .map((ont, idx) => ({ ont, idx }))
+        .filter(({ ont }) => !ont.deleted_at);
       
-      const ontUpdates = odp.children.map((ont, ontIndex) => {
-        return collection.updateOne(
-          { _id: branchId },
-          {
-            $set: {
-              [`children.${routerIndex}.children.${oltIndex}.pon_port.${ponPortIndex}.children.${odcIndex}.trays.${trayIndex}.children.${odpIndex}.children.${ontIndex}.deleted_at`]: deletedAt,
-              updatedAt: new Date()
+      console.log(`[softDeleteOdp] Ditemukan ${ontsToUpdate.length} ONT yang belum memiliki deleted_at dari total ${odp.children.length} ONT`);
+      
+      if (ontsToUpdate.length > 0) {
+        const ontUpdates = ontsToUpdate.map(({ idx }) => {
+          return collection.updateOne(
+            { 
+              _id: branchId,
+              [`children.${routerIndex}.children.${oltIndex}.pon_port.${ponPortIndex}.children.${odcIndex}.trays.${trayIndex}.children.${odpIndex}.children.${idx}.deleted_at`]: { $exists: false }
+            },
+            {
+              $set: {
+                [`children.${routerIndex}.children.${oltIndex}.pon_port.${ponPortIndex}.children.${odcIndex}.trays.${trayIndex}.children.${odpIndex}.children.${idx}.deleted_at`]: deletedAt,
+                updatedAt: new Date()
+              }
             }
-          }
-        );
-      });
-      
-      await Promise.all(ontUpdates);
+          );
+        });
+        
+        console.log(`[softDeleteOdp] Melakukan soft delete pada ${ontUpdates.length} ONT yang belum memiliki deleted_at`);
+        await Promise.all(ontUpdates);
+      }
     }
     
     return true;
