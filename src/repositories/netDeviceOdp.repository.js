@@ -7,6 +7,7 @@ const { createNetDeviceOntEntity } = require('../entities/netDeviceOnt.entity');
 const mongoose = require('mongoose');
 const { ObjectId } = mongoose.Types;
 const { DeletedFilterTypes } = require('./branch.repository');
+const { restoreOdp } = require('../utils/recursiveRestore.util');
 
 // Nama collection
 const COLLECTION = 'branches';
@@ -24,6 +25,8 @@ const ResultTypes = {
  */
 async function getOdpById(odpId, deletedFilter = DeletedFilterTypes.WITHOUT) {
   try {
+    console.log(`[getOdpById] Mencari ODP dengan ID: ${odpId}, filter: ${deletedFilter}`);
+    
     const branchCollection = getCollection('branches');
     const objectId = new ObjectId(odpId);
     
@@ -40,14 +43,20 @@ async function getOdpById(odpId, deletedFilter = DeletedFilterTypes.WITHOUT) {
     // Tambahkan filter deleted
     if (deletedFilter === DeletedFilterTypes.ONLY) {
       pipeline[0].$match['children.children.pon_port.children.trays.children.deleted_at'] = { $exists: true };
+      console.log('[getOdpById] Menambahkan filter ONLY - mencari yang memiliki deleted_at');
     } else if (deletedFilter === DeletedFilterTypes.WITHOUT) {
       pipeline[0].$match['children.children.pon_port.children.trays.children.deleted_at'] = { $exists: false };
+      console.log('[getOdpById] Menambahkan filter WITHOUT - mencari yang tidak memiliki deleted_at');
     }
+    
+    console.log('[getOdpById] Query MongoDB:', JSON.stringify(pipeline, null, 2));
     
     // Eksekusi query untuk mendapatkan branch
     const branches = await branchCollection.aggregate(pipeline).toArray();
+    console.log(`[getOdpById] Jumlah branches ditemukan: ${branches.length}`);
     
     if (!branches || branches.length === 0) {
+      console.log('[getOdpById] Tidak ada branch yang ditemukan');
       return null;
     }
     
@@ -88,6 +97,18 @@ async function getOdpById(odpId, deletedFilter = DeletedFilterTypes.WITHOUT) {
                           const odp = tray.children[n];
                           
                           if (odp._id.toString() === odpId.toString()) {
+                            console.log(`[getOdpById] ODP ditemukan dengan deleted_at: ${odp.deleted_at || 'tidak ada'}`);
+                            
+                            // Periksa filter
+                            if (deletedFilter === DeletedFilterTypes.ONLY && !odp.deleted_at) {
+                              console.log('[getOdpById] ODP tidak memiliki deleted_at, tapi filter ONLY');
+                              continue;
+                            }
+                            if (deletedFilter === DeletedFilterTypes.WITHOUT && odp.deleted_at) {
+                              console.log('[getOdpById] ODP memiliki deleted_at, tapi filter WITHOUT');
+                              continue;
+                            }
+                            
                             routerIndex = i;
                             oltIndex = j;
                             ponPortIndex = k;
@@ -111,8 +132,11 @@ async function getOdpById(odpId, deletedFilter = DeletedFilterTypes.WITHOUT) {
     
     // Jika ODP tidak ditemukan
     if (!odpData) {
+      console.log('[getOdpById] ODP tidak ditemukan atau tidak memenuhi filter');
       return null;
     }
+    
+    console.log('[getOdpById] ODP berhasil ditemukan dan memenuhi filter');
     
     // Return objek dengan data ODP dan indeksnya
     return {
@@ -232,9 +256,40 @@ async function addOntToOdp(odpId, ontData) {
   }
 }
 
+/**
+ * Melakukan restore pada ODP yang telah di-soft delete
+ * @param {string} odpId - ID ODP yang akan di-restore
+ * @returns {Promise<Object|null>} - Hasil restore atau null jika ODP tidak ditemukan/tidak bisa di-restore
+ */
+async function restore(odpId) {
+  try {
+    console.log(`[restore] Mencoba restore ODP dengan ID: ${odpId}`);
+    
+    // Cari ODP yang memiliki deleted_at
+    const odpInfo = await getOdpById(odpId, DeletedFilterTypes.ONLY);
+    console.log(`[restore] Status pencarian ODP yang dihapus:`, odpInfo);
+    
+    if (!odpInfo || !odpInfo.odp) {
+      console.log('[restore] ODP tidak ditemukan atau sudah di-restore');
+      return null;
+    }
+    
+    // Lakukan restore
+    console.log('[restore] Memanggil fungsi restoreOdp');
+    const result = await restoreOdp(odpId);
+    console.log(`[restore] Hasil restore:`, result);
+    
+    return result;
+  } catch (error) {
+    console.error('Error in ODP repository - restore:', error);
+    throw error;
+  }
+}
+
 module.exports = {
   getOdpById,
   getOdpDetailById,
   addOntToOdp,
-  ResultTypes
+  ResultTypes,
+  restore
 }; 

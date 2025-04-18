@@ -49,6 +49,9 @@ router.delete('/ont/:ont_id', netDeviceOntController.deleteOnt);
 // Route POST /api/infra/ont/:ont_id/restore
 router.post('/ont/:ont_id/restore', netDeviceOntController.restoreOnt);
 
+// Route POST /api/infra/odp/:odp_id/restore
+router.post('/odp/:odp_id/restore', netDeviceOdpController.restoreOdp);
+
 // Route POST /api/infra/branch/:branch_id/router
 router.post('/branch/:branch_id/router', validateAddRouter, netDeviceRouterController.addRouterToBranch);
 

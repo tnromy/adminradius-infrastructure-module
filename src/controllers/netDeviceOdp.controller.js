@@ -147,8 +147,59 @@ async function deleteOdp(req, res) {
   }
 }
 
+/**
+ * Melakukan restore pada ODP yang sudah di-soft delete
+ * @param {Object} req - Request object
+ * @param {Object} res - Response object
+ */
+async function restoreOdp(req, res) {
+  try {
+    const { odp_id } = req.params;
+    console.log(`[restoreOdp] Mencoba restore ODP dengan ID: ${odp_id}`);
+    
+    // Periksa status ODP terlebih dahulu
+    const odpInfo = await odpRepository.getOdpById(odp_id, branchRepository.DeletedFilterTypes.ONLY);
+    console.log(`[restoreOdp] Status pencarian ODP yang dihapus:`, odpInfo);
+    
+    if (!odpInfo || !odpInfo.odp) {
+      console.log(`[restoreOdp] ODP dengan ID ${odp_id} tidak ditemukan atau sudah di-restore`);
+      return res.status(404).json({
+        error: 'ODP not found or already restored'
+      });
+    }
+    
+    // Coba restore ODP
+    console.log(`[restoreOdp] Mencoba melakukan restore ODP`);
+    const result = await odpRepository.restore(odp_id);
+    console.log(`[restoreOdp] Hasil restore:`, result);
+    
+    if (!result) {
+      console.log(`[restoreOdp] Gagal melakukan restore ODP`);
+      return res.status(404).json({
+        error: 'Failed to restore ODP'
+      });
+    }
+    
+    // Dapatkan data ODP yang sudah di-restore
+    console.log(`[restoreOdp] Mengambil data ODP yang sudah di-restore`);
+    const restoredOdp = await odpRepository.getOdpById(odp_id, branchRepository.DeletedFilterTypes.WITHOUT);
+    console.log(`[restoreOdp] Data ODP yang sudah di-restore:`, restoredOdp);
+    
+    res.status(200).json({
+      message: 'ODP restored successfully',
+      data: restoredOdp
+    });
+  } catch (error) {
+    console.error('Error in restoreOdp controller:', error);
+    res.status(500).json({
+      error: 'Internal server error'
+    });
+  }
+}
+
 module.exports = {
   getOdpById,
   addOdpToOdc,
-  deleteOdp
+  deleteOdp,
+  restoreOdp
 }; 

@@ -7,6 +7,7 @@ const { createNetDeviceOdpEntity } = require('../entities/netDeviceOdp.entity');
 const mongoose = require('mongoose');
 const { ObjectId } = mongoose.Types;
 const { DeletedFilterTypes } = require('./branch.repository');
+const { restoreOdc } = require('../utils/recursiveRestore.util');
 
 // Nama collection
 const COLLECTION = 'branches';
@@ -250,9 +251,25 @@ async function addOdpToOdc(odcId, odpData) {
   }
 }
 
+/**
+ * Melakukan restore pada ODC yang telah di-soft delete
+ * @param {string} odcId - ID ODC yang akan di-restore
+ * @returns {Promise<Object|null>} - Hasil restore atau null jika ODC tidak ditemukan/tidak bisa di-restore
+ */
+async function restore(odcId) {
+  try {
+    const result = await restoreOdc(odcId);
+    return result;
+  } catch (error) {
+    console.error('Error in ODC repository - restore:', error);
+    throw error;
+  }
+}
+
 module.exports = {
   getOdcById,
   getOdcDetailById,
   addOdpToOdc,
-  ResultTypes
+  ResultTypes,
+  restore
 }; 
