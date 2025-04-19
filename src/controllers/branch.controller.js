@@ -4,6 +4,8 @@
 
 const branchRepository = require('../repositories/branch.repository');
 const { validateBranchEntity } = require('../entities/branch.entity');
+const { logDebug, logError, logInfo, logWarn, createErrorResponse } = require('../services/logger.service');
+const { getRequestContext } = require('../services/requestContext.service');
 
 /**
  * Mendapatkan semua branches
@@ -12,38 +14,69 @@ const { validateBranchEntity } = require('../entities/branch.entity');
  */
 async function getAllBranches(req, res) {
   try {
-    console.log(`[getAllBranches] Menerima request dengan query:`, req.query);
+    const context = getRequestContext();
+    logDebug('Menerima request getAllBranches', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      query: req.query,
+      userRoles: context.getUserRoles().map(r => r.name)
+    });
     
-    // Ambil parameter scope_level dari query
     const { scope_level, deleted } = req.query;
     
-    // Validasi parameter scope_level jika ada
     if (scope_level && !Object.values(branchRepository.ResultTypes).includes(scope_level)) {
-      console.log(`[getAllBranches] Invalid scope_level: ${scope_level}`);
-      return res.status(400).json({
-        error: 'Invalid scope_level type',
-        valid_values: Object.values(branchRepository.ResultTypes)
+      logWarn('Invalid scope_level parameter', {
+        requestId: context.getRequestId(),
+        userId: context.getUserId(),
+        invalidValue: scope_level,
+        validValues: Object.values(branchRepository.ResultTypes)
       });
+      return res.status(400).json(createErrorResponse(
+        400,
+        'Invalid scope_level type',
+        { valid_values: Object.values(branchRepository.ResultTypes) }
+      ));
     }
     
-    // Tentukan filter deleted (defaultnya WITHOUT)
     let deletedFilter = branchRepository.DeletedFilterTypes.WITHOUT;
     if (deleted && Object.values(branchRepository.DeletedFilterTypes).includes(deleted)) {
       deletedFilter = deleted;
     }
-    console.log(`[getAllBranches] Menggunakan filter: scope_level=${scope_level || 'default'}, deleted=${deletedFilter}`);
+
+    logDebug('Mengambil data branches', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      filters: {
+        scope_level: scope_level || 'default',
+        deleted: deletedFilter
+      }
+    });
     
     const branches = await branchRepository.getAllBranches(scope_level, deletedFilter);
-    console.log(`[getAllBranches] Berhasil mengambil ${branches.length} branches`);
+    
+    logInfo('Berhasil mengambil data branches', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      count: branches.length,
+      scope_level: scope_level || 'default',
+      deleted: deletedFilter
+    });
     
     res.status(200).json({
       data: branches
     });
   } catch (error) {
-    console.error('[getAllBranches] Error:', error);
-    res.status(500).json({
-      error: 'Internal server error'
+    logError('Error pada getAllBranches', {
+      requestId: getRequestContext().getRequestId(),
+      error: error.message,
+      stack: error.stack,
+      userId: getRequestContext().getUserId()
     });
+    res.status(500).json(createErrorResponse(
+      500,
+      'Internal server error',
+      error
+    ));
   }
 }
 

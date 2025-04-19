@@ -13,6 +13,7 @@ class RequestContext {
   constructor() {
     this.userId = null;
     this.userRoles = [];
+    this.requestId = null;
   }
 
   /**
@@ -32,6 +33,14 @@ class RequestContext {
   }
 
   /**
+   * Set request ID
+   * @param {string} requestId - Request ID
+   */
+  setRequestId(requestId) {
+    this.requestId = requestId;
+  }
+
+  /**
    * Get user ID
    * @returns {string} User ID
    */
@@ -45,6 +54,14 @@ class RequestContext {
    */
   getUserRoles() {
     return this.userRoles;
+  }
+
+  /**
+   * Get request ID
+   * @returns {string} Request ID
+   */
+  getRequestId() {
+    return this.requestId;
   }
 }
 

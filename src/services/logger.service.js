@@ -76,18 +76,24 @@ const logTrace = (message, additionalInfo) => createLogEntry('trace', message, a
 function requestLoggingMiddleware(req, res, next) {
   const requestId = generateUUID();
   const context = getRequestContext();
-  context.requestId = requestId;
+  
+  // Set request ID ke context
+  context.setRequestId(requestId);
+  
+  // Tambahkan request ID ke response header
+  res.setHeader('X-Request-ID', requestId);
   
   const startTime = Date.now();
   
   // Log request
-  logHttp(`Incoming ${req.method} request to ${req.url}`, {
+  logHttp('Incoming request', {
+    requestId,
     method: req.method,
     url: req.url,
     headers: req.headers,
     query: req.query,
     body: req.body,
-    ip: req.ip,
+    ip: req.ip || req.connection.remoteAddress,
     userAgent: req.get('user-agent')
   });
 
@@ -97,7 +103,8 @@ function requestLoggingMiddleware(req, res, next) {
     const responseTime = Date.now() - startTime;
     
     // Log response
-    logHttp(`Response sent for ${req.method} ${req.url}`, {
+    logHttp('Response sent', {
+      requestId,
       method: req.method,
       url: req.url,
       statusCode: res.statusCode,
@@ -111,6 +118,23 @@ function requestLoggingMiddleware(req, res, next) {
   next();
 }
 
+// Helper untuk membuat error response yang konsisten
+function createErrorResponse(status, message, error = null) {
+  const context = getRequestContext();
+  const requestId = context.getRequestId();
+  
+  const response = {
+    error: message,
+    request_id: requestId
+  };
+
+  if (error && process.env.NODE_ENV !== 'production') {
+    response.details = error.message;
+  }
+
+  return response;
+}
+
 module.exports = {
   logger,
   logError,
@@ -119,5 +143,6 @@ module.exports = {
   logHttp,
   logDebug,
   logTrace,
-  requestLoggingMiddleware
+  requestLoggingMiddleware,
+  createErrorResponse
 }; 

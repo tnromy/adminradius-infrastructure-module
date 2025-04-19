@@ -8,6 +8,7 @@ const { createNetDeviceRouterEntity } = require('../entities/netDeviceRouter.ent
 const mongoose = require('mongoose');
 const { ObjectId } = mongoose.Types;
 const { recursiveDeletedCheck, DeletedFilterTypes } = require('../utils/recursiveDeletedCheck.util');
+const { logDebug, logError, logTrace } = require('../services/logger.service');
 
 // Nama collection
 const COLLECTION = 'branches';
@@ -30,17 +31,40 @@ const ResultTypes = {
  */
 async function getAllBranches(scopeLevel = null, deletedFilter = DeletedFilterTypes.WITHOUT) {
   try {
+    logDebug('Memulai query getAllBranches', {
+      scopeLevel,
+      deletedFilter
+    });
+
     const collection = getCollection(COLLECTION);
+    const startTime = Date.now();
     const branches = await collection.find({}).toArray();
     
-    // Terapkan recursive deleted check pada setiap branch
+    logTrace('Query database selesai', {
+      executionTime: Date.now() - startTime,
+      resultCount: branches.length
+    });
+    
     const filteredBranches = branches
       .map(branch => recursiveDeletedCheck(branch, deletedFilter, scopeLevel))
       .filter(branch => branch !== null);
     
+    logDebug('Filtering branches selesai', {
+      originalCount: branches.length,
+      filteredCount: filteredBranches.length,
+      filters: {
+        scopeLevel,
+        deletedFilter
+      }
+    });
+
     return filteredBranches;
   } catch (error) {
-    console.error('Error getting all branches:', error);
+    logError('Error pada getAllBranches repository', {
+      error: error.message,
+      stack: error.stack,
+      collection: COLLECTION
+    });
     throw error;
   }
 }

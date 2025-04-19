@@ -9,9 +9,18 @@ const config = require('../config/app.config');
 const { initializeJwks } = require('./services/jwks.service');
 const { initializeRequestContext } = require('./services/requestContext.service');
 const { requestLoggingMiddleware, logError, logInfo } = require('./services/logger.service');
+const jwksClient = require('jwks-rsa');
 
 // Inisialisasi aplikasi Express
 const app = express();
+
+// Inisialisasi JWKS client global
+global.JWKS_CLIENT = jwksClient({
+  jwksUri: config.auth.jwksUrl,
+  cache: true,
+  rateLimit: true,
+  jwksRequestsPerMinute: 5
+});
 
 // Middleware
 app.use(express.json());

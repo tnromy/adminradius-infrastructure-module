@@ -12,11 +12,12 @@ const {
 } = require('../validations/branch.validation');
 const { validateDeletedParam, validateScopeLevelParam } = require('../validations/validation.middleware');
 const { authenticateJWT, authorizeRoles } = require('../middlewares/auth.middleware');
+const config = require('../../config/app.config');
 
 // Route GET /api/infra/branches
 router.get('/branches', 
   authenticateJWT,
-  authorizeRoles,
+  authorizeRoles(config.auth.allowedRoles),
   validateDeletedParam, 
   validateScopeLevelParam, 
   branchController.getAllBranches
@@ -25,7 +26,7 @@ router.get('/branches',
 // Route GET /api/infra/branch/:id
 router.get('/branch/:id', 
   authenticateJWT,
-  authorizeRoles,
+  authorizeRoles(config.auth.allowedRoles),
   validateBranchId, 
   validateDeletedParam, 
   validateScopeLevelParam, 
@@ -35,7 +36,7 @@ router.get('/branch/:id',
 // Route POST /api/infra/branch
 router.post('/branch', 
   authenticateJWT,
-  authorizeRoles,
+  authorizeRoles(config.auth.allowedRoles),
   validateCreateBranch, 
   branchController.createBranch
 );
@@ -43,7 +44,7 @@ router.post('/branch',
 // Route PUT /api/infra/branch/:id
 router.put('/branch/:id', 
   authenticateJWT,
-  authorizeRoles,
+  authorizeRoles(config.auth.allowedRoles),
   validateUpdateBranch, 
   branchController.updateBranch
 );
@@ -51,7 +52,7 @@ router.put('/branch/:id',
 // Route DELETE /api/infra/branch/:id
 router.delete('/branch/:id', 
   authenticateJWT,
-  authorizeRoles,
+  authorizeRoles(config.auth.allowedRoles),
   validateBranchId, 
   branchController.deleteBranch
 );
@@ -59,7 +60,7 @@ router.delete('/branch/:id',
 // Route POST /api/infra/branch/:id/restore
 router.post('/branch/:id/restore', 
   authenticateJWT,
-  authorizeRoles,
+  authorizeRoles(config.auth.allowedRoles),
   validateBranchId, 
   branchController.restoreBranch
 );
