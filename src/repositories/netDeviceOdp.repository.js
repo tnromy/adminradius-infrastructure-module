@@ -25,7 +25,16 @@ const ResultTypes = {
  */
 async function getOdpById(odpId, deletedFilter = DeletedFilterTypes.WITHOUT) {
   try {
-    console.log(`[getOdpById] Mencari ODP dengan ID: ${odpId}, filter: ${deletedFilter}`);
+    const { logDebug, logInfo, logWarn, logError } = require('../services/logger.service');
+    const { getRequestContext } = require('../services/requestContext.service');
+    const context = getRequestContext();
+    
+    logDebug(`Mencari ODP dengan ID: ${odpId}, filter: ${deletedFilter}`, {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      odpId: odpId,
+      filter: deletedFilter
+    });
     
     const branchCollection = getCollection('branches');
     const objectId = new ObjectId(odpId);
@@ -43,20 +52,42 @@ async function getOdpById(odpId, deletedFilter = DeletedFilterTypes.WITHOUT) {
     // Tambahkan filter deleted
     if (deletedFilter === DeletedFilterTypes.ONLY) {
       pipeline[0].$match['children.children.pon_port.children.trays.children.deleted_at'] = { $exists: true };
-      console.log('[getOdpById] Menambahkan filter ONLY - mencari yang memiliki deleted_at');
+      logDebug('Menambahkan filter ONLY - mencari yang memiliki deleted_at', {
+        requestId: context.getRequestId(),
+        userId: context.getUserId(),
+        odpId: odpId
+      });
     } else if (deletedFilter === DeletedFilterTypes.WITHOUT) {
       pipeline[0].$match['children.children.pon_port.children.trays.children.deleted_at'] = { $exists: false };
-      console.log('[getOdpById] Menambahkan filter WITHOUT - mencari yang tidak memiliki deleted_at');
+      logDebug('Menambahkan filter WITHOUT - mencari yang tidak memiliki deleted_at', {
+        requestId: context.getRequestId(),
+        userId: context.getUserId(),
+        odpId: odpId
+      });
     }
     
-    console.log('[getOdpById] Query MongoDB:', JSON.stringify(pipeline, null, 2));
+    logDebug('Query MongoDB untuk mencari ODP', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      odpId: odpId,
+      pipeline: JSON.stringify(pipeline)
+    });
     
     // Eksekusi query untuk mendapatkan branch
     const branches = await branchCollection.aggregate(pipeline).toArray();
-    console.log(`[getOdpById] Jumlah branches ditemukan: ${branches.length}`);
+    logDebug(`Jumlah branches ditemukan: ${branches.length}`, {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      odpId: odpId,
+      branchCount: branches.length
+    });
     
     if (!branches || branches.length === 0) {
-      console.log('[getOdpById] Tidak ada branch yang ditemukan');
+      logWarn('Tidak ada branch yang ditemukan untuk ODP', {
+        requestId: context.getRequestId(),
+        userId: context.getUserId(),
+        odpId: odpId
+      });
       return null;
     }
     
@@ -97,15 +128,28 @@ async function getOdpById(odpId, deletedFilter = DeletedFilterTypes.WITHOUT) {
                           const odp = tray.children[n];
                           
                           if (odp._id.toString() === odpId.toString()) {
-                            console.log(`[getOdpById] ODP ditemukan dengan deleted_at: ${odp.deleted_at || 'tidak ada'}`);
+                            logDebug(`ODP ditemukan dengan deleted_at: ${odp.deleted_at || 'tidak ada'}`, {
+                              requestId: context.getRequestId(),
+                              userId: context.getUserId(),
+                              odpId: odpId,
+                              hasDeletedAt: !!odp.deleted_at
+                            });
                             
                             // Periksa filter
                             if (deletedFilter === DeletedFilterTypes.ONLY && !odp.deleted_at) {
-                              console.log('[getOdpById] ODP tidak memiliki deleted_at, tapi filter ONLY');
+                              logDebug('ODP tidak memiliki deleted_at, tapi filter ONLY', {
+                                requestId: context.getRequestId(),
+                                userId: context.getUserId(),
+                                odpId: odpId
+                              });
                               continue;
                             }
                             if (deletedFilter === DeletedFilterTypes.WITHOUT && odp.deleted_at) {
-                              console.log('[getOdpById] ODP memiliki deleted_at, tapi filter WITHOUT');
+                              logDebug('ODP memiliki deleted_at, tapi filter WITHOUT', {
+                                requestId: context.getRequestId(),
+                                userId: context.getUserId(),
+                                odpId: odpId
+                              });
                               continue;
                             }
                             
@@ -132,11 +176,22 @@ async function getOdpById(odpId, deletedFilter = DeletedFilterTypes.WITHOUT) {
     
     // Jika ODP tidak ditemukan
     if (!odpData) {
-      console.log('[getOdpById] ODP tidak ditemukan atau tidak memenuhi filter');
+      logWarn('ODP tidak ditemukan atau tidak memenuhi filter', {
+        requestId: context.getRequestId(),
+        userId: context.getUserId(),
+        odpId: odpId,
+        filter: deletedFilter
+      });
       return null;
     }
     
-    console.log('[getOdpById] ODP berhasil ditemukan dan memenuhi filter');
+    logInfo('ODP berhasil ditemukan dan memenuhi filter', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      odpId: odpId,
+      filter: deletedFilter,
+      odpLabel: odpData.label || 'unknown'
+    });
     
     // Return objek dengan data ODP dan indeksnya
     return {
@@ -150,7 +205,17 @@ async function getOdpById(odpId, deletedFilter = DeletedFilterTypes.WITHOUT) {
       odpIndex
     };
   } catch (error) {
-    console.error('Error getting ODP by ID:', error);
+    const { logError } = require('../services/logger.service');
+    const { getRequestContext } = require('../services/requestContext.service');
+    
+    logError('Error getting ODP by ID:', {
+      requestId: getRequestContext().getRequestId(),
+      userId: getRequestContext().getUserId(),
+      odpId: odpId,
+      error: error.message,
+      stack: error.stack
+    });
+    
     throw error;
   }
 }
@@ -163,9 +228,25 @@ async function getOdpById(odpId, deletedFilter = DeletedFilterTypes.WITHOUT) {
  */
 async function getOdpDetailById(odpId, resultType = null) {
   try {
+    const { logDebug, logInfo, logError } = require('../services/logger.service');
+    const { getRequestContext } = require('../services/requestContext.service');
+    const context = getRequestContext();
+    
+    logDebug(`Mencari detail ODP dengan ID: ${odpId}, result type: ${resultType || 'default'}`, {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      odpId: odpId,
+      resultType: resultType || 'default'
+    });
+    
     const odpInfo = await getOdpById(odpId);
     
     if (!odpInfo || !odpInfo.odp) {
+      logDebug(`ODP dengan ID ${odpId} tidak ditemukan`, {
+        requestId: context.getRequestId(),
+        userId: context.getUserId(),
+        odpId: odpId
+      });
       return null;
     }
     
@@ -174,6 +255,12 @@ async function getOdpDetailById(odpId, resultType = null) {
     
     // Jika resultType tidak dispesifikasikan, kembalikan data lengkap seperti biasa
     if (!resultType || !Object.values(ResultTypes).includes(resultType)) {
+      logDebug(`Mengembalikan data ODP lengkap dengan ID: ${odpId}`, {
+        requestId: context.getRequestId(),
+        userId: context.getUserId(),
+        odpId: odpId,
+        odpLabel: odp.label || 'unknown'
+      });
       return odpInfo;
     }
     
@@ -182,6 +269,14 @@ async function getOdpDetailById(odpId, resultType = null) {
     
     // ODPS: Hapus children dari ODP
     if (resultType === ResultTypes.ODPS) {
+      logDebug(`Mengembalikan data ODP yang difilter (tanpa ONT children) untuk ID: ${odpId}`, {
+        requestId: context.getRequestId(),
+        userId: context.getUserId(),
+        odpId: odpId,
+        odpLabel: odp.label || 'unknown',
+        resultType: resultType
+      });
+      
       delete odpCopy.children;
       return {
         ...odpInfo,
@@ -191,7 +286,18 @@ async function getOdpDetailById(odpId, resultType = null) {
     
     return odpInfo;
   } catch (error) {
-    console.error(`Error getting ODP detail with ID ${odpId}:`, error);
+    const { logError } = require('../services/logger.service');
+    const { getRequestContext } = require('../services/requestContext.service');
+    
+    logError(`Error getting ODP detail with ID ${odpId}:`, {
+      requestId: getRequestContext().getRequestId(),
+      userId: getRequestContext().getUserId(),
+      odpId: odpId,
+      resultType: resultType || 'default',
+      error: error.message,
+      stack: error.stack
+    });
+    
     throw error;
   }
 }
@@ -204,11 +310,27 @@ async function getOdpDetailById(odpId, resultType = null) {
  */
 async function addOntToOdp(odpId, ontData) {
   try {
+    const { logDebug, logInfo, logWarn, logError } = require('../services/logger.service');
+    const { getRequestContext } = require('../services/requestContext.service');
+    const context = getRequestContext();
+    
     const collection = getCollection(COLLECTION);
+    
+    logDebug(`Memulai proses penambahan ONT ke ODP`, {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      odpId: odpId,
+      ontLabel: ontData.label
+    });
     
     // Dapatkan informasi ODP
     const odpInfo = await getOdpById(odpId);
     if (!odpInfo || !odpInfo.odp) {
+      logWarn(`ODP tidak ditemukan untuk penambahan ONT`, {
+        requestId: context.getRequestId(),
+        userId: context.getUserId(),
+        odpId: odpId
+      });
       return null;
     }
     
@@ -221,8 +343,26 @@ async function addOntToOdp(odpId, ontData) {
     const maxAvailablePort = odp.available_port || 0;
     const currentOntCount = odp.children ? odp.children.length : 0;
     
+    logDebug(`Validasi kapasitas port ODP untuk ONT baru`, {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      odpId: odpId,
+      odpLabel: odp.label || 'unknown',
+      maxAvailablePort: maxAvailablePort,
+      currentOntCount: currentOntCount
+    });
+    
     if (currentOntCount >= maxAvailablePort) {
-      throw new Error(`ODP port capacity exceeded. Maximum port: ${maxAvailablePort}, current ONT count: ${currentOntCount}`);
+      const errorMsg = `ODP port capacity exceeded. Maximum port: ${maxAvailablePort}, current ONT count: ${currentOntCount}`;
+      logWarn(errorMsg, {
+        requestId: context.getRequestId(),
+        userId: context.getUserId(),
+        odpId: odpId,
+        odpLabel: odp.label || 'unknown',
+        maxAvailablePort: maxAvailablePort,
+        currentOntCount: currentOntCount
+      });
+      throw new Error(errorMsg);
     }
 
     // Buat entity ONT dengan ObjectId baru
@@ -235,6 +375,15 @@ async function addOntToOdp(odpId, ontData) {
     // Path untuk update
     const odpPath = `children.${routerIndex}.children.${oltIndex}.pon_port.${ponPortIndex}.children.${odcIndex}.trays.${trayIndex}.children.${odpIndex}.children`;
     
+    logDebug(`Menambahkan ONT ke ODP menggunakan path: ${odpPath}`, {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      odpId: odpId,
+      odpLabel: odp.label || 'unknown',
+      branchId: branchId.toString(),
+      ontId: ontId.toString()
+    });
+    
     // Update branch, tambahkan ONT ke ODP
     const result = await collection.updateOne(
       { _id: branchId },
@@ -245,13 +394,38 @@ async function addOntToOdp(odpId, ontData) {
     );
     
     if (result.matchedCount === 0) {
+      logWarn(`Gagal menambahkan ONT ke ODP, branch tidak ditemukan`, {
+        requestId: context.getRequestId(),
+        userId: context.getUserId(),
+        odpId: odpId,
+        branchId: branchId.toString()
+      });
       return null;
     }
     
-    // Dapatkan ODP yang sudah diupdate
+    logInfo(`ONT berhasil ditambahkan ke ODP`, {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      odpId: odpId,
+      odpLabel: odp.label || 'unknown',
+      ontId: ontId.toString(),
+      ontLabel: ont.label
+    });
+    
+    // Dapatkan data ODP yang telah diupdate
     return getOdpById(odpId);
   } catch (error) {
-    console.error(`Error adding ONT to ODP with ID ${odpId}:`, error);
+    const { logError } = require('../services/logger.service');
+    const { getRequestContext } = require('../services/requestContext.service');
+    
+    logError(`Error in addOntToOdp:`, {
+      requestId: getRequestContext().getRequestId(),
+      userId: getRequestContext().getUserId(),
+      odpId: odpId,
+      error: error.message,
+      stack: error.stack
+    });
+    
     throw error;
   }
 }
@@ -263,25 +437,58 @@ async function addOntToOdp(odpId, ontData) {
  */
 async function restore(odpId) {
   try {
-    console.log(`[restore] Mencoba restore ODP dengan ID: ${odpId}`);
+    const { logDebug, logInfo, logError } = require('../services/logger.service');
+    const { getRequestContext } = require('../services/requestContext.service');
+    const context = getRequestContext();
+    
+    logDebug(`Mencoba restore ODP dengan ID: ${odpId}`, {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      odpId: odpId
+    });
     
     // Cari ODP yang memiliki deleted_at
     const odpInfo = await getOdpById(odpId, DeletedFilterTypes.ONLY);
-    console.log(`[restore] Status pencarian ODP yang dihapus:`, odpInfo);
     
     if (!odpInfo || !odpInfo.odp) {
-      console.log('[restore] ODP tidak ditemukan atau sudah di-restore');
+      logDebug('ODP tidak ditemukan atau sudah di-restore', {
+        requestId: context.getRequestId(),
+        userId: context.getUserId(),
+        odpId: odpId
+      });
       return null;
     }
     
     // Lakukan restore
-    console.log('[restore] Memanggil fungsi restoreOdp');
+    logDebug('Memanggil fungsi restoreOdp', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      odpId: odpId,
+      odpLabel: odpInfo.odp.label || 'unknown'
+    });
+    
     const result = await restoreOdp(odpId);
-    console.log(`[restore] Hasil restore:`, result);
+    
+    logInfo(`ODP berhasil di-restore`, {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      odpId: odpId,
+      hasil: !!result
+    });
     
     return result;
   } catch (error) {
-    console.error('Error in ODP repository - restore:', error);
+    const { logError } = require('../services/logger.service');
+    const { getRequestContext } = require('../services/requestContext.service');
+    
+    logError('Error in ODP repository - restore:', {
+      requestId: getRequestContext().getRequestId(),
+      userId: getRequestContext().getUserId(),
+      odpId: odpId,
+      error: error.message,
+      stack: error.stack
+    });
+    
     throw error;
   }
 }
