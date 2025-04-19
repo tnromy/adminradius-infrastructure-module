@@ -6,6 +6,8 @@ const oltRepository = require('../repositories/netDeviceOlt.repository');
 const odcRepository = require('../repositories/netDeviceOdc.repository');
 const branchRepository = require('../repositories/branch.repository'); // Untuk DeletedFilterTypes
 const { softDeleteOdc } = require('../utils/recursiveSoftDelete.util');
+const { logDebug, logError, logInfo, logWarn, createErrorResponse } = require('../services/logger.service');
+const { getRequestContext } = require('../services/requestContext.service');
 
 /**
  * Mendapatkan ODC berdasarkan ID
@@ -14,7 +16,17 @@ const { softDeleteOdc } = require('../utils/recursiveSoftDelete.util');
  */
 async function getOdcById(req, res) {
   try {
+    const context = getRequestContext();
     const { odc_id } = req.params;
+    
+    logDebug('Menerima request getOdcById', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      odcId: odc_id,
+      query: req.query,
+      userRoles: context.getUserRoles().map(r => r.name)
+    });
+    
     // Ambil parameter dari query
     const { deleted } = req.query;
     
@@ -24,22 +36,57 @@ async function getOdcById(req, res) {
       deletedFilter = deleted;
     }
     
+    logDebug('Mengambil data ODC by ID', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      odcId: odc_id,
+      filters: {
+        deleted: deletedFilter
+      }
+    });
+    
     const odc = await odcRepository.getOdcById(odc_id, deletedFilter);
     
     if (!odc) {
-      return res.status(404).json({
-        error: 'ODC not found'
+      logWarn('ODC tidak ditemukan', {
+        requestId: context.getRequestId(),
+        userId: context.getUserId(),
+        odcId: odc_id,
+        filters: {
+          deleted: deletedFilter
+        }
       });
+      
+      return res.status(404).json(createErrorResponse(
+        404,
+        'ODC not found'
+      ));
     }
+    
+    logInfo('Berhasil mengambil data ODC by ID', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      odcId: odc_id,
+      deleted: deletedFilter
+    });
     
     res.status(200).json({
       data: odc
     });
   } catch (error) {
-    console.error('Error in getOdcById controller:', error);
-    res.status(500).json({
-      error: 'Internal server error'
+    logError('Error pada getOdcById', {
+      requestId: getRequestContext().getRequestId(),
+      error: error.message,
+      stack: error.stack,
+      userId: getRequestContext().getUserId(),
+      odcId: req.params.odc_id
     });
+    
+    res.status(500).json(createErrorResponse(
+      500,
+      'Internal server error',
+      error
+    ));
   }
 }
 
@@ -50,44 +97,112 @@ async function getOdcById(req, res) {
  */
 async function addOdcToOlt(req, res) {
   try {
+    const context = getRequestContext();
     const { olt_id } = req.params;
     
+    logDebug('Menerima request addOdcToOlt', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      oltId: olt_id,
+      userRoles: context.getUserRoles().map(r => r.name),
+      requestBody: req.body
+    });
+    
     // Periksa apakah OLT ada
+    logDebug('Memeriksa keberadaan OLT', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      oltId: olt_id
+    });
+    
     const oltInfo = await oltRepository.getOltById(olt_id);
+    
     if (!oltInfo || !oltInfo.olt) {
-      return res.status(404).json({
-        error: 'OLT not found'
+      logWarn('OLT tidak ditemukan untuk penambahan ODC', {
+        requestId: context.getRequestId(),
+        userId: context.getUserId(),
+        oltId: olt_id
       });
+      
+      return res.status(404).json(createErrorResponse(
+        404,
+        'OLT not found'
+      ));
     }
     
     // Periksa apakah port yang dimaksud ada di OLT
+    logDebug('Memeriksa keberadaan port pada OLT', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      oltId: olt_id,
+      requestedPort: req.body.pon_port
+    });
+    
     const ponPort = oltInfo.olt.pon_port.find(port => port.port === req.body.pon_port);
+    
     if (!ponPort) {
-      return res.status(404).json({
-        error: `Port ${req.body.pon_port} not found on OLT`
+      logWarn('Port tidak ditemukan pada OLT', {
+        requestId: context.getRequestId(),
+        userId: context.getUserId(),
+        oltId: olt_id,
+        requestedPort: req.body.pon_port
       });
+      
+      return res.status(404).json(createErrorResponse(
+        404,
+        `Port ${req.body.pon_port} not found on OLT`
+      ));
     }
     
     // Tambahkan ODC ke OLT pada port tertentu
+    logDebug('Menambahkan ODC ke OLT', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      oltId: olt_id,
+      ponPort: req.body.pon_port,
+      odcLabel: req.body.label,
+      availableTray: req.body.available_tray || 0,
+      coresPerTray: req.body.cores_per_tray || 0
+    });
+    
     const updatedOltInfo = await oltRepository.addOdcToOlt(olt_id, req.body);
+    
+    logInfo('ODC berhasil ditambahkan ke OLT', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      oltId: olt_id,
+      oltLabel: oltInfo.olt.label || 'unknown',
+      ponPort: req.body.pon_port,
+      odcLabel: req.body.label
+    });
     
     res.status(200).json({
       message: 'ODC added to OLT successfully',
       data: updatedOltInfo.olt
     });
   } catch (error) {
-    console.error('Error in addOdcToOlt controller:', error);
+    logError('Error pada addOdcToOlt', {
+      requestId: getRequestContext().getRequestId(),
+      error: error.message,
+      stack: error.stack,
+      userId: getRequestContext().getUserId(),
+      oltId: req.params.olt_id,
+      requestBody: req.body
+    });
     
     // Handling specific errors
     if (error.message && error.message.includes('not found')) {
-      return res.status(404).json({
-        error: error.message
-      });
+      return res.status(404).json(createErrorResponse(
+        404,
+        error.message
+      ));
     }
     
-    res.status(500).json({
-      error: 'Internal server error'
-    });
+    res.status(500).json(createErrorResponse(
+      500,
+      'Internal server error',
+      error
+    ));
   }
 }
 
@@ -98,44 +213,126 @@ async function addOdcToOlt(req, res) {
  */
 async function deleteOdc(req, res) {
   try {
+    const context = getRequestContext();
     const { odc_id } = req.params;
     
+    logDebug('Menerima request deleteOdc', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      odcId: odc_id,
+      userRoles: context.getUserRoles().map(r => r.name)
+    });
+    
     // Periksa apakah ODC ada
+    logDebug('Memeriksa keberadaan ODC sebelum dihapus', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      odcId: odc_id
+    });
+    
     const odcInfo = await odcRepository.getOdcById(odc_id, branchRepository.DeletedFilterTypes.WITHOUT);
+    
     if (!odcInfo || !odcInfo.odc) {
-      return res.status(404).json({
-        error: 'ODC not found or already deleted'
+      logWarn('ODC tidak ditemukan atau sudah dihapus', {
+        requestId: context.getRequestId(),
+        userId: context.getUserId(),
+        odcId: odc_id
       });
+      
+      return res.status(404).json(createErrorResponse(
+        404,
+        'ODC not found or already deleted'
+      ));
     }
     
     // Lakukan soft delete rekursif pada ODC dan semua ODP serta ONT di dalamnya
-    const result = await softDeleteOdc({
-      branchId: odcInfo.branchId,
-      routerIndex: odcInfo.routerIndex,
-      oltIndex: odcInfo.oltIndex,
-      ponPortIndex: odcInfo.ponPortIndex,
-      odcIndex: odcInfo.odcIndex
-    });
-    
-    if (!result) {
-      return res.status(500).json({
-        error: 'Failed to delete ODC'
+    try {
+      logDebug('Memulai proses soft delete ODC secara rekursif', {
+        requestId: context.getRequestId(),
+        userId: context.getUserId(),
+        odcId: odc_id,
+        odcLabel: odcInfo.odc.label,
+        branchId: odcInfo.branchId,
+        routerIndex: odcInfo.routerIndex,
+        oltIndex: odcInfo.oltIndex,
+        ponPortIndex: odcInfo.ponPortIndex
       });
+      
+      const result = await softDeleteOdc({
+        branchId: odcInfo.branchId,
+        routerIndex: odcInfo.routerIndex,
+        oltIndex: odcInfo.oltIndex,
+        ponPortIndex: odcInfo.ponPortIndex,
+        odcIndex: odcInfo.odcIndex
+      });
+      
+      if (!result) {
+        logError('Soft delete ODC gagal', {
+          requestId: context.getRequestId(),
+          userId: context.getUserId(),
+          odcId: odc_id,
+          odcLabel: odcInfo.odc.label,
+          branchId: odcInfo.branchId
+        });
+        
+        return res.status(500).json(createErrorResponse(
+          500,
+          'Failed to delete ODC',
+          { odcId: odc_id }
+        ));
+      }
+      
+      logDebug('Soft delete berhasil, mengambil data ODC yang sudah dihapus', {
+        requestId: context.getRequestId(),
+        userId: context.getUserId(),
+        odcId: odc_id
+      });
+      
+      // Dapatkan ODC yang sudah di-soft delete
+      const deletedOdc = await odcRepository.getOdcById(odc_id, branchRepository.DeletedFilterTypes.WITH);
+      
+      logInfo('ODC berhasil di-soft delete secara rekursif', {
+        requestId: context.getRequestId(),
+        userId: context.getUserId(),
+        odcId: odc_id,
+        odcLabel: odcInfo.odc.label,
+        branchId: odcInfo.branchId
+      });
+      
+      // Sukses, kembalikan status 200 dengan data ODC yang sudah di-soft delete
+      res.status(200).json({
+        message: 'ODC and all ODPs and ONTs deleted successfully',
+        data: deletedOdc?.odc || { _id: odc_id, deleted_at: new Date() }
+      });
+    } catch (deleteError) {
+      logError('Error saat proses delete ODC', {
+        requestId: context.getRequestId(),
+        userId: context.getUserId(),
+        odcId: odc_id,
+        error: deleteError.message,
+        stack: deleteError.stack
+      });
+      
+      return res.status(500).json(createErrorResponse(
+        500,
+        `Failed to delete ODC: ${deleteError.message || 'Unknown error'}`,
+        deleteError
+      ));
     }
-    
-    // Dapatkan ODC yang sudah di-soft delete
-    const deletedOdc = await odcRepository.getOdcById(odc_id, branchRepository.DeletedFilterTypes.WITH);
-    
-    // Sukses, kembalikan status 200 dengan data ODC yang sudah di-soft delete
-    res.status(200).json({
-      message: 'ODC and all ODPs and ONTs deleted successfully',
-      data: deletedOdc.odc
-    });
   } catch (error) {
-    console.error('Error in deleteOdc controller:', error);
-    res.status(500).json({
-      error: 'Internal server error'
+    logError('Error pada deleteOdc controller', {
+      requestId: getRequestContext().getRequestId(),
+      error: error.message,
+      stack: error.stack,
+      userId: getRequestContext().getUserId(),
+      odcId: req.params.odc_id
     });
+    
+    res.status(500).json(createErrorResponse(
+      500,
+      'Internal server error',
+      error
+    ));
   }
 }
 
@@ -146,46 +343,112 @@ async function deleteOdc(req, res) {
  */
 async function restoreOdc(req, res) {
   try {
+    const context = getRequestContext();
     const { odc_id } = req.params;
-    console.log(`[restoreOdc] Mencoba restore ODC dengan ID: ${odc_id}`);
+    
+    logDebug('Menerima request restoreOdc', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      odcId: odc_id,
+      userRoles: context.getUserRoles().map(r => r.name)
+    });
     
     // Periksa status ODC terlebih dahulu - gunakan filter ONLY untuk mencari yang sudah dihapus
+    logDebug('Memeriksa keberadaan ODC yang sudah dihapus', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      odcId: odc_id
+    });
+    
     const odcInfo = await odcRepository.getOdcById(odc_id, branchRepository.DeletedFilterTypes.ONLY);
-    console.log(`[restoreOdc] Status pencarian ODC yang dihapus:`, odcInfo);
+    
+    logDebug('Status pencarian ODC yang dihapus', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      odcId: odc_id,
+      ditemukan: odcInfo ? true : false
+    });
     
     if (!odcInfo || !odcInfo.odc) {
-      console.log(`[restoreOdc] ODC dengan ID ${odc_id} tidak ditemukan atau sudah di-restore`);
-      return res.status(404).json({
-        error: 'ODC not found or already restored'
+      logWarn('ODC tidak ditemukan atau sudah di-restore', {
+        requestId: context.getRequestId(),
+        userId: context.getUserId(),
+        odcId: odc_id
       });
+      
+      return res.status(404).json(createErrorResponse(
+        404,
+        'ODC not found or already restored'
+      ));
     }
     
     // Coba restore ODC
-    console.log(`[restoreOdc] Mencoba melakukan restore ODC`);
+    logDebug('Mencoba melakukan restore ODC secara rekursif', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      odcId: odc_id,
+      odcLabel: odcInfo.odc.label,
+      branchId: odcInfo.branchId
+    });
+    
     const result = await odcRepository.restore(odc_id);
-    console.log(`[restoreOdc] Hasil restore:`, result);
+    
+    logDebug('Hasil restore ODC', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      odcId: odc_id,
+      berhasil: result ? true : false
+    });
     
     if (!result) {
-      console.log(`[restoreOdc] Gagal melakukan restore ODC`);
-      return res.status(404).json({
-        error: 'Failed to restore ODC'
+      logError('Gagal melakukan restore ODC', {
+        requestId: context.getRequestId(),
+        userId: context.getUserId(),
+        odcId: odc_id,
+        odcLabel: odcInfo.odc.label
       });
+      
+      return res.status(404).json(createErrorResponse(
+        404,
+        'Failed to restore ODC'
+      ));
     }
     
     // Dapatkan data ODC yang sudah di-restore menggunakan filter WITH untuk memastikan kita bisa menemukannya
-    console.log(`[restoreOdc] Mengambil data ODC yang sudah di-restore`);
+    logDebug('Mengambil data ODC yang sudah di-restore', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      odcId: odc_id
+    });
+    
     const restoredOdc = await odcRepository.getOdcById(odc_id, branchRepository.DeletedFilterTypes.WITH);
-    console.log(`[restoreOdc] Data ODC yang sudah di-restore:`, restoredOdc);
+    
+    logInfo('ODC berhasil di-restore secara rekursif', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      odcId: odc_id,
+      odcLabel: restoredOdc?.odc?.label || 'unknown',
+      branchId: odcInfo.branchId
+    });
     
     res.status(200).json({
       message: 'ODC restored successfully',
       data: restoredOdc
     });
   } catch (error) {
-    console.error('Error in restoreOdc controller:', error);
-    res.status(500).json({
-      error: 'Internal server error'
+    logError('Error pada restoreOdc', {
+      requestId: getRequestContext().getRequestId(),
+      error: error.message,
+      stack: error.stack,
+      userId: getRequestContext().getUserId(),
+      odcId: req.params.odc_id
     });
+    
+    res.status(500).json(createErrorResponse(
+      500,
+      'Internal server error',
+      error
+    ));
   }
 }
 
