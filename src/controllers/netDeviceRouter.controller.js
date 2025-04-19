@@ -5,6 +5,8 @@
 const branchRepository = require('../repositories/branch.repository');
 const routerRepository = require('../repositories/netDeviceRouter.repository');
 const { softDeleteRouter } = require('../utils/recursiveSoftDelete.util');
+const { logDebug, logError, logInfo, logWarn, createErrorResponse } = require('../services/logger.service');
+const { getRequestContext } = require('../services/requestContext.service');
 
 /**
  * Mendapatkan router berdasarkan ID
@@ -13,7 +15,17 @@ const { softDeleteRouter } = require('../utils/recursiveSoftDelete.util');
  */
 async function getRouterById(req, res) {
   try {
+    const context = getRequestContext();
     const { router_id } = req.params;
+    
+    logDebug('Menerima request getRouterById', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      routerId: router_id,
+      query: req.query,
+      userRoles: context.getUserRoles().map(r => r.name)
+    });
+    
     const { deleted } = req.query;
     
     // Tentukan filter deleted (defaultnya WITHOUT)
@@ -22,22 +34,57 @@ async function getRouterById(req, res) {
       deletedFilter = deleted;
     }
     
+    logDebug('Mengambil data router by ID', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      routerId: router_id,
+      filters: {
+        deleted: deletedFilter
+      }
+    });
+    
     const router = await routerRepository.getRouterById(router_id, deletedFilter);
     
     if (!router) {
-      return res.status(404).json({
-        error: 'Router not found'
+      logWarn('Router tidak ditemukan', {
+        requestId: context.getRequestId(),
+        userId: context.getUserId(),
+        routerId: router_id,
+        filters: {
+          deleted: deletedFilter
+        }
       });
+      
+      return res.status(404).json(createErrorResponse(
+        404,
+        'Router not found'
+      ));
     }
+    
+    logInfo('Berhasil mengambil data router by ID', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      routerId: router_id,
+      deleted: deletedFilter
+    });
     
     res.status(200).json({
       data: router
     });
   } catch (error) {
-    console.error('Error in getRouterById controller:', error);
-    res.status(500).json({
-      error: 'Internal server error'
+    logError('Error pada getRouterById', {
+      requestId: getRequestContext().getRequestId(),
+      error: error.message,
+      stack: error.stack,
+      userId: getRequestContext().getUserId(),
+      routerId: req.params.router_id
     });
+    
+    res.status(500).json(createErrorResponse(
+      500,
+      'Internal server error',
+      error
+    ));
   }
 }
 
@@ -48,28 +95,76 @@ async function getRouterById(req, res) {
  */
 async function addRouterToBranch(req, res) {
   try {
+    const context = getRequestContext();
     const { branch_id } = req.params;
     
+    logDebug('Menerima request addRouterToBranch', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      branchId: branch_id,
+      userRoles: context.getUserRoles().map(r => r.name),
+      requestBody: req.body
+    });
+    
     // Periksa apakah branch ada
+    logDebug('Memeriksa keberadaan branch', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      branchId: branch_id
+    });
+    
     const branch = await branchRepository.getBranchById(branch_id);
+    
     if (!branch) {
-      return res.status(404).json({
-        error: 'Branch not found'
+      logWarn('Branch tidak ditemukan untuk penambahan router', {
+        requestId: context.getRequestId(),
+        userId: context.getUserId(),
+        branchId: branch_id
       });
+      
+      return res.status(404).json(createErrorResponse(
+        404,
+        'Branch not found'
+      ));
     }
     
     // Tambahkan router ke branch
+    logDebug('Menambahkan router ke branch', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      branchId: branch_id,
+      routerLabel: req.body.label
+    });
+    
     const updatedBranch = await branchRepository.addRouterToBranch(branch_id, req.body);
+    
+    logInfo('Router berhasil ditambahkan ke branch', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      branchId: branch_id,
+      branchName: branch.name,
+      routerLabel: req.body.label
+    });
     
     res.status(200).json({
       message: 'Router added to branch successfully',
       data: updatedBranch
     });
   } catch (error) {
-    console.error('Error in addRouterToBranch controller:', error);
-    res.status(500).json({
-      error: 'Internal server error'
+    logError('Error pada addRouterToBranch', {
+      requestId: getRequestContext().getRequestId(),
+      error: error.message,
+      stack: error.stack,
+      userId: getRequestContext().getUserId(),
+      branchId: req.params.branch_id,
+      requestBody: req.body
     });
+    
+    res.status(500).json(createErrorResponse(
+      500,
+      'Internal server error',
+      error
+    ));
   }
 }
 
@@ -80,36 +175,85 @@ async function addRouterToBranch(req, res) {
  */
 async function deleteRouter(req, res) {
   try {
+    const context = getRequestContext();
     const { router_id } = req.params;
-    console.log(`[deleteRouter] Mencoba delete Router dengan ID: ${router_id}`);
+    
+    logDebug('Menerima request deleteRouter', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      routerId: router_id,
+      userRoles: context.getUserRoles().map(r => r.name)
+    });
     
     // Periksa apakah Router ada
+    logDebug('Memeriksa keberadaan router sebelum dihapus', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      routerId: router_id
+    });
+    
     const routerInfo = await routerRepository.getRouterById(router_id, branchRepository.DeletedFilterTypes.WITHOUT);
+    
     if (!routerInfo || !routerInfo.router) {
-      console.log('[deleteRouter] Router tidak ditemukan atau sudah dihapus');
-      return res.status(404).json({
-        error: 'Router not found or already deleted'
+      logWarn('Router tidak ditemukan atau sudah dihapus', {
+        requestId: context.getRequestId(),
+        userId: context.getUserId(),
+        routerId: router_id
       });
+      
+      return res.status(404).json(createErrorResponse(
+        404,
+        'Router not found or already deleted'
+      ));
     }
     
     // Lakukan soft delete rekursif pada Router dan semua device di dalamnya
     try {
-      console.log('[deleteRouter] Memulai proses soft delete');
+      logDebug('Memulai proses soft delete router secara rekursif', {
+        requestId: context.getRequestId(),
+        userId: context.getUserId(),
+        routerId: router_id,
+        routerLabel: routerInfo.router.label,
+        branchId: routerInfo.branchId
+      });
+      
       const result = await softDeleteRouter({
         branchId: routerInfo.branchId,
         routerIndex: routerInfo.routerIndex
       });
       
       if (!result) {
-        console.error('[deleteRouter] Soft delete gagal');
-        return res.status(500).json({
-          error: 'Failed to delete Router'
+        logError('Soft delete router gagal', {
+          requestId: context.getRequestId(),
+          userId: context.getUserId(),
+          routerId: router_id,
+          routerLabel: routerInfo.router.label,
+          branchId: routerInfo.branchId
         });
+        
+        return res.status(500).json(createErrorResponse(
+          500,
+          'Failed to delete Router',
+          { routerId: router_id }
+        ));
       }
       
-      console.log('[deleteRouter] Soft delete berhasil, mengambil data Router yang sudah dihapus');
+      logDebug('Soft delete berhasil, mengambil data Router yang sudah dihapus', {
+        requestId: context.getRequestId(),
+        userId: context.getUserId(),
+        routerId: router_id
+      });
+      
       // Dapatkan Router yang sudah di-soft delete
       const deletedRouter = await routerRepository.getRouterById(router_id, branchRepository.DeletedFilterTypes.WITH);
+      
+      logInfo('Router berhasil di-soft delete secara rekursif', {
+        requestId: context.getRequestId(),
+        userId: context.getUserId(),
+        routerId: router_id,
+        routerLabel: routerInfo.router.label,
+        branchId: routerInfo.branchId
+      });
       
       // Sukses, kembalikan status 200 dengan data Router yang sudah di-soft delete
       res.status(200).json({
@@ -117,16 +261,34 @@ async function deleteRouter(req, res) {
         data: deletedRouter?.router || { _id: router_id, deleted_at: new Date() }
       });
     } catch (deleteError) {
-      console.error('[deleteRouter] Error saat proses delete:', deleteError);
-      return res.status(500).json({
-        error: `Failed to delete Router: ${deleteError.message || 'Unknown error'}`
+      logError('Error saat proses delete router', {
+        requestId: context.getRequestId(),
+        userId: context.getUserId(),
+        routerId: router_id,
+        error: deleteError.message,
+        stack: deleteError.stack
       });
+      
+      return res.status(500).json(createErrorResponse(
+        500,
+        `Failed to delete Router: ${deleteError.message || 'Unknown error'}`,
+        deleteError
+      ));
     }
   } catch (error) {
-    console.error('[deleteRouter] Error di controller:', error);
-    res.status(500).json({
-      error: `Internal server error: ${error.message || 'Unknown error'}`
+    logError('Error pada deleteRouter controller', {
+      requestId: getRequestContext().getRequestId(),
+      error: error.message,
+      stack: error.stack,
+      userId: getRequestContext().getUserId(),
+      routerId: req.params.router_id
     });
+    
+    res.status(500).json(createErrorResponse(
+      500,
+      'Internal server error',
+      error
+    ));
   }
 }
 
@@ -137,46 +299,112 @@ async function deleteRouter(req, res) {
  */
 async function restoreRouter(req, res) {
   try {
+    const context = getRequestContext();
     const { router_id } = req.params;
-    console.log(`[restoreRouter] Mencoba restore Router dengan ID: ${router_id}`);
+    
+    logDebug('Menerima request restoreRouter', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      routerId: router_id,
+      userRoles: context.getUserRoles().map(r => r.name)
+    });
     
     // Periksa status Router terlebih dahulu
+    logDebug('Memeriksa keberadaan router yang sudah dihapus', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      routerId: router_id
+    });
+    
     const routerInfo = await routerRepository.getRouterById(router_id, branchRepository.DeletedFilterTypes.ONLY);
-    console.log(`[restoreRouter] Status pencarian Router yang dihapus:`, routerInfo);
+    
+    logDebug('Status pencarian router yang dihapus', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      routerId: router_id,
+      ditemukan: routerInfo ? true : false
+    });
     
     if (!routerInfo || !routerInfo.router) {
-      console.log(`[restoreRouter] Router dengan ID ${router_id} tidak ditemukan atau sudah di-restore`);
-      return res.status(404).json({
-        error: 'Router not found or already restored'
+      logWarn('Router tidak ditemukan atau sudah di-restore', {
+        requestId: context.getRequestId(),
+        userId: context.getUserId(),
+        routerId: router_id
       });
+      
+      return res.status(404).json(createErrorResponse(
+        404,
+        'Router not found or already restored'
+      ));
     }
     
     // Coba restore Router
-    console.log(`[restoreRouter] Mencoba melakukan restore Router`);
+    logDebug('Mencoba melakukan restore router secara rekursif', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      routerId: router_id,
+      routerLabel: routerInfo.router.label,
+      branchId: routerInfo.branchId
+    });
+    
     const result = await routerRepository.restore(router_id);
-    console.log(`[restoreRouter] Hasil restore:`, result);
+    
+    logDebug('Hasil restore router', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      routerId: router_id,
+      berhasil: result ? true : false
+    });
     
     if (!result) {
-      console.log(`[restoreRouter] Gagal melakukan restore Router`);
-      return res.status(404).json({
-        error: 'Failed to restore Router'
+      logError('Gagal melakukan restore router', {
+        requestId: context.getRequestId(),
+        userId: context.getUserId(),
+        routerId: router_id,
+        routerLabel: routerInfo.router.label
       });
+      
+      return res.status(404).json(createErrorResponse(
+        404,
+        'Failed to restore Router'
+      ));
     }
     
     // Dapatkan data Router yang sudah di-restore
-    console.log(`[restoreRouter] Mengambil data Router yang sudah di-restore`);
+    logDebug('Mengambil data router yang sudah di-restore', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      routerId: router_id
+    });
+    
     const restoredRouter = await routerRepository.getRouterById(router_id, branchRepository.DeletedFilterTypes.WITH);
-    console.log(`[restoreRouter] Data Router yang sudah di-restore:`, restoredRouter);
+    
+    logInfo('Router berhasil di-restore secara rekursif', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      routerId: router_id,
+      routerLabel: restoredRouter?.router?.label || 'unknown',
+      branchId: routerInfo.branchId
+    });
     
     res.status(200).json({
       message: 'Router restored successfully',
       data: restoredRouter
     });
   } catch (error) {
-    console.error('Error in restoreRouter controller:', error);
-    res.status(500).json({
-      error: 'Internal server error'
+    logError('Error pada restoreRouter', {
+      requestId: getRequestContext().getRequestId(),
+      error: error.message,
+      stack: error.stack,
+      userId: getRequestContext().getUserId(),
+      routerId: req.params.router_id
     });
+    
+    res.status(500).json(createErrorResponse(
+      500,
+      'Internal server error',
+      error
+    ));
   }
 }
 
