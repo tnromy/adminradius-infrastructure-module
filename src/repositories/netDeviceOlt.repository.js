@@ -230,7 +230,7 @@ async function addOdcToOlt(oltId, odcData) {
       return null;
     }
     
-    const { olt, branch, routerIndex, oltIndex } = oltInfo;
+    const { olt, branchId, routerIndex, oltIndex } = oltInfo;
     
     // Cari port yang sesuai dengan pon_port
     const ponPortIndex = olt.pon_port.findIndex(port => port.port === odcData.pon_port);
@@ -269,7 +269,7 @@ async function addOdcToOlt(oltId, odcData) {
     
     // Update branch, tambahkan ODC ke port OLT
     const result = await collection.updateOne(
-      { _id: branch._id },
+      { _id: branchId },
       { 
         $push: { [oltPath]: odc },
         $set: { updatedAt: new Date() }

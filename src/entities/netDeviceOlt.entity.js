@@ -90,9 +90,22 @@ function createNetDeviceOltEntity(data = {}) {
     type: 'olt'
   });
   
-  // Buat array pon_port jika ada
+  // Buat array pon_port berdasarkan available_pon
   const ponPorts = [];
-  if (Array.isArray(data.pon_port)) {
+  const availablePon = data.available_pon || 0;
+  
+  // Jika available_pon ada, buat port sejumlah available_pon
+  if (availablePon > 0) {
+    for (let i = 1; i <= availablePon; i++) {
+      ponPorts.push(createPonPortEntity({
+        port: i,
+        max_client: 64, // Default max client untuk GPON
+        children: []
+      }));
+    }
+  } 
+  // Jika pon_port sudah ada di data, gunakan itu
+  else if (Array.isArray(data.pon_port)) {
     data.pon_port.forEach(portData => {
       ponPorts.push(createPonPortEntity(portData));
     });

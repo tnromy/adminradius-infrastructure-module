@@ -18,6 +18,10 @@ const validateAddOlt = [
     .notEmpty().withMessage('label is required')
     .isString().withMessage('label must be a string'),
   
+  body('available_pon')
+    .notEmpty().withMessage('available_pon is required')
+    .isInt({ min: 1, max: 128 }).withMessage('available_pon must be between 1 and 128'),
+  
   // Validasi location (format GeoJSON Point)
   body('location')
     .optional()
@@ -97,11 +101,6 @@ const validateAddOlt = [
   body('pon_type')
     .notEmpty().withMessage('pon_type is required')
     .isIn(Object.values(PonTypes)).withMessage('pon_type must be either GPON or EPON'),
-  
-  // Validasi available_pon
-  body('available_pon')
-    .notEmpty().withMessage('available_pon is required')
-    .isInt({ min: 1 }).withMessage('available_pon must be a positive integer'),
   
   // Validasi telnet_conn jika ada
   body('telnet_conn')
