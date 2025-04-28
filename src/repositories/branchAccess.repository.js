@@ -5,7 +5,15 @@ const { logDebug, logError } = require('../services/logger.service');
 
 class BranchAccessRepository {
   constructor() {
-    this.collection = getCollection('branch_access');
+    this.collectionName = 'branch_access';
+  }
+
+  /**
+   * Mendapatkan collection
+   * @private
+   */
+  getCollection() {
+    return getCollection(this.collectionName);
   }
 
   /**
@@ -18,7 +26,7 @@ class BranchAccessRepository {
     try {
       const branchObjectId = typeof branchId === 'string' ? new ObjectId(branchId) : branchId;
       
-      const access = await this.collection.findOne({
+      const access = await this.getCollection().findOne({
         user_id: userId,
         branch_id: branchObjectId
       });
@@ -48,7 +56,7 @@ class BranchAccessRepository {
    */
   async getAccessibleBranches(userId) {
     try {
-      const accessList = await this.collection.find({
+      const accessList = await this.getCollection().find({
         user_id: userId
       }).toArray();
 
@@ -77,7 +85,7 @@ class BranchAccessRepository {
       validateBranchAccess(data);
       const branchAccess = createBranchAccess(data);
       
-      await this.collection.insertOne(branchAccess);
+      await this.getCollection().insertOne(branchAccess);
 
       logDebug('Added branch access', {
         userId: data.user_id,
@@ -106,7 +114,7 @@ class BranchAccessRepository {
     try {
       const branchObjectId = typeof branchId === 'string' ? new ObjectId(branchId) : branchId;
       
-      const result = await this.collection.updateOne(
+      const result = await this.getCollection().updateOne(
         {
           user_id: userId,
           branch_id: branchObjectId
@@ -145,7 +153,7 @@ class BranchAccessRepository {
     try {
       const branchObjectId = typeof branchId === 'string' ? new ObjectId(branchId) : branchId;
       
-      const result = await this.collection.deleteOne({
+      const result = await this.getCollection().deleteOne({
         user_id: userId,
         branch_id: branchObjectId
       });
@@ -168,4 +176,6 @@ class BranchAccessRepository {
   }
 }
 
-module.exports = new BranchAccessRepository(); 
+// Export singleton instance
+const branchAccessRepository = new BranchAccessRepository();
+module.exports = branchAccessRepository; 

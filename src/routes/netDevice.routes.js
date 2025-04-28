@@ -16,6 +16,19 @@ const { validateAddOdp } = require('../validations/netDeviceOdp.validation');
 const { validateAddOnt } = require('../validations/netDeviceOnt.validation');
 const { validateDeletedParam, validateScopeLevelParam } = require('../validations/validation.middleware');
 const { authenticateJWT, authorizeRoles } = require('../middlewares/auth.middleware');
+const { 
+  checkRouterAccess,
+  checkOltAccess,
+  checkOdcAccess,
+  checkOdpAccess,
+  checkOntAccess,
+  checkRouterWriteAccess,
+  checkOltWriteAccess,
+  checkOdcWriteAccess,
+  checkOdpWriteAccess,
+  checkOntWriteAccess,
+  checkWritePermission
+} = require('../middlewares/permission.middleware');
 const config = require('../../config/app.config');
 
 // Route GET /api/infra/router/:router_id
@@ -23,7 +36,8 @@ router.get('/router/:router_id',
   authenticateJWT,
   authorizeRoles(config.auth.allowedRoles),
   validateDeletedParam, 
-  validateScopeLevelParam, 
+  validateScopeLevelParam,
+  checkRouterAccess,
   netDeviceRouterController.getRouterById
 );
 
@@ -32,7 +46,8 @@ router.get('/olt/:olt_id',
   authenticateJWT,
   authorizeRoles(config.auth.allowedRoles),
   validateDeletedParam, 
-  validateScopeLevelParam, 
+  validateScopeLevelParam,
+  checkOltAccess,
   netDeviceOltController.getOltById
 );
 
@@ -41,7 +56,8 @@ router.get('/odc/:odc_id',
   authenticateJWT,
   authorizeRoles(config.auth.allowedRoles),
   validateDeletedParam, 
-  validateScopeLevelParam, 
+  validateScopeLevelParam,
+  checkOdcAccess,
   netDeviceOdcController.getOdcById
 );
 
@@ -50,7 +66,8 @@ router.get('/odp/:odp_id',
   authenticateJWT,
   authorizeRoles(config.auth.allowedRoles),
   validateDeletedParam, 
-  validateScopeLevelParam, 
+  validateScopeLevelParam,
+  checkOdpAccess,
   netDeviceOdpController.getOdpById
 );
 
@@ -59,7 +76,8 @@ router.get('/ont/:ont_id',
   authenticateJWT,
   authorizeRoles(config.auth.allowedRoles),
   validateDeletedParam, 
-  validateScopeLevelParam, 
+  validateScopeLevelParam,
+  checkOntAccess,
   netDeviceOntController.getOntById
 );
 
@@ -67,6 +85,7 @@ router.get('/ont/:ont_id',
 router.delete('/router/:router_id', 
   authenticateJWT,
   authorizeRoles(config.auth.allowedRoles),
+  checkRouterWriteAccess,
   netDeviceRouterController.deleteRouter
 );
 
@@ -74,6 +93,7 @@ router.delete('/router/:router_id',
 router.delete('/olt/:olt_id', 
   authenticateJWT,
   authorizeRoles(config.auth.allowedRoles),
+  checkOltWriteAccess,
   netDeviceOltController.deleteOlt
 );
 
@@ -81,6 +101,7 @@ router.delete('/olt/:olt_id',
 router.delete('/odc/:odc_id', 
   authenticateJWT,
   authorizeRoles(config.auth.allowedRoles),
+  checkOdcWriteAccess,
   netDeviceOdcController.deleteOdc
 );
 
@@ -88,6 +109,7 @@ router.delete('/odc/:odc_id',
 router.delete('/odp/:odp_id', 
   authenticateJWT,
   authorizeRoles(config.auth.allowedRoles),
+  checkOdpWriteAccess,
   netDeviceOdpController.deleteOdp
 );
 
@@ -95,6 +117,7 @@ router.delete('/odp/:odp_id',
 router.delete('/ont/:ont_id', 
   authenticateJWT,
   authorizeRoles(config.auth.allowedRoles),
+  checkOntWriteAccess,
   netDeviceOntController.deleteOnt
 );
 
@@ -102,6 +125,7 @@ router.delete('/ont/:ont_id',
 router.post('/ont/:ont_id/restore', 
   authenticateJWT,
   authorizeRoles(config.auth.allowedRoles),
+  checkOntWriteAccess,
   netDeviceOntController.restoreOnt
 );
 
@@ -109,6 +133,7 @@ router.post('/ont/:ont_id/restore',
 router.post('/odp/:odp_id/restore', 
   authenticateJWT,
   authorizeRoles(config.auth.allowedRoles),
+  checkOdpWriteAccess,
   netDeviceOdpController.restoreOdp
 );
 
@@ -116,6 +141,7 @@ router.post('/odp/:odp_id/restore',
 router.post('/odc/:odc_id/restore', 
   authenticateJWT,
   authorizeRoles(config.auth.allowedRoles),
+  checkOdcWriteAccess,
   netDeviceOdcController.restoreOdc
 );
 
@@ -123,6 +149,7 @@ router.post('/odc/:odc_id/restore',
 router.post('/olt/:olt_id/restore', 
   authenticateJWT,
   authorizeRoles(config.auth.allowedRoles),
+  checkOltWriteAccess,
   netDeviceOltController.restoreOlt
 );
 
@@ -130,6 +157,7 @@ router.post('/olt/:olt_id/restore',
 router.post('/router/:router_id/restore', 
   authenticateJWT,
   authorizeRoles(config.auth.allowedRoles),
+  checkRouterWriteAccess,
   netDeviceRouterController.restoreRouter
 );
 
@@ -137,7 +165,8 @@ router.post('/router/:router_id/restore',
 router.post('/branch/:branch_id/router', 
   authenticateJWT,
   authorizeRoles(config.auth.allowedRoles),
-  validateAddRouter, 
+  validateAddRouter,
+  checkWritePermission,
   netDeviceRouterController.addRouterToBranch
 );
 
@@ -145,7 +174,8 @@ router.post('/branch/:branch_id/router',
 router.post('/router/:router_id/olt', 
   authenticateJWT,
   authorizeRoles(config.auth.allowedRoles),
-  validateAddOlt, 
+  validateAddOlt,
+  checkRouterWriteAccess,
   netDeviceOltController.addOltToRouter
 );
 
@@ -153,7 +183,8 @@ router.post('/router/:router_id/olt',
 router.post('/olt/:olt_id/odc', 
   authenticateJWT,
   authorizeRoles(config.auth.allowedRoles),
-  validateAddOdc, 
+  validateAddOdc,
+  checkOltWriteAccess,
   netDeviceOdcController.addOdcToOlt
 );
 
@@ -161,7 +192,8 @@ router.post('/olt/:olt_id/odc',
 router.post('/odc/:odc_id/odp', 
   authenticateJWT,
   authorizeRoles(config.auth.allowedRoles),
-  validateAddOdp, 
+  validateAddOdp,
+  checkOdcWriteAccess,
   netDeviceOdpController.addOdpToOdc
 );
 
@@ -169,7 +201,8 @@ router.post('/odc/:odc_id/odp',
 router.post('/odp/:odp_id/ont', 
   authenticateJWT,
   authorizeRoles(config.auth.allowedRoles),
-  validateAddOnt, 
+  validateAddOnt,
+  checkOdpWriteAccess,
   netDeviceOntController.addOntToOdp
 );
 

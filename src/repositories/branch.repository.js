@@ -24,25 +24,31 @@ const ResultTypes = {
 };
 
 /**
- * Mendapatkan semua branches dengan level detail tertentu
+ * Mendapatkan semua branches dengan level detail tertentu dan filter akses
  * @param {string} scopeLevel - Level scope data (BRANCHES, ROUTERS, OLTS, ODCS, ODPS, ONTS)
  * @param {string} deletedFilter - Filter data yang dihapus (ONLY, WITH, WITHOUT)
+ * @param {Array<ObjectId>} [accessibleBranchIds] - Array of branch IDs yang bisa diakses
  * @returns {Promise<Array>} - Array berisi data branches sesuai level detail dan filter
  */
-async function getAllBranches(scopeLevel = null, deletedFilter = DeletedFilterTypes.WITHOUT) {
+async function getAllBranches(scopeLevel = null, deletedFilter = DeletedFilterTypes.WITHOUT, accessibleBranchIds = null) {
   try {
     logDebug('Memulai query getAllBranches', {
       scopeLevel,
-      deletedFilter
+      deletedFilter,
+      hasAccessFilter: !!accessibleBranchIds
     });
 
     const collection = getCollection(COLLECTION);
     const startTime = Date.now();
-    const branches = await collection.find({}).toArray();
+
+    // Buat query berdasarkan akses
+    const query = accessibleBranchIds ? { _id: { $in: accessibleBranchIds } } : {};
+    const branches = await collection.find(query).toArray();
     
     logTrace('Query database selesai', {
       executionTime: Date.now() - startTime,
-      resultCount: branches.length
+      resultCount: branches.length,
+      accessFilterApplied: !!accessibleBranchIds
     });
     
     const filteredBranches = branches
@@ -54,7 +60,8 @@ async function getAllBranches(scopeLevel = null, deletedFilter = DeletedFilterTy
       filteredCount: filteredBranches.length,
       filters: {
         scopeLevel,
-        deletedFilter
+        deletedFilter,
+        accessFiltered: !!accessibleBranchIds
       }
     });
 

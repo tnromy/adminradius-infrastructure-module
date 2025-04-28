@@ -95,12 +95,15 @@ async function startServer() {
 }
 
 // Jalankan server
-startServer().catch(error => {
-  logError('Unhandled error during server startup', {
-    error: error.message,
-    stack: error.stack
+if (require.main === module) {
+  startServer().catch(error => {
+    logError('Unhandled error during server startup', {
+      error: error.message,
+      stack: error.stack
+    });
+    process.exit(1);
   });
-});
+}
 
 // Handle server shutdown
 process.on('SIGTERM', () => {

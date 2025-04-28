@@ -19,7 +19,8 @@ async function getAllBranches(req, res) {
       requestId: context.getRequestId(),
       userId: context.getUserId(),
       query: req.query,
-      userRoles: context.getUserRoles().map(r => r.name)
+      userRoles: context.getUserRoles().map(r => r.name),
+      hasAccessFilter: !!req.accessibleBranchIds
     });
     
     const { scope_level, deleted } = req.query;
@@ -48,18 +49,25 @@ async function getAllBranches(req, res) {
       userId: context.getUserId(),
       filters: {
         scope_level: scope_level || 'default',
-        deleted: deletedFilter
+        deleted: deletedFilter,
+        accessibleBranchCount: req.accessibleBranchIds?.length
       }
     });
     
-    const branches = await branchRepository.getAllBranches(scope_level, deletedFilter);
+    // Gunakan accessible branch IDs jika ada (untuk non-Client Owner)
+    const branches = await branchRepository.getAllBranches(
+      scope_level, 
+      deletedFilter,
+      req.accessibleBranchIds // Ini akan null untuk Client Owner
+    );
     
     logInfo('Berhasil mengambil data branches', {
       requestId: context.getRequestId(),
       userId: context.getUserId(),
       count: branches.length,
       scope_level: scope_level || 'default',
-      deleted: deletedFilter
+      deleted: deletedFilter,
+      filteredByAccess: !!req.accessibleBranchIds
     });
     
     res.status(200).json({
