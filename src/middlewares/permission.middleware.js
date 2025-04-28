@@ -226,26 +226,61 @@ async function findBranchIdByDevice(deviceType, deviceId) {
 
   switch (deviceType) {
     case 'router':
-      query = { "children.id": deviceId };
+      query = { "children._id": deviceId };
       break;
     case 'olt':
-      query = { "children.children.id": deviceId };
+      // OLT berada di dalam array children dari router
+      query = { "children.children._id": deviceId };
       break;
     case 'odc':
-      query = { "children.children.pon_ports.children.id": deviceId };
+      // ODC berada di dalam array children dari pon_port OLT
+      query = { "children.children.pon_port.children._id": deviceId };
       break;
     case 'odp':
-      query = { "children.children.pon_ports.children.trays.children.id": deviceId };
+      // ODP berada di dalam array children dari tray ODC
+      query = { "children.children.pon_port.children.trays.children._id": deviceId };
       break;
     case 'ont':
-      query = { "children.children.pon_ports.children.trays.children.children.id": deviceId };
+      // ONT berada di dalam array children dari ODP
+      query = { "children.children.pon_port.children.trays.children.children._id": deviceId };
       break;
     default:
       throw new Error('Invalid device type');
   }
 
-  const branch = await branchesCollection.findOne(query);
-  return branch ? branch._id : null;
+  try {
+    logDebug(`Mencari ${deviceType} dengan ID ${deviceId}`, {
+      query,
+      deviceType,
+      deviceId
+    });
+
+    const branch = await branchesCollection.findOne(query);
+    
+    if (!branch) {
+      logDebug(`${deviceType.toUpperCase()} tidak ditemukan`, {
+        deviceType,
+        deviceId,
+        query
+      });
+      return null;
+    }
+
+    logDebug(`${deviceType.toUpperCase()} ditemukan di branch ${branch._id}`, {
+      deviceType,
+      deviceId,
+      branchId: branch._id
+    });
+
+    return branch._id;
+  } catch (error) {
+    logError(`Error mencari ${deviceType}`, {
+      deviceType,
+      deviceId,
+      error: error.message
+    });
+    throw error;
+  }
 }
 
 /**
