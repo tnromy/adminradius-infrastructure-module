@@ -1,8 +1,23 @@
 const { ObjectId } = require('mongodb');
 const branchAccessRepository = require('../repositories/branchAccess.repository');
 const { getRequestContext } = require('../services/requestContext.service');
-const { logDebug, logError, createErrorResponse } = require('../services/logger.service');
+const { logDebug, logError, createErrorResponse, logWarn } = require('../services/logger.service');
 const { getCollection } = require('../repositories/database.connector');
+
+/**
+ * Helper function untuk validasi dan konversi ObjectId
+ * @param {string} id - ID yang akan divalidasi
+ * @returns {ObjectId|null} - ObjectId jika valid, null jika tidak
+ */
+function validateAndConvertId(id) {
+  try {
+    if (!id) return null;
+    // Coba konversi ke ObjectId
+    return ObjectId.isValid(id) && String(new ObjectId(id)) === id ? new ObjectId(id) : null;
+  } catch (error) {
+    return null;
+  }
+}
 
 /**
  * Middleware untuk memastikan hanya role Client Owner yang bisa akses
@@ -74,7 +89,7 @@ async function checkDirectBranchAccess(req, res, next) {
   const context = getRequestContext();
   const userRoles = context.getUserRoles();
   const userId = context.getUserId();
-  const branchId = req.params.branch_id;
+  const branchId = req.params.id || req.params.branch_id; // Support both :id and :branch_id params
 
   // Skip untuk Client Owner
   if (userRoles.some(role => role.name === 'Client Owner')) {
@@ -82,9 +97,28 @@ async function checkDirectBranchAccess(req, res, next) {
   }
 
   try {
-    const access = await branchAccessRepository.checkAccess(userId, branchId);
+    // Validasi branch_id menggunakan helper function
+    const branchObjectId = validateAndConvertId(branchId);
+    if (!branchObjectId) {
+      logWarn('Invalid branch_id format', {
+        userId,
+        branchId,
+        requestId: context.getRequestId()
+      });
+      return res.status(400).json(createErrorResponse(
+        400,
+        'Invalid branch ID format'
+      ));
+    }
+
+    const access = await branchAccessRepository.checkAccess(userId, branchObjectId);
     
     if (!access) {
+      logWarn('Access denied - No branch access', {
+        userId,
+        branchId: branchObjectId.toString(),
+        requestId: context.getRequestId()
+      });
       return res.status(403).json(createErrorResponse(
         403,
         'Forbidden - You do not have access to this branch'
@@ -99,7 +133,8 @@ async function checkDirectBranchAccess(req, res, next) {
     logError('Error checking direct branch access', {
       userId,
       branchId,
-      error: error.message
+      error: error.message,
+      requestId: context.getRequestId()
     });
     return res.status(500).json(createErrorResponse(
       500,
@@ -116,7 +151,7 @@ async function checkWritePermission(req, res, next) {
   const context = getRequestContext();
   const userRoles = context.getUserRoles();
   const userId = context.getUserId();
-  const branchId = req.params.branch_id;
+  const branchId = req.params.id || req.params.branch_id; // Support both :id and :branch_id params
 
   // Skip untuk Client Owner
   if (userRoles.some(role => role.name === 'Client Owner')) {
@@ -124,9 +159,41 @@ async function checkWritePermission(req, res, next) {
   }
 
   try {
-    const access = await branchAccessRepository.checkAccess(userId, branchId);
+    // Validasi branch_id menggunakan helper function
+    const branchObjectId = validateAndConvertId(branchId);
+    if (!branchObjectId) {
+      logWarn('Invalid branch_id format', {
+        userId,
+        branchId,
+        requestId: context.getRequestId()
+      });
+      return res.status(400).json(createErrorResponse(
+        400,
+        'Invalid branch ID format'
+      ));
+    }
+
+    const access = await branchAccessRepository.checkAccess(userId, branchObjectId);
     
-    if (!access || access.permission !== 'RW') {
+    if (!access) {
+      logWarn('Access denied - No branch access', {
+        userId,
+        branchId: branchObjectId.toString(),
+        requestId: context.getRequestId()
+      });
+      return res.status(403).json(createErrorResponse(
+        403,
+        'Forbidden - You do not have access to this branch'
+      ));
+    }
+
+    if (access.permission !== 'RW') {
+      logWarn('Access denied - Insufficient permission', {
+        userId,
+        branchId: branchObjectId.toString(),
+        permission: access.permission,
+        requestId: context.getRequestId()
+      });
       return res.status(403).json(createErrorResponse(
         403,
         'Forbidden - You do not have write permission for this branch'
@@ -140,7 +207,8 @@ async function checkWritePermission(req, res, next) {
     logError('Error checking write permission', {
       userId,
       branchId,
-      error: error.message
+      error: error.message,
+      requestId: context.getRequestId()
     });
     return res.status(500).json(createErrorResponse(
       500,
@@ -198,9 +266,28 @@ function createDeviceAccessChecker(deviceType, requireWrite = false) {
     const deviceId = req.params[`${deviceType}_id`];
 
     try {
-      const branchId = await findBranchIdByDevice(deviceType, deviceId);
+      // Validasi device_id menggunakan helper function
+      const deviceObjectId = validateAndConvertId(deviceId);
+      if (!deviceObjectId) {
+        logWarn(`Invalid ${deviceType}_id format`, {
+          userId,
+          deviceId,
+          requestId: context.getRequestId()
+        });
+        return res.status(400).json(createErrorResponse(
+          400,
+          `Invalid ${deviceType} ID format`
+        ));
+      }
+
+      const branchId = await findBranchIdByDevice(deviceType, deviceObjectId);
       
       if (!branchId) {
+        logWarn(`${deviceType.toUpperCase()} not found`, {
+          userId,
+          deviceId,
+          requestId: context.getRequestId()
+        });
         return res.status(404).json(createErrorResponse(
           404,
           `${deviceType.toUpperCase()} not found`
@@ -209,10 +296,30 @@ function createDeviceAccessChecker(deviceType, requireWrite = false) {
 
       const access = await branchAccessRepository.checkAccess(userId, branchId);
       
-      if (!access || (requireWrite && access.permission !== 'RW')) {
+      if (!access) {
+        logWarn('Access denied - No branch access', {
+          userId,
+          deviceId,
+          branchId: branchId.toString(),
+          requestId: context.getRequestId()
+        });
         return res.status(403).json(createErrorResponse(
           403,
-          `Forbidden - You do not have ${requireWrite ? 'write ' : ''}permission for this ${deviceType}`
+          `Forbidden - You do not have access to this ${deviceType}`
+        ));
+      }
+
+      if (requireWrite && access.permission !== 'RW') {
+        logWarn('Access denied - Insufficient permission', {
+          userId,
+          deviceId,
+          branchId: branchId.toString(),
+          permission: access.permission,
+          requestId: context.getRequestId()
+        });
+        return res.status(403).json(createErrorResponse(
+          403,
+          `Forbidden - You do not have write permission for this ${deviceType}`
         ));
       }
 
@@ -224,7 +331,8 @@ function createDeviceAccessChecker(deviceType, requireWrite = false) {
       logError(`Error checking ${deviceType} access`, {
         userId,
         deviceId,
-        error: error.message
+        error: error.message,
+        requestId: context.getRequestId()
       });
       return res.status(500).json(createErrorResponse(
         500,
