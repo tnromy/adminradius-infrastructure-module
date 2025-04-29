@@ -9,36 +9,16 @@ const createBranchAccessCollection = async () => {
 
     // Buat collection branch_access
     try {
-      await db.createCollection('branch_access', {
-        validator: {
-          $jsonSchema: {
-            bsonType: "object",
-            required: ["branch_id", "user_id", "permission"],
-            properties: {
-              branch_id: {
-                bsonType: "objectId",
-                description: "ID dari branch yang diakses"
-              },
-              user_id: {
-                bsonType: "string",
-                description: "UUID dari user yang memiliki akses"
-              },
-              permission: {
-                enum: ["R", "RW"],
-                description: "Tipe akses: R (read) atau RW (read-write)"
-              }
-            }
-          }
-        }
-      });
+      await db.createCollection('branch_access');
       console.log('\n✓ Collection "branch_access" created successfully');
 
-      // Buat index untuk optimasi query
+      // Buat indexes
       const collection = db.collection('branch_access');
-      await collection.createIndex({ user_id: 1 });
-      await collection.createIndex({ branch_id: 1, user_id: 1 }, { unique: true });
+      await collection.createIndex({ branch_id: 1, user_id: 1 }, { name: 'idx_branch_user' });
+      await collection.createIndex({ created_at: -1 }, { name: 'idx_created_at' });
+      await collection.createIndex({ status: 1 }, { name: 'idx_status' });
       console.log('\n✓ Indexes created successfully');
-
+      
     } catch (err) {
       if (err.code === 48) {
         console.log('\nℹ Collection "branch_access" already exists');

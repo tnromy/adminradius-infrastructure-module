@@ -1,6 +1,26 @@
 const { ObjectId } = require('mongodb');
 
 /**
+ * Enum untuk permission branch access
+ * @enum {string}
+ */
+const BranchAccessPermission = {
+  READ: 'R',
+  READ_WRITE: 'RW'
+};
+
+/**
+ * Enum untuk status branch access
+ * @enum {string}
+ */
+const BranchAccessStatus = {
+  SUBMITTED: 'SUBMITTED',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+  REVOKED: 'REVOKED'
+};
+
+/**
  * @typedef {Object} BranchAccess
  * @property {ObjectId} _id - ID dari dokumen branch access
  * @property {ObjectId} branch_id - ID dari branch yang diakses
@@ -9,16 +29,13 @@ const { ObjectId } = require('mongodb');
  */
 
 /**
- * Membuat objek BranchAccess baru
- * @param {Object} data - Data untuk membuat BranchAccess
- * @param {string|ObjectId} data.branch_id - ID dari branch
- * @param {string} data.user_id - UUID dari user
- * @param {string} data.permission - Tipe akses (R/RW)
- * @returns {BranchAccess}
+ * Membuat basic branch access entity (minimal)
+ * @param {Object} data - Data untuk membuat basic branch access
+ * @returns {Object} Basic branch access entity
  */
-function createBranchAccess(data) {
+function createBasicBranchAccessEntity(data = {}) {
   return {
-    _id: new ObjectId(),
+    _id: data._id || null,
     branch_id: typeof data.branch_id === 'string' ? new ObjectId(data.branch_id) : data.branch_id,
     user_id: data.user_id,
     permission: data.permission
@@ -26,23 +43,72 @@ function createBranchAccess(data) {
 }
 
 /**
- * Memvalidasi data BranchAccess
- * @param {Object} data - Data yang akan divalidasi
- * @throws {Error} Jika validasi gagal
+ * Membuat full branch access entity
+ * @param {Object} data - Data untuk membuat branch access
+ * @returns {Object} Full branch access entity
  */
-function validateBranchAccess(data) {
-  if (!data.branch_id) {
-    throw new Error('branch_id is required');
+function createBranchAccessEntity(data = {}) {
+  const now = new Date();
+  
+  return {
+    _id: data._id || null,
+    branch_id: typeof data.branch_id === 'string' ? new ObjectId(data.branch_id) : data.branch_id,
+    user_id: data.user_id,
+    permission: data.permission,
+    name: data.name || '',
+    email: data.email || '',
+    phone: data.phone || '',
+    ava_path: data.ava_path || '',
+    status: data.status || BranchAccessStatus.SUBMITTED,
+    user_note: data.user_note || null,
+    reviewer_note: data.reviewer_note || null,
+    approved_by_user_id: data.approved_by_user_id || null,
+    rejected_by_user_id: data.rejected_by_user_id || null,
+    revoked_by_user_id: data.revoked_by_user_id || null,
+    created_at: data.created_at || now,
+    updated_at: data.updated_at || now
+  };
+}
+
+/**
+ * Membuat list branch access entity
+ * @param {Array} dataList - Array of branch access data
+ * @returns {Array} Array of branch access entities
+ */
+function createBranchAccessListEntity(dataList = []) {
+  return dataList.map(data => createBranchAccessEntity(data));
+}
+
+/**
+ * Validasi branch access entity
+ * @param {Object} data - Data yang akan divalidasi
+ * @returns {boolean} True jika valid
+ */
+function validateBranchAccessEntity(data) {
+  if (!data.branch_id || !ObjectId.isValid(data.branch_id)) {
+    return false;
   }
+
   if (!data.user_id) {
-    throw new Error('user_id is required');
+    return false;
   }
-  if (!data.permission || !['R', 'RW'].includes(data.permission)) {
-    throw new Error('permission must be either R or RW');
+
+  if (data.permission && !Object.values(BranchAccessPermission).includes(data.permission)) {
+    return false;
   }
+
+  if (data.status && !Object.values(BranchAccessStatus).includes(data.status)) {
+    return false;
+  }
+
+  return true;
 }
 
 module.exports = {
-  createBranchAccess,
-  validateBranchAccess
+  BranchAccessPermission,
+  BranchAccessStatus,
+  createBasicBranchAccessEntity,
+  createBranchAccessEntity,
+  createBranchAccessListEntity,
+  validateBranchAccessEntity
 }; 

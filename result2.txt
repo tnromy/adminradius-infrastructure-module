@@ -1,0 +1,476 @@
+###
+cat src/services/branch.service.js
+/**
+ * Service untuk operasi terkait branches
+ */
+
+const branchRepository = require('../repositories/branch.repository');
+const { DeletedFilterTypes } = require('../utils/recursiveDeletedCheck.util');
+
+/**
+ * Mendapatkan semua branches dengan level detail tertentu
+ * @param {string} scopeLevel - Level scope data (BRANCHES, ROUTERS, OLTS, ODCS, ODPS, ONTS)
+ * @param {string} deleted - Filter data yang dihapus (ONLY, WITH, WITHOUT)
+ * @returns {Promise<Array>} - Array berisi data branches sesuai level detail
+ */
+async function getAllBranches(scopeLevel = null, deleted = DeletedFilterTypes.WITHOUT) {
+  try {
+    // Validasi parameter deleted
+    if (!Object.values(DeletedFilterTypes).includes(deleted)) {
+      throw new Error(`Invalid deleted filter type. Must be one of: ${Object.values(DeletedFilterTypes).join(', ')}`);
+    }
+
+    return await branchRepository.getAllBranches(scopeLevel, deleted);
+  } catch (error) {
+    console.error('Error in getAllBranches service:', error);
+    throw error;
+  }
+}
+
+/**
+ * Mendapatkan branch berdasarkan ID dengan level detail tertentu
+ * @param {string} id - ID branch
+ * @param {string} scopeLevel - Level scope data (BRANCHES, ROUTERS, OLTS, ODCS, ODPS, ONTS)
+ * @param {string} deleted - Filter data yang dihapus (ONLY, WITH, WITHOUT)
+ * @returns {Promise<Object>} - Data branch sesuai level detail
+ */
+async function getBranchById(id, scopeLevel = null, deleted = DeletedFilterTypes.WITHOUT) {
+  try {
+    // Validasi parameter deleted
+    if (!Object.values(DeletedFilterTypes).includes(deleted)) {
+      throw new Error(`Invalid deleted filter type. Must be one of: ${Object.values(DeletedFilterTypes).join(', ')}`);
+    }
+
+    const branch = await branchRepository.getBranchById(id, scopeLevel, deleted);
+    if (!branch) {
+      throw new Error('Branch not found');
+    }
+    return branch;
+  } catch (error) {
+    console.error('Error in getBranchById service:', error);
+    throw error;
+  }
+}
+
+// ... existing code ...
+###
+cat src/services/jwks.service.js
+/**
+ * Service untuk mengelola JWKS (JSON Web Key Set)
+ */
+
+const axios = require('axios');
+const config = require('../../config/app.config');
+
+// Variable global untuk menyimpan JWKS
+let globalJwks = null;
+
+/**
+ * Mengambil JWKS dari URL yang ditentukan
+ * @returns {Promise<Object>} JWKS yang sudah diformat
+ */
+async function fetchJwks() {
+  try {
+    console.log('[fetchJwks] Mengambil JWKS dari:', config.auth.jwksUrl);
+    
+    const response = await axios.get(config.auth.jwksUrl);
+    const jwks = response.data;
+    
+    // Format JWKS untuk penggunaan nantinya
+    const formattedJwks = {
+      keys: jwks.keys.map(key => ({
+        kid: key.kid,
+        kty: key.kty,
+        alg: key.alg,
+        use: key.use,
+        n: key.n,
+        e: key.e
+      }))
+    };
+    
+    console.log('[fetchJwks] JWKS berhasil diambil dan diformat');
+    return formattedJwks;
+  } catch (error) {
+    console.error('[fetchJwks] Error saat mengambil JWKS:', error);
+    throw error;
+  }
+}
+
+/**
+ * Menginisialisasi JWKS
+ * @returns {Promise<void>}
+ */
+async function initializeJwks() {
+  try {
+    console.log('[initializeJwks] Memulai inisialisasi JWKS');
+    globalJwks = await fetchJwks();
+    console.log('[initializeJwks] JWKS berhasil diinisialisasi');
+  } catch (error) {
+    console.error('[initializeJwks] Error saat inisialisasi JWKS:', error);
+    throw error;
+  }
+}
+
+/**
+ * Mendapatkan JWKS yang sudah diformat
+ * @returns {Object} JWKS yang sudah diformat
+ */
+function getJwks() {
+  return globalJwks;
+}
+
+module.exports = {
+  initializeJwks,
+  getJwks
+}; ###
+cat src/services/logger.service.js
+/**
+ * Service untuk logging menggunakan Winston
+ */
+
+const winston = require('winston');
+const { ElasticsearchTransport } = require('winston-elasticsearch');
+const config = require('../../config/app.config');
+const { getRequestContext } = require('./requestContext.service');
+const { generateUUID } = require('../utils/uuid.util');
+
+// Konfigurasi format log
+const logFormat = winston.format.combine(
+  winston.format.timestamp(),
+  winston.format.json()
+);
+
+// Konfigurasi Elasticsearch transport
+const esTransportOpts = {
+  level: 'trace',
+  clientOpts: {
+    node: config.elasticsearch.node,
+    auth: {
+      username: config.elasticsearch.auth.username,
+      password: config.elasticsearch.auth.password
+    }
+  },
+  indexPrefix: config.elasticsearch.index,
+  indexSuffixPattern: 'YYYY.MM.DD'
+};
+
+// Buat Winston logger
+const logger = winston.createLogger({
+  levels: config.logLevels,
+  format: logFormat,
+  transports: [
+    new winston.transports.Console({
+      level: 'trace'
+    }),
+    new ElasticsearchTransport(esTransportOpts)
+  ]
+});
+
+/**
+ * Membuat log entry dengan context yang sesuai
+ * @param {string} level - Level log
+ * @param {string} message - Pesan log
+ * @param {Object} additionalInfo - Informasi tambahan
+ */
+function createLogEntry(level, message, additionalInfo = {}) {
+  const context = getRequestContext();
+  const requestId = context?.requestId || generateUUID();
+  
+  const logData = {
+    level,
+    message,
+    requestId,
+    userId: context?.getUserId(),
+    timestamp: new Date().toISOString(),
+    ...additionalInfo
+  };
+
+  logger.log(level, message, logData);
+}
+
+// Fungsi helper untuk setiap level log
+const logError = (message, additionalInfo) => createLogEntry('error', message, additionalInfo);
+const logWarn = (message, additionalInfo) => createLogEntry('warn', message, additionalInfo);
+const logInfo = (message, additionalInfo) => createLogEntry('info', message, additionalInfo);
+const logHttp = (message, additionalInfo) => createLogEntry('http', message, additionalInfo);
+const logDebug = (message, additionalInfo) => createLogEntry('debug', message, additionalInfo);
+const logTrace = (message, additionalInfo) => createLogEntry('trace', message, additionalInfo);
+
+/**
+ * Middleware untuk logging HTTP requests
+ */
+function requestLoggingMiddleware(req, res, next) {
+  const requestId = generateUUID();
+  const context = getRequestContext();
+  
+  // Set request ID ke context
+  context.setRequestId(requestId);
+  
+  // Tambahkan request ID ke response header
+  res.setHeader('X-Request-ID', requestId);
+  
+  const startTime = Date.now();
+  
+  // Log request
+  logHttp('Incoming request', {
+    requestId,
+    method: req.method,
+    url: req.url,
+    headers: req.headers,
+    query: req.query,
+    body: req.body,
+    ip: req.ip || req.connection.remoteAddress,
+    userAgent: req.get('user-agent')
+  });
+
+  // Intercept response
+  const originalSend = res.send;
+  res.send = function(body) {
+    const responseTime = Date.now() - startTime;
+    
+    // Log response
+    logHttp('Response sent', {
+      requestId,
+      method: req.method,
+      url: req.url,
+      statusCode: res.statusCode,
+      responseTime,
+      responseBody: body
+    });
+
+    originalSend.call(this, body);
+  };
+
+  next();
+}
+
+// Helper untuk membuat error response yang konsisten
+function createErrorResponse(status, message, error = null) {
+  const context = getRequestContext();
+  const requestId = context.getRequestId();
+  
+  const response = {
+    error: message,
+    request_id: requestId
+  };
+
+  if (error && process.env.NODE_ENV !== 'production') {
+    response.details = error.message;
+  }
+
+  return response;
+}
+
+module.exports = {
+  logger,
+  logError,
+  logWarn,
+  logInfo,
+  logHttp,
+  logDebug,
+  logTrace,
+  requestLoggingMiddleware,
+  createErrorResponse
+}; ###
+cat src/services/netDevice.service.js
+###
+cat src/services/netDeviceFactory.service.js
+###
+cat src/services/netDeviceOnt.service.js
+/**
+ * Service untuk operasi terkait ONT
+ */
+
+const netDeviceOntRepository = require('../repositories/netDeviceOnt.repository');
+const { DeletedFilterTypes } = require('../utils/recursiveDeletedCheck.util');
+const { logDebug, logError } = require('./logger.service');
+const { getRequestContext } = require('./requestContext.service');
+
+/**
+ * Mendapatkan ONT berdasarkan ID
+ * @param {string} ontId - ID ONT
+ * @param {string} deleted - Filter data yang dihapus (ONLY, WITH, WITHOUT)
+ * @returns {Promise<Object>} Data ONT
+ */
+async function getOntById(ontId, deleted = DeletedFilterTypes.WITHOUT) {
+  try {
+    const context = getRequestContext();
+    
+    // Validasi parameter deleted
+    if (!Object.values(DeletedFilterTypes).includes(deleted)) {
+      logError('Invalid deleted filter type pada getOntById', {
+        requestId: context.getRequestId(),
+        userId: context.getUserId(),
+        ontId: ontId,
+        deletedFilterType: deleted,
+        validTypes: Object.values(DeletedFilterTypes)
+      });
+      
+      throw new Error(`Invalid deleted filter type. Must be one of: ${Object.values(DeletedFilterTypes).join(', ')}`);
+    }
+    
+    logDebug('Mengambil data ONT dari repository', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      ontId: ontId,
+      deletedFilter: deleted
+    });
+
+    const ont = await netDeviceOntRepository.getOntById(ontId, deleted);
+    if (!ont) {
+      logDebug('ONT tidak ditemukan', {
+        requestId: context.getRequestId(),
+        userId: context.getUserId(),
+        ontId: ontId,
+        deletedFilter: deleted
+      });
+      
+      throw new Error('ONT not found');
+    }
+    return ont;
+  } catch (error) {
+    logError('Error pada getOntById service', {
+      requestId: getRequestContext().getRequestId(),
+      userId: getRequestContext().getUserId(),
+      error: error.message,
+      stack: error.stack,
+      ontId: ontId
+    });
+    
+    throw error;
+  }
+}
+
+/**
+ * Melakukan restore pada ONT yang sudah di-soft delete
+ * @param {string} ontId - ID ONT yang akan di-restore
+ * @returns {Promise<Object>} ONT yang sudah di-restore
+ */
+async function restoreOnt(ontId) {
+  try {
+    const context = getRequestContext();
+    
+    logDebug('Melakukan restore ONT dari repository', {
+      requestId: context.getRequestId(),
+      userId: context.getUserId(),
+      ontId: ontId
+    });
+    
+    const ont = await netDeviceOntRepository.restoreOnt(ontId);
+    if (!ont) {
+      logDebug('ONT tidak ditemukan atau sudah di-restore', {
+        requestId: context.getRequestId(),
+        userId: context.getUserId(),
+        ontId: ontId
+      });
+      
+      throw new Error('ONT not found or already restored');
+    }
+    return ont;
+  } catch (error) {
+    logError('Error pada restoreOnt service', {
+      requestId: getRequestContext().getRequestId(),
+      userId: getRequestContext().getUserId(),
+      error: error.message,
+      stack: error.stack,
+      ontId: ontId
+    });
+    
+    throw error;
+  }
+}
+
+module.exports = {
+  getOntById,
+  restoreOnt
+}; ###
+cat src/services/requestContext.service.js
+/**
+ * Service untuk mengelola request context menggunakan async_hooks
+ */
+
+const { AsyncLocalStorage } = require('async_hooks');
+
+const asyncLocalStorage = new AsyncLocalStorage();
+
+/**
+ * Class untuk menyimpan data context request
+ */
+class RequestContext {
+  constructor() {
+    this.userId = null;
+    this.userRoles = [];
+    this.requestId = null;
+  }
+
+  /**
+   * Set user ID dari JWT sub claim
+   * @param {string} userId - User ID
+   */
+  setUserId(userId) {
+    this.userId = userId;
+  }
+
+  /**
+   * Set roles user dari JWT roles claim
+   * @param {Array} roles - Array of role objects
+   */
+  setUserRoles(roles) {
+    this.userRoles = roles;
+  }
+
+  /**
+   * Set request ID
+   * @param {string} requestId - Request ID
+   */
+  setRequestId(requestId) {
+    this.requestId = requestId;
+  }
+
+  /**
+   * Get user ID
+   * @returns {string} User ID
+   */
+  getUserId() {
+    return this.userId;
+  }
+
+  /**
+   * Get user roles
+   * @returns {Array} Array of role objects
+   */
+  getUserRoles() {
+    return this.userRoles;
+  }
+
+  /**
+   * Get request ID
+   * @returns {string} Request ID
+   */
+  getRequestId() {
+    return this.requestId;
+  }
+}
+
+/**
+ * Middleware untuk menginisialisasi request context
+ */
+function initializeRequestContext(req, res, next) {
+  asyncLocalStorage.run(new RequestContext(), () => {
+    next();
+  });
+}
+
+/**
+ * Get current request context
+ * @returns {RequestContext} Current request context
+ */
+function getRequestContext() {
+  return asyncLocalStorage.getStore();
+}
+
+module.exports = {
+  RequestContext,
+  initializeRequestContext,
+  getRequestContext
+}; 
