@@ -96,7 +96,7 @@ async function createBranchAccess(req, res) {
         branch_id: new ObjectId(branchId),
         user_id: context.getUserId(),
         status: BranchAccessStatus.SUBMITTED,
-        permission: BranchAccessPermission.READ,
+        permission: null,
         user_note: user_note || null,
         name,
         email,
@@ -112,7 +112,10 @@ async function createBranchAccess(req, res) {
       });
     }
 
-    res.status(201).json(result);
+    res.status(201).json({
+      message: existingAccess ? 'Branch access request updated' : 'Branch access request created',
+      data: result
+    });
   } catch (error) {
     logError('Gagal membuat/mengupdate branch access request', {
       requestId: context.getRequestId(),
@@ -195,7 +198,10 @@ async function updateBranchAccess(req, res) {
       permission: permission
     });
 
-    res.json(result);
+    res.json({
+      message: 'Branch access updated successfully',
+      data: result
+    });
   } catch (error) {
     logError('Gagal mengupdate branch access', {
       requestId: context.getRequestId(),
