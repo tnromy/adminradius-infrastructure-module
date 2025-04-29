@@ -2,11 +2,37 @@ const { ObjectId } = require('mongodb');
 const { getCollection } = require('./database.connector');
 const { createBranchAccessEntity, createBranchAccessListEntity } = require('../entities/branchAccess.entity');
 const { logDebug, logError } = require('../services/logger.service');
+const { BranchAccessStatus } = require('../entities/branchAccess.entity');
 
 /**
  * Repository untuk operasi branch access
  */
 class BranchAccessRepository {
+  /**
+   * Mencari branch access berdasarkan ID
+   * @param {string} id - ID branch access
+   * @returns {Promise<Object|null>} Branch access jika ditemukan
+   */
+  async findById(id) {
+    try {
+      const collection = getCollection('branch_access');
+      
+      const result = await collection.findOne({ 
+        _id: new ObjectId(id)
+      });
+
+      logDebug('Finding branch access by ID', {
+        branchAccessId: id,
+        found: !!result
+      });
+
+      return result;
+    } catch (error) {
+      logError('Error finding branch access by ID:', error);
+      throw error;
+    }
+  }
+
   /**
    * Menambahkan branch access baru
    * @param {Object} data - Data branch access
@@ -156,6 +182,61 @@ class BranchAccessRepository {
       return result.deletedCount > 0;
     } catch (error) {
       logError('Error deleting branch access:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Mendapatkan list branch yang dapat diakses oleh user
+   * @param {string} userId - ID user
+   * @returns {Promise<Array>} List branch access yang approved
+   */
+  async getAccessibleBranches(userId) {
+    try {
+      const collection = getCollection('branch_access');
+      
+      const result = await collection.find({
+        user_id: userId,
+        status: BranchAccessStatus.APPROVED
+      }).toArray();
+
+      logDebug('Retrieved accessible branches', {
+        userId,
+        count: result.length
+      });
+
+      return result;
+    } catch (error) {
+      logError('Error getting accessible branches:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Memeriksa akses user terhadap branch tertentu
+   * @param {string} userId - ID user
+   * @param {ObjectId} branchId - ID branch
+   * @returns {Promise<Object|null>} Branch access jika ada dan approved
+   */
+  async checkAccess(userId, branchId) {
+    try {
+      const collection = getCollection('branch_access');
+      
+      const access = await collection.findOne({
+        user_id: userId,
+        branch_id: branchId,
+        status: BranchAccessStatus.APPROVED
+      });
+
+      logDebug('Checked branch access', {
+        userId,
+        branchId: branchId.toString(),
+        hasAccess: !!access
+      });
+
+      return access;
+    } catch (error) {
+      logError('Error checking branch access:', error);
       throw error;
     }
   }
