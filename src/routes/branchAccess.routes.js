@@ -6,6 +6,7 @@ const express = require('express');
 const router = express.Router();
 const { authenticateJWT, authorizeRoles } = require('../middlewares/auth.middleware');
 const { validateIdToken } = require('../middlewares/idToken.middleware');
+const { branchPermission } = require('../middlewares/branchPermission.middleware');
 const {
   validateGetBranchAccessList,
   validateCreateBranchAccess,
@@ -21,7 +22,7 @@ const {
 router.get(
   '/branch-access-list',
   authenticateJWT,
-  authorizeRoles(['Client Owner']),
+  authorizeRoles(['Client Owner', 'Client Administrator']),
   validateGetBranchAccessList,
   getBranchAccessList
 );
@@ -32,6 +33,7 @@ router.post(
   authenticateJWT,
   authorizeRoles(['Client Owner', 'Client Administrator']),
   validateCreateBranchAccess,
+  branchPermission,
   validateIdToken,
   createBranchAccess
 );
@@ -42,6 +44,7 @@ router.put(
   authenticateJWT,
   authorizeRoles(['Client Owner']),
   validateUpdateBranchAccess,
+  branchPermission,
   updateBranchAccess
 );
 

@@ -20,58 +20,102 @@ const ResultTypes = {
   OLTS: 'OLTS',
   ODCS: 'ODCS',
   ODPS: 'ODPS',
-  ONTS: 'ONTS'
+  ONTS: 'ONTS',
+  BASIC: 'BASIC',
+  FULL: 'FULL'
 };
 
 /**
- * Mendapatkan semua branches dengan level detail tertentu dan filter akses
- * @param {string} scopeLevel - Level scope data (BRANCHES, ROUTERS, OLTS, ODCS, ODPS, ONTS)
- * @param {string} deletedFilter - Filter data yang dihapus (ONLY, WITH, WITHOUT)
- * @param {Array<ObjectId>} [accessibleBranchIds] - Array of branch IDs yang bisa diakses
- * @returns {Promise<Array>} - Array berisi data branches sesuai level detail dan filter
+ * Membuat basic branch entity (minimal fields)
+ * @param {Object} data - Data branch
+ * @returns {Object} Basic branch entity
  */
-async function getAllBranches(scopeLevel = null, deletedFilter = DeletedFilterTypes.WITHOUT, accessibleBranchIds = null) {
+function createBasicBranchEntity(data) {
+  return {
+    _id: data._id,
+    name: data.name,
+    address: data.address,
+    location: data.location,
+    created_at: data.created_at,
+    updated_at: data.updated_at
+  };
+}
+
+/**
+ * Membuat list basic branch entity
+ * @param {Array} dataList - Array of branch data
+ * @returns {Array} Array of basic branch entities
+ */
+function createBasicBranchListEntity(dataList) {
+  return dataList.map(data => createBasicBranchEntity(data));
+}
+
+/**
+ * Membuat full branch entity dengan semua fields
+ * @param {Object} data - Data branch
+ * @returns {Object} Full branch entity
+ */
+function createFullBranchEntity(data) {
+  return {
+    ...data,
+    _id: data._id
+  };
+}
+
+/**
+ * Membuat list full branch entity
+ * @param {Array} dataList - Array of branch data
+ * @returns {Array} Array of full branch entities
+ */
+function createFullBranchListEntity(dataList) {
+  return dataList.map(data => createFullBranchEntity(data));
+}
+
+/**
+ * Membuat branch list entity dengan level detail tertentu
+ * @param {Array} dataList - Array of branch data
+ * @returns {Array} Array of branch entities
+ */
+function createBranchListEntity(dataList) {
+  return dataList.map(data => createBranchEntity(data));
+}
+
+/**
+ * Mendapatkan semua branches
+ * @param {string} resultType - Tipe result yang diinginkan
+ * @param {string} deletedFilter - Filter untuk deleted
+ * @param {Array<ObjectId>} accessibleBranchIds - List branch ID yang bisa diakses
+ * @returns {Promise<Array>} List branch
+ */
+async function getAllBranches(resultType = ResultTypes.BASIC, deletedFilter = DeletedFilterTypes.WITHOUT, accessibleBranchIds = null) {
   try {
-    logDebug('Memulai query getAllBranches', {
-      scopeLevel,
-      deletedFilter,
-      hasAccessFilter: !!accessibleBranchIds
-    });
+    const collection = getCollection('branches');
+    let query = {};
 
-    const collection = getCollection(COLLECTION);
-    const startTime = Date.now();
+    // Filter deleted
+    if (deletedFilter === DeletedFilterTypes.WITHOUT) {
+      query.deleted = { $ne: true };
+    } else if (deletedFilter === DeletedFilterTypes.ONLY) {
+      query.deleted = true;
+    }
 
-    // Buat query berdasarkan akses
-    const query = accessibleBranchIds ? { _id: { $in: accessibleBranchIds } } : {};
-    const branches = await collection.find(query).toArray();
-    
-    logTrace('Query database selesai', {
-      executionTime: Date.now() - startTime,
-      resultCount: branches.length,
-      accessFilterApplied: !!accessibleBranchIds
-    });
-    
-    const filteredBranches = branches
-      .map(branch => recursiveDeletedCheck(branch, deletedFilter, scopeLevel))
-      .filter(branch => branch !== null);
-    
-    logDebug('Filtering branches selesai', {
-      originalCount: branches.length,
-      filteredCount: filteredBranches.length,
-      filters: {
-        scopeLevel,
-        deletedFilter,
-        accessFiltered: !!accessibleBranchIds
-      }
-    });
+    // Filter berdasarkan accessible branches jika ada
+    if (accessibleBranchIds && accessibleBranchIds.length > 0) {
+      query._id = { $in: accessibleBranchIds.map(id => new ObjectId(id)) };
+    }
 
-    return filteredBranches;
+    const result = await collection.find(query).toArray();
+
+    // Transform result sesuai tipe yang diminta
+    if (resultType === ResultTypes.BASIC) {
+      return createBasicBranchListEntity(result);
+    } else if (resultType === ResultTypes.FULL) {
+      return createFullBranchListEntity(result);
+    } else {
+      return createBranchListEntity(result);
+    }
   } catch (error) {
-    logError('Error pada getAllBranches repository', {
-      error: error.message,
-      stack: error.stack,
-      collection: COLLECTION
-    });
+    logError('Error getting all branches:', error);
     throw error;
   }
 }
@@ -251,5 +295,10 @@ module.exports = {
   addRouterToBranch,
   ResultTypes,
   DeletedFilterTypes,
-  restore
+  restore,
+  createBasicBranchEntity,
+  createBasicBranchListEntity,
+  createFullBranchEntity,
+  createFullBranchListEntity,
+  createBranchListEntity
 };

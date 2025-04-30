@@ -3,6 +3,7 @@
  */
 
 const { AsyncLocalStorage } = require('async_hooks');
+const { v4: uuidv4 } = require('uuid');
 
 const asyncLocalStorage = new AsyncLocalStorage();
 
@@ -11,9 +12,11 @@ const asyncLocalStorage = new AsyncLocalStorage();
  */
 class RequestContext {
   constructor() {
+    this.requestId = uuidv4();
     this.userId = null;
     this.userRoles = [];
-    this.requestId = null;
+    this.branchAccess = null;
+    this.branchAccessList = [];
   }
 
   /**
@@ -62,6 +65,26 @@ class RequestContext {
    */
   getRequestId() {
     return this.requestId;
+  }
+
+  setBranchAccess(branchAccess) {
+    this.branchAccess = branchAccess;
+  }
+
+  getBranchAccess() {
+    return this.branchAccess;
+  }
+
+  setBranchAccessList(branchAccessList) {
+    this.branchAccessList = branchAccessList;
+  }
+
+  getBranchAccessList() {
+    return this.branchAccessList;
+  }
+
+  getAccessibleBranchIds() {
+    return this.branchAccessList.map(access => access.branch_id);
   }
 }
 

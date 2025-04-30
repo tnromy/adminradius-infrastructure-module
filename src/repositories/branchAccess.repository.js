@@ -240,6 +240,64 @@ class BranchAccessRepository {
       throw error;
     }
   }
+
+  /**
+   * Mencari branch access yang approved berdasarkan branch_id dan user_id
+   * @param {string} branchId - ID branch
+   * @param {string} userId - ID user
+   * @returns {Promise<Object|null>} Branch access yang approved jika ditemukan
+   */
+  async findApprovedBranchAccessByBranchIdAndUserId(branchId, userId) {
+    try {
+      const collection = getCollection('branch_access');
+      
+      const result = await collection.findOne(
+        { 
+          branch_id: new ObjectId(branchId),
+          user_id: userId,
+          status: BranchAccessStatus.APPROVED
+        },
+        { sort: { created_at: -1 } }
+      );
+
+      logDebug('Finding approved branch access', {
+        branchId,
+        userId,
+        found: !!result
+      });
+
+      return result;
+    } catch (error) {
+      logError('Error finding approved branch access:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Mendapatkan semua branch access yang approved untuk user tertentu
+   * @param {string} userId - ID user
+   * @returns {Promise<Array>} List branch access yang approved
+   */
+  async getApprovedBranchAccessByUserId(userId) {
+    try {
+      const collection = getCollection('branch_access');
+      
+      const result = await collection.find({
+        user_id: userId,
+        status: BranchAccessStatus.APPROVED
+      }).toArray();
+
+      logDebug('Retrieved approved branch access list', {
+        userId,
+        count: result.length
+      });
+
+      return createBranchAccessListEntity(result);
+    } catch (error) {
+      logError('Error getting approved branch access list:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = new BranchAccessRepository(); 
