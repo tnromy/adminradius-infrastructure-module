@@ -1,0 +1,2166 @@
+{
+	"info": {
+		"_postman_id": "19479b35-d228-4757-9b67-15a61eaba5d5",
+		"name": "adminradius",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "8632578"
+	},
+	"item": [
+		{
+			"name": "dashboard",
+			"item": [
+				{
+					"name": "auth",
+					"item": [
+						{
+							"name": "root api",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://localhost:8081/api",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8081",
+									"path": [
+										"api"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "login",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"code\": \"01968449-e644-743a-bf3f-6ee5dacca9fb\",\r\n    \"code_verifier\": \"asdfasdf\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://racenet.adminradius.com/api/auth/login",
+									"protocol": "https",
+									"host": [
+										"racenet",
+										"adminradius",
+										"com"
+									],
+									"path": [
+										"api",
+										"auth",
+										"login"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "logout",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"code\": \"0195604e-4d8b-7d7d-8b76-57e9f987667d\",\r\n    \"code_verifier\": \"asdfasdf\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8081/api/auth/logout",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8081",
+									"path": [
+										"api",
+										"auth",
+										"logout"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "dashboard",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6IkxudnRCSzFucmpWMURWN2NVdmo5dDgzZEtib1NPc1BaVkJZckdUVDdnRU0ifQ.eyJpc3MiOiJodHRwczovL2F1dGguaWNjLmNvLmlkL3JlYWxtL3JhY2VuZXQiLCJzdWIiOiIwMTk1NDY4NC1iODJhLTczMmItYWQ1YS05OGIzYzUxNzFlZWMiLCJhdWQiOiJhZG1pbnJhZGl1cy1kYXNoYm9hcmQiLCJleHAiOjE3NDEwNzY2OTksImlhdCI6MTc0MTA3NjM5OSwicm9sZXMiOlt7ImlkIjoyLCJuYW1lIjoiQ2xpZW50IEFkbWluaXN0cmF0b3IiLCJkaXNwbGF5X25hbWUiOiJDbGllbnQgQWRtaW5pc3RyYXRvciJ9XX0.Jj44Zojo6yvIptNUXSaYzu-bHCKGyAm6nhZGstve_wTmkg9Olh9DgUbA1wW0aGEwYezra3TQ1CTBfkWQ_WwypkDwyWSBr8k13-ImxMxeslrnD1AtjSvn1QUKOcYmch3iwYMbL4aC-THasapLikCYBauODRH629_eq21ZI3QuaJF8Gg5hPQP8-vE5Jl9Aeo3asj27-_sX3GfZAWhoxMSFtCTcAxIlHaeHJZcg0trqnCRQ4kYNrAaDEjjsUT0u1pV0g7JH7mbuF2hic2r-DPKHWMDAbJXMaQ2v41O4I5No44GSbEI_SigxOs4aMJ1hNohk3qvnXyySDLqyAwjs9nzojA",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://localhost:8081/api/dashboard",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8081",
+									"path": [
+										"api",
+										"dashboard"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "refresh token",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{ACCESS_TOKEN}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "https://racenet.adminradius.com/api/auth/refresh",
+									"protocol": "https",
+									"host": [
+										"racenet",
+										"adminradius",
+										"com"
+									],
+									"path": [
+										"api",
+										"auth",
+										"refresh"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "infra",
+					"item": [
+						{
+							"name": "branch",
+							"item": [
+								{
+									"name": "add",
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{ACCESS_TOKEN}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "Accept",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n  \"name\": \"Cabang Bandung Utara\",\r\n  \"location\": {\r\n    \"type\": \"Point\",\r\n    \"coordinates\": [107.6191, -6.8841]\r\n  },\r\n  \"address\": {\r\n    \"country\": \"ID\",\r\n    \"province\": \"Jawa Barat\",\r\n    \"city\": \"Bandung\"\r\n  },\r\n  \"contact\": {\r\n    \"email\": \"bandung.utara@ispprovider.co.id\",\r\n    \"phone\": \"+6282345678901\"\r\n  }\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{PROTOCOL}}://{{DOMAIN}}/api/infra/branch",
+											"protocol": "{{PROTOCOL}}",
+											"host": [
+												"{{DOMAIN}}"
+											],
+											"path": [
+												"api",
+												"infra",
+												"branch"
+											]
+										}
+									},
+									"response": [
+										{
+											"name": "response 200",
+											"originalRequest": {
+												"method": "POST",
+												"header": [
+													{
+														"key": "Content-Type",
+														"value": "application/json",
+														"type": "text"
+													},
+													{
+														"key": "Accept",
+														"value": "application/json",
+														"type": "text"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\r\n  \"name\": \"Cabang Tangerang Selatan\",\r\n  \"location\": {\r\n    \"type\": \"Point\",\r\n    \"coordinates\": [106.7271, -6.2875]\r\n  },\r\n  \"address\": {\r\n    \"country\": \"ID\",\r\n    \"province\": \"Banten\",\r\n    \"city\": \"Tangerang Selatan\",\r\n    \"district\": \"Serpong\",\r\n    \"village\": \"Serpong\",\r\n    \"detail\": \"Jl. Pahlawan Seribu No. 128, Ruko Golden Plaza Blok A3\",\r\n    \"zip_code\": \"15310\"\r\n  },\r\n  \"contact\": {\r\n    \"email\": \"tangerang.selatan@ispprovider.co.id\",\r\n    \"phone\": \"+6281234567890\"\r\n  }\r\n}",
+													"options": {
+														"raw": {
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "{{PROTOCOL}}://{{DOMAIN}}/api/infra/branch",
+													"protocol": "{{PROTOCOL}}",
+													"host": [
+														"{{DOMAIN}}"
+													],
+													"path": [
+														"api",
+														"infra",
+														"branch"
+													]
+												}
+											},
+											"status": "OK",
+											"code": 200,
+											"_postman_previewlanguage": "json",
+											"header": [
+												{
+													"key": "X-Powered-By",
+													"value": "Express"
+												},
+												{
+													"key": "Content-Type",
+													"value": "application/json; charset=utf-8"
+												},
+												{
+													"key": "Content-Length",
+													"value": "539"
+												},
+												{
+													"key": "ETag",
+													"value": "W/\"21b-/YrtHPtqRsYKxRnTNegaSAYQFVk\""
+												},
+												{
+													"key": "Date",
+													"value": "Tue, 15 Apr 2025 10:31:52 GMT"
+												},
+												{
+													"key": "Connection",
+													"value": "keep-alive"
+												},
+												{
+													"key": "Keep-Alive",
+													"value": "timeout=5"
+												}
+											],
+											"cookie": [],
+											"body": "{\n    \"message\": \"Branch created successfully\",\n    \"data\": {\n        \"_id\": \"67fe35982962890d3628d917\",\n        \"name\": \"Cabang Tangerang Selatan\",\n        \"location\": {\n            \"type\": \"Point\",\n            \"coordinates\": [\n                106.7271,\n                -6.2875\n            ]\n        },\n        \"address\": {\n            \"country\": \"ID\",\n            \"province\": \"Banten\",\n            \"city\": \"Tangerang Selatan\",\n            \"district\": \"Serpong\",\n            \"village\": \"Serpong\",\n            \"detail\": \"Jl. Pahlawan Seribu No. 128, Ruko Golden Plaza Blok A3\",\n            \"zip_code\": \"15310\"\n        },\n        \"contact\": {\n            \"email\": \"tangerang.selatan@ispprovider.co.id\",\n            \"phone\": \"+6281234567890\"\n        },\n        \"createdAt\": \"2025-04-15T10:31:52.411Z\",\n        \"updatedAt\": \"2025-04-15T10:31:52.411Z\"\n    }\n}"
+										}
+									]
+								},
+								{
+									"name": "get list",
+									"protocolProfileBehavior": {
+										"disableBodyPruning": true
+									},
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{ACCESS_TOKEN}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [],
+										"body": {
+											"mode": "urlencoded",
+											"urlencoded": []
+										},
+										"url": {
+											"raw": "{{PROTOCOL}}://{{DOMAIN}}/api/infra/branches",
+											"protocol": "{{PROTOCOL}}",
+											"host": [
+												"{{DOMAIN}}"
+											],
+											"path": [
+												"api",
+												"infra",
+												"branches"
+											],
+											"query": [
+												{
+													"key": "scope_level",
+													"value": "BRANCHES",
+													"disabled": true
+												},
+												{
+													"key": "scope_level",
+													"value": "ROUTERS",
+													"disabled": true
+												},
+												{
+													"key": "scope_level",
+													"value": "OLTS",
+													"disabled": true
+												},
+												{
+													"key": "scope_level",
+													"value": "ODCS",
+													"disabled": true
+												},
+												{
+													"key": "scope_level",
+													"value": "ODPS",
+													"disabled": true
+												},
+												{
+													"key": "deleted",
+													"value": "WITHOUT",
+													"disabled": true
+												},
+												{
+													"key": "deleted",
+													"value": "WITH",
+													"disabled": true
+												},
+												{
+													"key": "deleted",
+													"value": "ONLY",
+													"disabled": true
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "show",
+									"protocolProfileBehavior": {
+										"disableBodyPruning": true
+									},
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{ACCESS_TOKEN}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [],
+										"body": {
+											"mode": "urlencoded",
+											"urlencoded": []
+										},
+										"url": {
+											"raw": "{{PROTOCOL}}://{{DOMAIN}}/api/infra/branch/6810aa3e49cf9328bc9b40f4",
+											"protocol": "{{PROTOCOL}}",
+											"host": [
+												"{{DOMAIN}}"
+											],
+											"path": [
+												"api",
+												"infra",
+												"branch",
+												"6810aa3e49cf9328bc9b40f4"
+											],
+											"query": [
+												{
+													"key": "scope_level",
+													"value": "BRANCHES",
+													"disabled": true
+												},
+												{
+													"key": "scope_level",
+													"value": "ROUTERS",
+													"disabled": true
+												},
+												{
+													"key": "scope_level",
+													"value": "OLTS",
+													"disabled": true
+												},
+												{
+													"key": "scope_level",
+													"value": "ODCS",
+													"disabled": true
+												},
+												{
+													"key": "scope_level",
+													"value": "ODPS",
+													"disabled": true
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "delete",
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{ACCESS_TOKEN}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "DELETE",
+										"header": [],
+										"body": {
+											"mode": "urlencoded",
+											"urlencoded": []
+										},
+										"url": {
+											"raw": "{{PROTOCOL}}://{{DOMAIN}}/api/infra/branch/6810aa3e49cf9328bc9b40f4",
+											"protocol": "{{PROTOCOL}}",
+											"host": [
+												"{{DOMAIN}}"
+											],
+											"path": [
+												"api",
+												"infra",
+												"branch",
+												"6810aa3e49cf9328bc9b40f4"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "restore",
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{ACCESS_TOKEN}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "urlencoded",
+											"urlencoded": []
+										},
+										"url": {
+											"raw": "{{PROTOCOL}}://{{DOMAIN}}/api/infra/branch/6810aa3e49cf9328bc9b40f4/restore",
+											"protocol": "{{PROTOCOL}}",
+											"host": [
+												"{{DOMAIN}}"
+											],
+											"path": [
+												"api",
+												"infra",
+												"branch",
+												"6810aa3e49cf9328bc9b40f4",
+												"restore"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "router",
+							"item": [
+								{
+									"name": "add",
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{ACCESS_TOKEN}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "Accept",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n  \"label\": \"Router Mikrotik 2 CCR1039\",\r\n  \"connection_type\": \"PUBLIC\",\r\n  \"ip_addr\": \"103.145.63.10\",\r\n  \"location\": {\r\n    \"type\": \"Point\",\r\n    \"coordinates\": [106.8456, -6.2088]\r\n  },\r\n  \"address\": {\r\n    \"country\": \"ID\",\r\n    \"province\": \"DKI Jakarta\",\r\n    \"city\": \"Jakarta Pusat\",\r\n    \"district\": \"Menteng\",\r\n    \"village\": \"Menteng\",\r\n    \"detail\": \"Jl. Thamrin No. 28, Gedung Cyber Tower Lt. 6\",\r\n    \"zip_code\": \"10350\"\r\n  }\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{PROTOCOL}}://{{DOMAIN}}/api/infra/branch/6810aa3e49cf9328bc9b40f4/router",
+											"protocol": "{{PROTOCOL}}",
+											"host": [
+												"{{DOMAIN}}"
+											],
+											"path": [
+												"api",
+												"infra",
+												"branch",
+												"6810aa3e49cf9328bc9b40f4",
+												"router"
+											]
+										}
+									},
+									"response": [
+										{
+											"name": "response 200",
+											"originalRequest": {
+												"method": "POST",
+												"header": [
+													{
+														"key": "Content-Type",
+														"value": "application/json",
+														"type": "text"
+													},
+													{
+														"key": "Accept",
+														"value": "application/json",
+														"type": "text"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\r\n  \"label\": \"Router Mikrotik CCR1036\",\r\n  \"connection_type\": \"PUBLIC\",\r\n  \"ip_addr\": \"103.145.63.10\",\r\n  \"location\": {\r\n    \"type\": \"Point\",\r\n    \"coordinates\": [106.8456, -6.2088]\r\n  },\r\n  \"address\": {\r\n    \"country\": \"ID\",\r\n    \"province\": \"DKI Jakarta\",\r\n    \"city\": \"Jakarta Pusat\",\r\n    \"district\": \"Menteng\",\r\n    \"village\": \"Menteng\",\r\n    \"detail\": \"Jl. Thamrin No. 28, Gedung Cyber Tower Lt. 6\",\r\n    \"zip_code\": \"10350\"\r\n  }\r\n}",
+													"options": {
+														"raw": {
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "{{PROTOCOL}}://{{DOMAIN}}/api/infra/branch/67fe35982962890d3628d917/router",
+													"protocol": "{{PROTOCOL}}",
+													"host": [
+														"{{DOMAIN}}"
+													],
+													"path": [
+														"api",
+														"infra",
+														"branch",
+														"67fe35982962890d3628d917",
+														"router"
+													]
+												}
+											},
+											"status": "OK",
+											"code": 200,
+											"_postman_previewlanguage": "json",
+											"header": [
+												{
+													"key": "X-Powered-By",
+													"value": "Express"
+												},
+												{
+													"key": "Content-Type",
+													"value": "application/json; charset=utf-8"
+												},
+												{
+													"key": "Content-Length",
+													"value": "1042"
+												},
+												{
+													"key": "ETag",
+													"value": "W/\"412-30/qcbP4BOVxYez26TrKR7RJWy0\""
+												},
+												{
+													"key": "Date",
+													"value": "Tue, 15 Apr 2025 11:16:12 GMT"
+												},
+												{
+													"key": "Connection",
+													"value": "keep-alive"
+												},
+												{
+													"key": "Keep-Alive",
+													"value": "timeout=5"
+												}
+											],
+											"cookie": [],
+											"body": "{\n    \"message\": \"Router added to branch successfully\",\n    \"data\": {\n        \"_id\": \"67fe35982962890d3628d917\",\n        \"name\": \"Cabang Tangerang Selatan\",\n        \"location\": {\n            \"type\": \"Point\",\n            \"coordinates\": [\n                106.7271,\n                -6.2875\n            ]\n        },\n        \"address\": {\n            \"country\": \"ID\",\n            \"province\": \"Banten\",\n            \"city\": \"Tangerang Selatan\",\n            \"district\": \"Serpong\",\n            \"village\": \"Serpong\",\n            \"detail\": \"Jl. Pahlawan Seribu No. 128, Ruko Golden Plaza Blok A3\",\n            \"zip_code\": \"15310\"\n        },\n        \"contact\": {\n            \"email\": \"tangerang.selatan@ispprovider.co.id\",\n            \"phone\": \"+6281234567890\"\n        },\n        \"children\": [\n            {\n                \"_id\": \"67fe3ffc13f21c5b60bb9b5c\",\n                \"label\": \"Router Mikrotik CCR1036\",\n                \"type\": \"router\",\n                \"location\": {\n                    \"type\": \"Point\",\n                    \"coordinates\": [\n                        106.8456,\n                        -6.2088\n                    ]\n                },\n                \"address\": {\n                    \"country\": \"ID\",\n                    \"province\": \"DKI Jakarta\",\n                    \"city\": \"Jakarta Pusat\",\n                    \"district\": \"Menteng\",\n                    \"village\": \"Menteng\",\n                    \"detail\": \"Jl. Thamrin No. 28, Gedung Cyber Tower Lt. 6\",\n                    \"zip_code\": \"10350\"\n                },\n                \"children\": [],\n                \"createdAt\": \"2025-04-15T11:16:12.187Z\",\n                \"updatedAt\": \"2025-04-15T11:16:12.187Z\",\n                \"connection_type\": \"PUBLIC\",\n                \"ip_addr\": \"103.145.63.10\"\n            }\n        ],\n        \"createdAt\": \"2025-04-15T10:31:52.411Z\",\n        \"updatedAt\": \"2025-04-15T11:16:12.187Z\"\n    }\n}"
+										}
+									]
+								},
+								{
+									"name": "show",
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{ACCESS_TOKEN}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "Accept",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{PROTOCOL}}://{{DOMAIN}}/api/infra/router/68117585f37bd9d800fe5777",
+											"protocol": "{{PROTOCOL}}",
+											"host": [
+												"{{DOMAIN}}"
+											],
+											"path": [
+												"api",
+												"infra",
+												"router",
+												"68117585f37bd9d800fe5777"
+											],
+											"query": [
+												{
+													"key": "scope_level",
+													"value": "ROUTERS",
+													"disabled": true
+												},
+												{
+													"key": "scope_level",
+													"value": "OLTS",
+													"disabled": true
+												},
+												{
+													"key": "scope_level",
+													"value": "ODCS",
+													"disabled": true
+												},
+												{
+													"key": "scope_level",
+													"value": "ODPS",
+													"disabled": true
+												},
+												{
+													"key": "deleted",
+													"value": "ONLY",
+													"disabled": true
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "delete",
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{ACCESS_TOKEN}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "DELETE",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "Accept",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{PROTOCOL}}://{{DOMAIN}}/api/infra/router/68117585f37bd9d800fe5777",
+											"protocol": "{{PROTOCOL}}",
+											"host": [
+												"{{DOMAIN}}"
+											],
+											"path": [
+												"api",
+												"infra",
+												"router",
+												"68117585f37bd9d800fe5777"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "restore",
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{ACCESS_TOKEN}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "Accept",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{PROTOCOL}}://{{DOMAIN}}/api/infra/router/68117585f37bd9d800fe5777/restore",
+											"protocol": "{{PROTOCOL}}",
+											"host": [
+												"{{DOMAIN}}"
+											],
+											"path": [
+												"api",
+												"infra",
+												"router",
+												"68117585f37bd9d800fe5777",
+												"restore"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "olt",
+							"item": [
+								{
+									"name": "add",
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{ACCESS_TOKEN}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "Accept",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n  \"label\": \"OLT-HQ-02\",\r\n  \"vendor\": \"Huawei\",\r\n  \"model\": \"MA5800-X7\",\r\n  \"sn\": \"2102350XYZTS8000012\",\r\n  \"pon_type\": \"GPON\",\r\n  \"available_pon\": 16,\r\n  \"location\": {\r\n    \"type\": \"Point\",\r\n    \"coordinates\": [106.8456, -6.2088]  // [longitude, latitude]\r\n  },\r\n  \"address\": {\r\n    \"country\": \"ID\",\r\n    \"province\": \"DKI Jakarta\",\r\n    \"city\": \"Jakarta Pusat\",\r\n    \"district\": \"Menteng\",\r\n    \"village\": \"Kebon Sirih\",\r\n    \"detail\": \"Gedung Telkom, Jl. Sudirman No. 123\",\r\n    \"zip_code\": \"10220\"\r\n  },\r\n  \"telnet_conn\": {\r\n    \"ip_addr\": \"192.168.1.10\",\r\n    \"port\": 23,\r\n    \"username\": \"admin\",\r\n    \"password\": \"P@ssw0rd\"\r\n  },\r\n  \"ssh_conn\": {\r\n    \"ip_addr\": \"192.168.1.10\",\r\n    \"port\": 22,\r\n    \"username\": \"admin\",\r\n    \"password\": \"P@ssw0rd\"\r\n  },\r\n  \"snmp_conn\": {\r\n    \"ip_addr\": \"192.168.1.10\",\r\n    \"port\": 161,\r\n    \"community_read\": \"public\",\r\n    \"community_write\": \"private\"\r\n  }\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{PROTOCOL}}://{{DOMAIN}}/api/infra/router/68117585f37bd9d800fe5777/olt",
+											"protocol": "{{PROTOCOL}}",
+											"host": [
+												"{{DOMAIN}}"
+											],
+											"path": [
+												"api",
+												"infra",
+												"router",
+												"68117585f37bd9d800fe5777",
+												"olt"
+											]
+										}
+									},
+									"response": [
+										{
+											"name": "response 200",
+											"originalRequest": {
+												"method": "POST",
+												"header": [
+													{
+														"key": "Content-Type",
+														"value": "application/json",
+														"type": "text"
+													},
+													{
+														"key": "Accept",
+														"value": "application/json",
+														"type": "text"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\r\n  \"label\": \"OLT-HQ-01\",\r\n  \"vendor\": \"Huawei\",\r\n  \"model\": \"MA5800-X7\",\r\n  \"sn\": \"2102350XYZTS8000012\",\r\n  \"pon_type\": \"GPON\",\r\n  \"available_pon\": 16,\r\n  \"location\": {\r\n    \"type\": \"Point\",\r\n    \"coordinates\": [106.8456, -6.2088]  // [longitude, latitude]\r\n  },\r\n  \"address\": {\r\n    \"country\": \"ID\",\r\n    \"province\": \"DKI Jakarta\",\r\n    \"city\": \"Jakarta Pusat\",\r\n    \"district\": \"Menteng\",\r\n    \"village\": \"Kebon Sirih\",\r\n    \"detail\": \"Gedung Telkom, Jl. Sudirman No. 123\",\r\n    \"zip_code\": \"10220\"\r\n  },\r\n  \"telnet_conn\": {\r\n    \"ip_addr\": \"192.168.1.10\",\r\n    \"port\": 23,\r\n    \"username\": \"admin\",\r\n    \"password\": \"P@ssw0rd\"\r\n  },\r\n  \"ssh_conn\": {\r\n    \"ip_addr\": \"192.168.1.10\",\r\n    \"port\": 22,\r\n    \"username\": \"admin\",\r\n    \"password\": \"P@ssw0rd\"\r\n  },\r\n  \"snmp_conn\": {\r\n    \"ip_addr\": \"192.168.1.10\",\r\n    \"port\": 161,\r\n    \"community_read\": \"public\",\r\n    \"community_write\": \"private\"\r\n  }\r\n}",
+													"options": {
+														"raw": {
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "{{PROTOCOL}}://{{DOMAIN}}/api/infra/router/67fe3ffc13f21c5b60bb9b5c/olt",
+													"protocol": "{{PROTOCOL}}",
+													"host": [
+														"{{DOMAIN}}"
+													],
+													"path": [
+														"api",
+														"infra",
+														"router",
+														"67fe3ffc13f21c5b60bb9b5c",
+														"olt"
+													]
+												}
+											},
+											"status": "OK",
+											"code": 200,
+											"_postman_previewlanguage": "json",
+											"header": [
+												{
+													"key": "X-Powered-By",
+													"value": "Express"
+												},
+												{
+													"key": "Content-Type",
+													"value": "application/json; charset=utf-8"
+												},
+												{
+													"key": "Content-Length",
+													"value": "1985"
+												},
+												{
+													"key": "ETag",
+													"value": "W/\"7c1-V4Jtr/StDFi/xklaz7l/earnAeo\""
+												},
+												{
+													"key": "Date",
+													"value": "Wed, 16 Apr 2025 03:08:34 GMT"
+												},
+												{
+													"key": "Connection",
+													"value": "keep-alive"
+												},
+												{
+													"key": "Keep-Alive",
+													"value": "timeout=5"
+												}
+											],
+											"cookie": [],
+											"body": "{\n    \"message\": \"OLT added to router successfully\",\n    \"data\": {\n        \"_id\": \"67fe3ffc13f21c5b60bb9b5c\",\n        \"label\": \"Router Mikrotik CCR1036\",\n        \"type\": \"router\",\n        \"location\": {\n            \"type\": \"Point\",\n            \"coordinates\": [\n                106.8456,\n                -6.2088\n            ]\n        },\n        \"address\": {\n            \"country\": \"ID\",\n            \"province\": \"DKI Jakarta\",\n            \"city\": \"Jakarta Pusat\",\n            \"district\": \"Menteng\",\n            \"village\": \"Menteng\",\n            \"detail\": \"Jl. Thamrin No. 28, Gedung Cyber Tower Lt. 6\",\n            \"zip_code\": \"10350\"\n        },\n        \"children\": [\n            {\n                \"_id\": \"67ff1f32dee07ca3f64dd8a1\",\n                \"label\": \"OLT-HQ-01\",\n                \"type\": \"olt\",\n                \"location\": {\n                    \"type\": \"Point\",\n                    \"coordinates\": [\n                        106.8456,\n                        -6.2088\n                    ]\n                },\n                \"address\": {\n                    \"country\": \"ID\",\n                    \"province\": \"DKI Jakarta\",\n                    \"city\": \"Jakarta Pusat\",\n                    \"district\": \"Menteng\",\n                    \"village\": \"Kebon Sirih\",\n                    \"detail\": \"Gedung Telkom, Jl. Sudirman No. 123\",\n                    \"zip_code\": \"10220\"\n                },\n                \"children\": [],\n                \"createdAt\": \"2025-04-16T03:08:34.128Z\",\n                \"updatedAt\": \"2025-04-16T03:08:34.128Z\",\n                \"vendor\": \"Huawei\",\n                \"model\": \"MA5800-X7\",\n                \"sn\": \"2102350XYZTS8000012\",\n                \"telnet_conn\": {\n                    \"ip_addr\": \"192.168.1.10\",\n                    \"port\": 23,\n                    \"username\": \"admin\",\n                    \"password\": \"P@ssw0rd\"\n                },\n                \"ssh_conn\": {\n                    \"ip_addr\": \"192.168.1.10\",\n                    \"port\": 22,\n                    \"username\": \"admin\",\n                    \"password\": \"P@ssw0rd\"\n                },\n                \"snmp_conn\": {\n                    \"ip_addr\": \"192.168.1.10\",\n                    \"port\": 161,\n                    \"community_read\": \"public\",\n                    \"community_write\": \"private\"\n                },\n                \"pon_type\": \"GPON\",\n                \"pon_port\": [\n                    {\n                        \"port\": 1,\n                        \"max_client\": 64,\n                        \"children\": []\n                    },\n                    {\n                        \"port\": 2,\n                        \"max_client\": 64,\n                        \"children\": []\n                    },\n                    {\n                        \"port\": 3,\n                        \"max_client\": 64,\n                        \"children\": []\n                    },\n                    {\n                        \"port\": 4,\n                        \"max_client\": 64,\n                        \"children\": []\n                    },\n                    {\n                        \"port\": 5,\n                        \"max_client\": 64,\n                        \"children\": []\n                    },\n                    {\n                        \"port\": 6,\n                        \"max_client\": 64,\n                        \"children\": []\n                    },\n                    {\n                        \"port\": 7,\n                        \"max_client\": 64,\n                        \"children\": []\n                    },\n                    {\n                        \"port\": 8,\n                        \"max_client\": 64,\n                        \"children\": []\n                    },\n                    {\n                        \"port\": 9,\n                        \"max_client\": 64,\n                        \"children\": []\n                    },\n                    {\n                        \"port\": 10,\n                        \"max_client\": 64,\n                        \"children\": []\n                    },\n                    {\n                        \"port\": 11,\n                        \"max_client\": 64,\n                        \"children\": []\n                    },\n                    {\n                        \"port\": 12,\n                        \"max_client\": 64,\n                        \"children\": []\n                    },\n                    {\n                        \"port\": 13,\n                        \"max_client\": 64,\n                        \"children\": []\n                    },\n                    {\n                        \"port\": 14,\n                        \"max_client\": 64,\n                        \"children\": []\n                    },\n                    {\n                        \"port\": 15,\n                        \"max_client\": 64,\n                        \"children\": []\n                    },\n                    {\n                        \"port\": 16,\n                        \"max_client\": 64,\n                        \"children\": []\n                    }\n                ]\n            }\n        ],\n        \"createdAt\": \"2025-04-15T11:16:12.187Z\",\n        \"updatedAt\": \"2025-04-15T11:16:12.187Z\",\n        \"connection_type\": \"PUBLIC\",\n        \"ip_addr\": \"103.145.63.10\"\n    }\n}"
+										}
+									]
+								},
+								{
+									"name": "show",
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{ACCESS_TOKEN}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "Accept",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{PROTOCOL}}://{{DOMAIN}}/api/infra/olt/681175b2f37bd9d800fe5791",
+											"protocol": "{{PROTOCOL}}",
+											"host": [
+												"{{DOMAIN}}"
+											],
+											"path": [
+												"api",
+												"infra",
+												"olt",
+												"681175b2f37bd9d800fe5791"
+											],
+											"query": [
+												{
+													"key": "scope_level",
+													"value": "OLTS",
+													"disabled": true
+												},
+												{
+													"key": "scope_level",
+													"value": "ODCS",
+													"disabled": true
+												},
+												{
+													"key": "scope_level",
+													"value": "ODPS",
+													"disabled": true
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "delete",
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{ACCESS_TOKEN}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "DELETE",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "Accept",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{PROTOCOL}}://{{DOMAIN}}/api/infra/olt/681175b2f37bd9d800fe5791",
+											"protocol": "{{PROTOCOL}}",
+											"host": [
+												"{{DOMAIN}}"
+											],
+											"path": [
+												"api",
+												"infra",
+												"olt",
+												"681175b2f37bd9d800fe5791"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "restore",
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{ACCESS_TOKEN}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "Accept",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{PROTOCOL}}://{{DOMAIN}}/api/infra/olt/681175b2f37bd9d800fe5791/restore",
+											"protocol": "{{PROTOCOL}}",
+											"host": [
+												"{{DOMAIN}}"
+											],
+											"path": [
+												"api",
+												"infra",
+												"olt",
+												"681175b2f37bd9d800fe5791",
+												"restore"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "odc",
+							"item": [
+								{
+									"name": "add",
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{ACCESS_TOKEN}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "Accept",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n  \"label\": \"ODC-CENTRAL-03\",\r\n  \"pon_port\": 1,\r\n  \"available_tray\": 4,\r\n  \"cores_per_tray\": 16,\r\n  \"location\": {\r\n    \"type\": \"Point\",\r\n    \"coordinates\": [106.8500, -6.2100]\r\n  },\r\n  \"address\": {\r\n    \"country\": \"ID\",\r\n    \"province\": \"DKI Jakarta\",\r\n    \"city\": \"Jakarta Pusat\",\r\n    \"district\": \"Menteng\",\r\n    \"village\": \"Kebon Sirih\",\r\n    \"detail\": \"Jl. Menteng Raya No. 35\",\r\n    \"zip_code\": \"10340\"\r\n  }\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{PROTOCOL}}://{{DOMAIN}}/api/infra/olt/681175b2f37bd9d800fe5791/odc",
+											"protocol": "{{PROTOCOL}}",
+											"host": [
+												"{{DOMAIN}}"
+											],
+											"path": [
+												"api",
+												"infra",
+												"olt",
+												"681175b2f37bd9d800fe5791",
+												"odc"
+											]
+										}
+									},
+									"response": [
+										{
+											"name": "response 200",
+											"originalRequest": {
+												"method": "POST",
+												"header": [
+													{
+														"key": "Content-Type",
+														"value": "application/json",
+														"type": "text"
+													},
+													{
+														"key": "Accept",
+														"value": "application/json",
+														"type": "text"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\r\n  \"label\": \"ODC-CENTRAL-01\",\r\n  \"pon_port\": 1,\r\n  \"available_tray\": 4,\r\n  \"cores_per_tray\": 16,\r\n  \"location\": {\r\n    \"type\": \"Point\",\r\n    \"coordinates\": [106.8500, -6.2100]\r\n  },\r\n  \"address\": {\r\n    \"country\": \"ID\",\r\n    \"province\": \"DKI Jakarta\",\r\n    \"city\": \"Jakarta Pusat\",\r\n    \"district\": \"Menteng\",\r\n    \"village\": \"Kebon Sirih\",\r\n    \"detail\": \"Jl. Menteng Raya No. 35\",\r\n    \"zip_code\": \"10340\"\r\n  }\r\n}",
+													"options": {
+														"raw": {
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "{{PROTOCOL}}://{{DOMAIN}}/api/infra/olt/67ff1f32dee07ca3f64dd8a1/odc",
+													"protocol": "{{PROTOCOL}}",
+													"host": [
+														"{{DOMAIN}}"
+													],
+													"path": [
+														"api",
+														"infra",
+														"olt",
+														"67ff1f32dee07ca3f64dd8a1",
+														"odc"
+													]
+												}
+											},
+											"status": "OK",
+											"code": 200,
+											"_postman_previewlanguage": "json",
+											"header": [
+												{
+													"key": "X-Powered-By",
+													"value": "Express"
+												},
+												{
+													"key": "Content-Type",
+													"value": "application/json; charset=utf-8"
+												},
+												{
+													"key": "Content-Length",
+													"value": "2144"
+												},
+												{
+													"key": "ETag",
+													"value": "W/\"860-3Ye547Z0By0X+l8D5UzYCVA3SgU\""
+												},
+												{
+													"key": "Date",
+													"value": "Wed, 16 Apr 2025 03:33:30 GMT"
+												},
+												{
+													"key": "Connection",
+													"value": "keep-alive"
+												},
+												{
+													"key": "Keep-Alive",
+													"value": "timeout=5"
+												}
+											],
+											"cookie": [],
+											"body": "{\n    \"message\": \"ODC added to OLT successfully\",\n    \"data\": {\n        \"_id\": \"67ff1f32dee07ca3f64dd8a1\",\n        \"label\": \"OLT-HQ-01\",\n        \"type\": \"olt\",\n        \"location\": {\n            \"type\": \"Point\",\n            \"coordinates\": [\n                106.8456,\n                -6.2088\n            ]\n        },\n        \"address\": {\n            \"country\": \"ID\",\n            \"province\": \"DKI Jakarta\",\n            \"city\": \"Jakarta Pusat\",\n            \"district\": \"Menteng\",\n            \"village\": \"Kebon Sirih\",\n            \"detail\": \"Gedung Telkom, Jl. Sudirman No. 123\",\n            \"zip_code\": \"10220\"\n        },\n        \"children\": [],\n        \"createdAt\": \"2025-04-16T03:08:34.128Z\",\n        \"updatedAt\": \"2025-04-16T03:08:34.128Z\",\n        \"vendor\": \"Huawei\",\n        \"model\": \"MA5800-X7\",\n        \"sn\": \"2102350XYZTS8000012\",\n        \"telnet_conn\": {\n            \"ip_addr\": \"192.168.1.10\",\n            \"port\": 23,\n            \"username\": \"admin\",\n            \"password\": \"P@ssw0rd\"\n        },\n        \"ssh_conn\": {\n            \"ip_addr\": \"192.168.1.10\",\n            \"port\": 22,\n            \"username\": \"admin\",\n            \"password\": \"P@ssw0rd\"\n        },\n        \"snmp_conn\": {\n            \"ip_addr\": \"192.168.1.10\",\n            \"port\": 161,\n            \"community_read\": \"public\",\n            \"community_write\": \"private\"\n        },\n        \"pon_type\": \"GPON\",\n        \"pon_port\": [\n            {\n                \"port\": 1,\n                \"max_client\": 64,\n                \"children\": [\n                    {\n                        \"_id\": \"67ff250ac125b3ea445a3a67\",\n                        \"label\": \"ODC-CENTRAL-01\",\n                        \"type\": \"odc\",\n                        \"location\": {\n                            \"type\": \"Point\",\n                            \"coordinates\": [\n                                106.85,\n                                -6.21\n                            ]\n                        },\n                        \"address\": {\n                            \"country\": \"ID\",\n                            \"province\": \"DKI Jakarta\",\n                            \"city\": \"Jakarta Pusat\",\n                            \"district\": \"Menteng\",\n                            \"village\": \"Kebon Sirih\",\n                            \"detail\": \"Jl. Menteng Raya No. 35\",\n                            \"zip_code\": \"10340\"\n                        },\n                        \"children\": [],\n                        \"createdAt\": \"2025-04-16T03:33:30.676Z\",\n                        \"updatedAt\": \"2025-04-16T03:33:30.676Z\",\n                        \"available_tray\": 4,\n                        \"trays\": [\n                            {\n                                \"tray\": 1,\n                                \"start_core\": 1,\n                                \"end_core\": 16,\n                                \"children\": []\n                            },\n                            {\n                                \"tray\": 2,\n                                \"start_core\": 17,\n                                \"end_core\": 32,\n                                \"children\": []\n                            },\n                            {\n                                \"tray\": 3,\n                                \"start_core\": 33,\n                                \"end_core\": 48,\n                                \"children\": []\n                            },\n                            {\n                                \"tray\": 4,\n                                \"start_core\": 49,\n                                \"end_core\": 64,\n                                \"children\": []\n                            }\n                        ]\n                    }\n                ]\n            },\n            {\n                \"port\": 2,\n                \"max_client\": 64,\n                \"children\": []\n            },\n            {\n                \"port\": 3,\n                \"max_client\": 64,\n                \"children\": []\n            },\n            {\n                \"port\": 4,\n                \"max_client\": 64,\n                \"children\": []\n            },\n            {\n                \"port\": 5,\n                \"max_client\": 64,\n                \"children\": []\n            },\n            {\n                \"port\": 6,\n                \"max_client\": 64,\n                \"children\": []\n            },\n            {\n                \"port\": 7,\n                \"max_client\": 64,\n                \"children\": []\n            },\n            {\n                \"port\": 8,\n                \"max_client\": 64,\n                \"children\": []\n            },\n            {\n                \"port\": 9,\n                \"max_client\": 64,\n                \"children\": []\n            },\n            {\n                \"port\": 10,\n                \"max_client\": 64,\n                \"children\": []\n            },\n            {\n                \"port\": 11,\n                \"max_client\": 64,\n                \"children\": []\n            },\n            {\n                \"port\": 12,\n                \"max_client\": 64,\n                \"children\": []\n            },\n            {\n                \"port\": 13,\n                \"max_client\": 64,\n                \"children\": []\n            },\n            {\n                \"port\": 14,\n                \"max_client\": 64,\n                \"children\": []\n            },\n            {\n                \"port\": 15,\n                \"max_client\": 64,\n                \"children\": []\n            },\n            {\n                \"port\": 16,\n                \"max_client\": 64,\n                \"children\": []\n            }\n        ]\n    }\n}"
+										}
+									]
+								},
+								{
+									"name": "show",
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{ACCESS_TOKEN}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "Accept",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{PROTOCOL}}://{{DOMAIN}}/api/infra/odc/681175ddf37bd9d800fe57ae",
+											"protocol": "{{PROTOCOL}}",
+											"host": [
+												"{{DOMAIN}}"
+											],
+											"path": [
+												"api",
+												"infra",
+												"odc",
+												"681175ddf37bd9d800fe57ae"
+											],
+											"query": [
+												{
+													"key": "scope_level",
+													"value": "ODCS",
+													"disabled": true
+												},
+												{
+													"key": "scope_level",
+													"value": "ODPS",
+													"disabled": true
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "delete",
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{ACCESS_TOKEN}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "DELETE",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "Accept",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{PROTOCOL}}://{{DOMAIN}}/api/infra/odc/681175ddf37bd9d800fe57ae",
+											"protocol": "{{PROTOCOL}}",
+											"host": [
+												"{{DOMAIN}}"
+											],
+											"path": [
+												"api",
+												"infra",
+												"odc",
+												"681175ddf37bd9d800fe57ae"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "restore",
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{ACCESS_TOKEN}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "Accept",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{PROTOCOL}}://{{DOMAIN}}/api/infra/odc/681175ddf37bd9d800fe57ae/restore",
+											"protocol": "{{PROTOCOL}}",
+											"host": [
+												"{{DOMAIN}}"
+											],
+											"path": [
+												"api",
+												"infra",
+												"odc",
+												"681175ddf37bd9d800fe57ae",
+												"restore"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "odp",
+							"item": [
+								{
+									"name": "add",
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{ACCESS_TOKEN}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "Accept",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n  \"label\": \"ODP-MENTENG-01C\",\r\n  \"tray\": 1,\r\n  \"core_on_odc_tray\": 8,\r\n  \"available_port\": 16,\r\n  \"location\": {\r\n    \"type\": \"Point\",\r\n    \"coordinates\": [106.8550, -6.2150]\r\n  },\r\n  \"address\": {\r\n    \"country\": \"ID\",\r\n    \"province\": \"DKI Jakarta\",\r\n    \"city\": \"Jakarta Pusat\",\r\n    \"district\": \"Menteng\",\r\n    \"village\": \"Kebon Sirih\",\r\n    \"detail\": \"Jl. Cikini Raya No. 45\",\r\n    \"zip_code\": \"10330\"\r\n  }\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{PROTOCOL}}://{{DOMAIN}}/api/infra/odc/681175ddf37bd9d800fe57ae/odp",
+											"protocol": "{{PROTOCOL}}",
+											"host": [
+												"{{DOMAIN}}"
+											],
+											"path": [
+												"api",
+												"infra",
+												"odc",
+												"681175ddf37bd9d800fe57ae",
+												"odp"
+											]
+										}
+									},
+									"response": [
+										{
+											"name": "response 200",
+											"originalRequest": {
+												"method": "POST",
+												"header": [
+													{
+														"key": "Content-Type",
+														"value": "application/json",
+														"type": "text"
+													},
+													{
+														"key": "Accept",
+														"value": "application/json",
+														"type": "text"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\r\n  \"label\": \"ODP-MENTENG-01A\",\r\n  \"tray\": 1,\r\n  \"core_on_odc_tray\": 8,\r\n  \"available_port\": 16,\r\n  \"location\": {\r\n    \"type\": \"Point\",\r\n    \"coordinates\": [106.8550, -6.2150]\r\n  },\r\n  \"address\": {\r\n    \"country\": \"ID\",\r\n    \"province\": \"DKI Jakarta\",\r\n    \"city\": \"Jakarta Pusat\",\r\n    \"district\": \"Menteng\",\r\n    \"village\": \"Kebon Sirih\",\r\n    \"detail\": \"Jl. Cikini Raya No. 45\",\r\n    \"zip_code\": \"10330\"\r\n  }\r\n}",
+													"options": {
+														"raw": {
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "{{PROTOCOL}}://{{DOMAIN}}/api/infra/odc/67ff250ac125b3ea445a3a67/odp",
+													"protocol": "{{PROTOCOL}}",
+													"host": [
+														"{{DOMAIN}}"
+													],
+													"path": [
+														"api",
+														"infra",
+														"odc",
+														"67ff250ac125b3ea445a3a67",
+														"odp"
+													]
+												}
+											},
+											"status": "OK",
+											"code": 200,
+											"_postman_previewlanguage": "json",
+											"header": [
+												{
+													"key": "X-Powered-By",
+													"value": "Express"
+												},
+												{
+													"key": "Content-Type",
+													"value": "application/json; charset=utf-8"
+												},
+												{
+													"key": "Content-Length",
+													"value": "1132"
+												},
+												{
+													"key": "ETag",
+													"value": "W/\"46c-M9Lzv0ARToKwqDRYwNEjOdiXO/w\""
+												},
+												{
+													"key": "Date",
+													"value": "Wed, 16 Apr 2025 04:02:33 GMT"
+												},
+												{
+													"key": "Connection",
+													"value": "keep-alive"
+												},
+												{
+													"key": "Keep-Alive",
+													"value": "timeout=5"
+												}
+											],
+											"cookie": [],
+											"body": "{\n    \"message\": \"ODP added to ODC successfully\",\n    \"data\": {\n        \"_id\": \"67ff250ac125b3ea445a3a67\",\n        \"label\": \"ODC-CENTRAL-01\",\n        \"type\": \"odc\",\n        \"location\": {\n            \"type\": \"Point\",\n            \"coordinates\": [\n                106.85,\n                -6.21\n            ]\n        },\n        \"address\": {\n            \"country\": \"ID\",\n            \"province\": \"DKI Jakarta\",\n            \"city\": \"Jakarta Pusat\",\n            \"district\": \"Menteng\",\n            \"village\": \"Kebon Sirih\",\n            \"detail\": \"Jl. Menteng Raya No. 35\",\n            \"zip_code\": \"10340\"\n        },\n        \"children\": [],\n        \"createdAt\": \"2025-04-16T03:33:30.676Z\",\n        \"updatedAt\": \"2025-04-16T03:33:30.676Z\",\n        \"available_tray\": 4,\n        \"trays\": [\n            {\n                \"tray\": 1,\n                \"start_core\": 1,\n                \"end_core\": 16,\n                \"children\": [\n                    {\n                        \"_id\": \"67ff2bd9341eb6f27268498d\",\n                        \"label\": \"ODP-MENTENG-01A\",\n                        \"type\": \"odp\",\n                        \"location\": {\n                            \"type\": \"Point\",\n                            \"coordinates\": [\n                                106.855,\n                                -6.215\n                            ]\n                        },\n                        \"address\": {\n                            \"country\": \"ID\",\n                            \"province\": \"DKI Jakarta\",\n                            \"city\": \"Jakarta Pusat\",\n                            \"district\": \"Menteng\",\n                            \"village\": \"Kebon Sirih\",\n                            \"detail\": \"Jl. Cikini Raya No. 45\",\n                            \"zip_code\": \"10330\"\n                        },\n                        \"createdAt\": \"2025-04-16T04:02:33.300Z\",\n                        \"updatedAt\": \"2025-04-16T04:02:33.300Z\",\n                        \"core_on_odc_tray\": 8,\n                        \"available_port\": 16,\n                        \"children\": []\n                    }\n                ]\n            },\n            {\n                \"tray\": 2,\n                \"start_core\": 17,\n                \"end_core\": 32,\n                \"children\": []\n            },\n            {\n                \"tray\": 3,\n                \"start_core\": 33,\n                \"end_core\": 48,\n                \"children\": []\n            },\n            {\n                \"tray\": 4,\n                \"start_core\": 49,\n                \"end_core\": 64,\n                \"children\": []\n            }\n        ]\n    }\n}"
+										}
+									]
+								},
+								{
+									"name": "show",
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{ACCESS_TOKEN}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "Accept",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{PROTOCOL}}://{{DOMAIN}}/api/infra/odp/6811760cf37bd9d800fe57c7",
+											"protocol": "{{PROTOCOL}}",
+											"host": [
+												"{{DOMAIN}}"
+											],
+											"path": [
+												"api",
+												"infra",
+												"odp",
+												"6811760cf37bd9d800fe57c7"
+											],
+											"query": [
+												{
+													"key": "scope_level",
+													"value": "ODPS",
+													"disabled": true
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "delete",
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{ACCESS_TOKEN}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "DELETE",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "Accept",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{PROTOCOL}}://{{DOMAIN}}/api/infra/odp/6811760cf37bd9d800fe57c7",
+											"protocol": "{{PROTOCOL}}",
+											"host": [
+												"{{DOMAIN}}"
+											],
+											"path": [
+												"api",
+												"infra",
+												"odp",
+												"6811760cf37bd9d800fe57c7"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "restore",
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{ACCESS_TOKEN}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "Accept",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{PROTOCOL}}://{{DOMAIN}}/api/infra/odp/6811760cf37bd9d800fe57c7/restore",
+											"protocol": "{{PROTOCOL}}",
+											"host": [
+												"{{DOMAIN}}"
+											],
+											"path": [
+												"api",
+												"infra",
+												"odp",
+												"6811760cf37bd9d800fe57c7",
+												"restore"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "ont",
+							"item": [
+								{
+									"name": "add",
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{ACCESS_TOKEN}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "Accept",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n  \"label\": \"ONT-PelangganA-03\",\r\n  \"vendor\": \"Huawei\",\r\n  \"model\": \"HG8245A\",\r\n  \"sn\": \"4857WF39214Z\",\r\n  \"location\": {\r\n    \"type\": \"Point\",\r\n    \"coordinates\": [110.4251, -7.7752]\r\n  },\r\n  \"address\": {\r\n    \"country\": \"ID\",\r\n    \"province\": \"Jawa Tengah\",\r\n    \"city\": \"Yogyakarta\",\r\n    \"district\": \"Depok\",\r\n    \"village\": \"Condongcatur\",\r\n    \"detail\": \"Perumahan Seturan Indah Blok A-12\",\r\n    \"zip_code\": \"55281\"\r\n  }\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{PROTOCOL}}://{{DOMAIN}}/api/infra/odp/6811760cf37bd9d800fe57c7/ont",
+											"protocol": "{{PROTOCOL}}",
+											"host": [
+												"{{DOMAIN}}"
+											],
+											"path": [
+												"api",
+												"infra",
+												"odp",
+												"6811760cf37bd9d800fe57c7",
+												"ont"
+											]
+										}
+									},
+									"response": [
+										{
+											"name": "response 200",
+											"originalRequest": {
+												"method": "POST",
+												"header": [
+													{
+														"key": "Content-Type",
+														"value": "application/json",
+														"type": "text"
+													},
+													{
+														"key": "Accept",
+														"value": "application/json",
+														"type": "text"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\r\n  \"label\": \"ONT-PelangganA-01\",\r\n  \"vendor\": \"Huawei\",\r\n  \"model\": \"HG8245A\",\r\n  \"sn\": \"4857WF39214Z\",\r\n  \"location\": {\r\n    \"type\": \"Point\",\r\n    \"coordinates\": [110.4251, -7.7752]\r\n  },\r\n  \"address\": {\r\n    \"country\": \"ID\",\r\n    \"province\": \"Jawa Tengah\",\r\n    \"city\": \"Yogyakarta\",\r\n    \"district\": \"Depok\",\r\n    \"village\": \"Condongcatur\",\r\n    \"detail\": \"Perumahan Seturan Indah Blok A-12\",\r\n    \"zip_code\": \"55281\"\r\n  }\r\n}",
+													"options": {
+														"raw": {
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "{{PROTOCOL}}://{{DOMAIN}}/api/infra/odp/67ff2bd9341eb6f27268498d/ont",
+													"protocol": "{{PROTOCOL}}",
+													"host": [
+														"{{DOMAIN}}"
+													],
+													"path": [
+														"api",
+														"infra",
+														"odp",
+														"67ff2bd9341eb6f27268498d",
+														"ont"
+													]
+												}
+											},
+											"status": "OK",
+											"code": 200,
+											"_postman_previewlanguage": "json",
+											"header": [
+												{
+													"key": "X-Powered-By",
+													"value": "Express"
+												},
+												{
+													"key": "Content-Type",
+													"value": "application/json; charset=utf-8"
+												},
+												{
+													"key": "Content-Length",
+													"value": "939"
+												},
+												{
+													"key": "ETag",
+													"value": "W/\"3ab-dztxosS/HzxakhojKVifZm/+gMA\""
+												},
+												{
+													"key": "Date",
+													"value": "Wed, 16 Apr 2025 05:31:17 GMT"
+												},
+												{
+													"key": "Connection",
+													"value": "keep-alive"
+												},
+												{
+													"key": "Keep-Alive",
+													"value": "timeout=5"
+												}
+											],
+											"cookie": [],
+											"body": "{\n    \"message\": \"ONT added to ODP successfully\",\n    \"data\": {\n        \"_id\": \"67ff2bd9341eb6f27268498d\",\n        \"label\": \"ODP-MENTENG-01A\",\n        \"type\": \"odp\",\n        \"location\": {\n            \"type\": \"Point\",\n            \"coordinates\": [\n                106.855,\n                -6.215\n            ]\n        },\n        \"address\": {\n            \"country\": \"ID\",\n            \"province\": \"DKI Jakarta\",\n            \"city\": \"Jakarta Pusat\",\n            \"district\": \"Menteng\",\n            \"village\": \"Kebon Sirih\",\n            \"detail\": \"Jl. Cikini Raya No. 45\",\n            \"zip_code\": \"10330\"\n        },\n        \"createdAt\": \"2025-04-16T04:02:33.300Z\",\n        \"updatedAt\": \"2025-04-16T04:02:33.300Z\",\n        \"core_on_odc_tray\": 8,\n        \"available_port\": 16,\n        \"children\": [\n            {\n                \"_id\": \"67ff40a5c122e481ec2da0df\",\n                \"label\": \"ONT-PelangganA-01\",\n                \"type\": \"ont\",\n                \"location\": {\n                    \"type\": \"Point\",\n                    \"coordinates\": [\n                        110.4251,\n                        -7.7752\n                    ]\n                },\n                \"address\": {\n                    \"country\": \"ID\",\n                    \"province\": \"Jawa Tengah\",\n                    \"city\": \"Yogyakarta\",\n                    \"district\": \"Depok\",\n                    \"village\": \"Condongcatur\",\n                    \"detail\": \"Perumahan Seturan Indah Blok A-12\",\n                    \"zip_code\": \"55281\"\n                },\n                \"createdAt\": \"2025-04-16T05:31:17.842Z\",\n                \"updatedAt\": \"2025-04-16T05:31:17.842Z\",\n                \"vendor\": \"Huawei\",\n                \"model\": \"HG8245A\",\n                \"sn\": \"4857WF39214Z\"\n            }\n        ]\n    }\n}"
+										}
+									]
+								},
+								{
+									"name": "show",
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{ACCESS_TOKEN}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "Accept",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{PROTOCOL}}://{{DOMAIN}}/api/infra/ont/6811762df37bd9d800fe57e1",
+											"protocol": "{{PROTOCOL}}",
+											"host": [
+												"{{DOMAIN}}"
+											],
+											"path": [
+												"api",
+												"infra",
+												"ont",
+												"6811762df37bd9d800fe57e1"
+											],
+											"query": [
+												{
+													"key": "deleted",
+													"value": "ONLY",
+													"disabled": true
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "delete",
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{ACCESS_TOKEN}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "DELETE",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "Accept",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{PROTOCOL}}://{{DOMAIN}}/api/infra/ont/6811762df37bd9d800fe57e1",
+											"protocol": "{{PROTOCOL}}",
+											"host": [
+												"{{DOMAIN}}"
+											],
+											"path": [
+												"api",
+												"infra",
+												"ont",
+												"6811762df37bd9d800fe57e1"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "restore",
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{ACCESS_TOKEN}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "Accept",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{PROTOCOL}}://{{DOMAIN}}/api/infra/ont/6811762df37bd9d800fe57e1/restore",
+											"protocol": "{{PROTOCOL}}",
+											"host": [
+												"{{DOMAIN}}"
+											],
+											"path": [
+												"api",
+												"infra",
+												"ont",
+												"6811762df37bd9d800fe57e1",
+												"restore"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "access",
+							"item": [
+								{
+									"name": "get listaccess",
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{ACCESS_TOKEN}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "Accept",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{PROTOCOL}}://{{DOMAIN}}/api/infra/branch-access-list?status=SUBMITTED",
+											"protocol": "{{PROTOCOL}}",
+											"host": [
+												"{{DOMAIN}}"
+											],
+											"path": [
+												"api",
+												"infra",
+												"branch-access-list"
+											],
+											"query": [
+												{
+													"key": "status",
+													"value": "APPROVED",
+													"disabled": true
+												},
+												{
+													"key": "status",
+													"value": "SUBMITTED"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "ask access",
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{ACCESS_TOKEN}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "Accept",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"id_token\": \"eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6IkxudnRCSzFucmpWMURWN2NVdmo5dDgzZEtib1NPc1BaVkJZckdUVDdnRU0ifQ.eyJpc3MiOiJodHRwczovL2F1dGguaWNjLmNvLmlkL3JlYWxtL3JhY2VuZXQiLCJzdWIiOiIwMTk1NDY4NC1iODJhLTczMmItYWQ1YS05OGIzYzUxNzFlZWMiLCJhdWQiOiJhZG1pbnJhZGl1cy1kYXNoYm9hcmQiLCJleHAiOjE3NDU5Nzc5OTAsImlhdCI6MTc0NTk3NDM5MCwiYXV0aF90aW1lIjoxNzQ1OTc0MzkwLCJub25jZSI6InRlc3QxMjM0IiwiYWNyIjpudWxsLCJhbXIiOlsicGFzc3dvcmQiXSwiYXpwIjoiYWRtaW5yYWRpdXMtZGFzaGJvYXJkIiwicHJlZmVycmVkX3VzZXJuYW1lIjoiemFja3kiLCJuYW1lIjoiTS4gWmFja3kgUHJhdGFtYSIsImVtYWlsIjoicHphY2t5NTQwQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJwaG9uZV9udW1iZXIiOiIwODk2MzU4NjkwNTAiLCJwaG9uZV9udW1iZXJfdmVyaWZpZWQiOnRydWUsInBpY3R1cmUiOiJodHRwczovL2F1dGguaWNjLmNvLmlkL2RhdGEvdXNlcnMvZGVmYXVsdC5wbmciLCJnZW5kZXIiOiJNQUxFIiwiYmlydGhkYXRlIjoiMTk5MC0wMS0wMSIsInpvbmVpbmZvIjoiQXNpYS9KYWthcnRhIiwibG9jYWxlIjoiaWQtSUQiLCJ1cGRhdGVkX2F0IjoxNzQxMDcwNzU5fQ.GklqAlJs-i4oW99dAXZoJ0JeIOxonWdxc3Y9ixhqgzoWVG-zmqSIqBo_6ZDOJqiIJiWaofvyKblU1Yf1HYfRhMSqKk1X5dNwf0mi5EUlB3SRjmqVKUYQsisATRgYikr0YwYpthrECzPjc74sXt9_Fs5yox9ond5oswebu_cnrG0UYM9J41teHqsvcNdEjm-gk6rQ72E01Zw9qYDln2smZPLHhs9En0gAejlup6YM5YOsbLUvLGv_jXOlVUPalgTnPTJlUwfFHCowJ1LaTUx3egQN9QqPlyj4qNfXpXHLIDfjaCJUAkLz4M8M1wswCxA8yFx6xWokpYd4V6yBc1-lkQ\",\r\n    \"user_note\": \"halo bos\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{PROTOCOL}}://{{DOMAIN}}/api/infra/branch/6810aa3e49cf9328bc9b40f4/access",
+											"protocol": "{{PROTOCOL}}",
+											"host": [
+												"{{DOMAIN}}"
+											],
+											"path": [
+												"api",
+												"infra",
+												"branch",
+												"6810aa3e49cf9328bc9b40f4",
+												"access"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "process access",
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{ACCESS_TOKEN}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "Accept",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"permission\": \"RW\",\r\n    \"status\": \"APPROVED\",\r\n    \"reviewer_note\": \"bagus gan\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{PROTOCOL}}://{{DOMAIN}}/api/infra/branch-access/68117a06e6063abc20da25a3",
+											"protocol": "{{PROTOCOL}}",
+											"host": [
+												"{{DOMAIN}}"
+											],
+											"path": [
+												"api",
+												"infra",
+												"branch-access",
+												"68117a06e6063abc20da25a3"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "logs",
+					"item": [
+						{
+							"name": "get daily log",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"_source\": [\"message\"],\r\n  \"query\": {\r\n    \"match_all\": {}\r\n  },\r\n  \"sort\": [\r\n    {\r\n      \"fields.timestamp\": {\r\n        \"order\": \"desc\"\r\n      }\r\n    }\r\n  ],\r\n  \"size\": 100\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://192.168.23.2:9200/infrastructure-service-logs-2025.04.19/_search",
+									"protocol": "http",
+									"host": [
+										"192",
+										"168",
+										"23",
+										"2"
+									],
+									"port": "9200",
+									"path": [
+										"infrastructure-service-logs-2025.04.19",
+										"_search"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete daily log",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://192.168.23.2:9200/infrastructure-service-logs-2025.04.19",
+									"protocol": "http",
+									"host": [
+										"192",
+										"168",
+										"23",
+										"2"
+									],
+									"port": "9200",
+									"path": [
+										"infrastructure-service-logs-2025.04.19"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	]
+}

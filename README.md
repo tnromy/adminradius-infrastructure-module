@@ -1,4 +1,5 @@
-tambahkan kembali pengecekan params deleted secara recursive
+scripts:
 
-tambahkan fitur lock pada saat delete data untuk menghindari race condition.
-tambahkan penanganan double request pada dsaat add data di semua endpoint
+npm run migrate down
+npm run migrate up
+npm run start
