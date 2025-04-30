@@ -125,6 +125,20 @@ async function checkDirectBranchAccess(req, res, next) {
       ));
     }
 
+    // Verifikasi bahwa permission adalah R atau RW
+    if (!access.permission || !['R', 'RW'].includes(access.permission)) {
+      logWarn('Access denied - Invalid permission', {
+        userId,
+        branchId: branchObjectId.toString(),
+        permission: access.permission,
+        requestId: context.getRequestId()
+      });
+      return res.status(403).json(createErrorResponse(
+        403,
+        'Forbidden - You have invalid permission for this branch'
+      ));
+    }
+
     // Simpan permission ke request untuk penggunaan selanjutnya
     req.branchAccess = access;
     
@@ -184,6 +198,20 @@ async function checkWritePermission(req, res, next) {
       return res.status(403).json(createErrorResponse(
         403,
         'Forbidden - You do not have access to this branch'
+      ));
+    }
+
+    // Verifikasi bahwa permission adalah valid
+    if (!access.permission || !['R', 'RW'].includes(access.permission)) {
+      logWarn('Access denied - Invalid permission', {
+        userId,
+        branchId: branchObjectId.toString(),
+        permission: access.permission,
+        requestId: context.getRequestId()
+      });
+      return res.status(403).json(createErrorResponse(
+        403,
+        'Forbidden - You have invalid permission for this branch'
       ));
     }
 
@@ -341,6 +369,21 @@ function createDeviceAccessChecker(deviceType, requireWrite = false) {
         return res.status(403).json(createErrorResponse(
           403,
           `Forbidden - You do not have access to this ${deviceType}`
+        ));
+      }
+
+      // Verifikasi bahwa permission adalah R atau RW
+      if (!access.permission || !['R', 'RW'].includes(access.permission)) {
+        logWarn('Access denied - Invalid permission', {
+          userId,
+          deviceId,
+          branchId: branchId.toString(),
+          permission: access.permission,
+          requestId: context.getRequestId()
+        });
+        return res.status(403).json(createErrorResponse(
+          403,
+          `Forbidden - You have invalid permission for this ${deviceType}`
         ));
       }
 

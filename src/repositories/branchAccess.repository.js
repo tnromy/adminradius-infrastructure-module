@@ -117,13 +117,14 @@ class BranchAccessRepository {
       const result = await collection.find({ 
         user_id: userId,
         status: status,
-        permission: { $ne: null } // Pastikan hanya mengambil yang memiliki permission
+        permission: { $in: ['R', 'RW'] } // Pastikan hanya mengambil yang memiliki permission valid
       }).toArray();
 
       logDebug('Retrieved branch access by user and status', {
         userId,
         status,
-        count: result.length
+        count: result.length,
+        permissions: result.map(access => access.permission) // Menampilkan permission yang ditemukan
       });
 
       return createBranchAccessListEntity(result);
@@ -142,7 +143,10 @@ class BranchAccessRepository {
     try {
       const collection = getCollection('branch_access');
       
-      const result = await collection.find({ status }).toArray();
+      const result = await collection.find({ 
+        status, 
+        permission: { $in: ['R', 'RW'] } // Pastikan hanya mengambil yang memiliki permission valid
+      }).toArray();
       return createBranchAccessListEntity(result);
     } catch (error) {
       logError('Error getting branch access by status:', error);
@@ -163,7 +167,8 @@ class BranchAccessRepository {
       const result = await collection.find(
         { 
           branch_id: new ObjectId(branchId),
-          status: status
+          status: status,
+          permission: { $in: ['R', 'RW'] } // Pastikan hanya mengambil yang memiliki permission valid
         }
       ).toArray();
 
@@ -202,7 +207,8 @@ class BranchAccessRepository {
       
       const result = await collection.find({
         user_id: userId,
-        status: BranchAccessStatus.APPROVED
+        status: BranchAccessStatus.APPROVED,
+        permission: { $in: ['R', 'RW'] } // Hanya mengambil branch dengan permission R atau RW
       }).toArray();
 
       logDebug('Retrieved accessible branches', {
@@ -230,13 +236,15 @@ class BranchAccessRepository {
       const access = await collection.findOne({
         user_id: userId,
         branch_id: branchId,
-        status: BranchAccessStatus.APPROVED
+        status: BranchAccessStatus.APPROVED,
+        permission: { $in: ['R', 'RW'] } // Memastikan permission adalah R atau RW
       });
 
       logDebug('Checked branch access', {
         userId,
         branchId: branchId.toString(),
-        hasAccess: !!access
+        hasAccess: !!access,
+        permission: access ? access.permission : null
       });
 
       return access;
@@ -260,7 +268,8 @@ class BranchAccessRepository {
         { 
           branch_id: new ObjectId(branchId),
           user_id: userId,
-          status: BranchAccessStatus.APPROVED
+          status: BranchAccessStatus.APPROVED,
+          permission: { $in: ['R', 'RW'] } // Hanya mengambil permission R atau RW
         },
         { sort: { created_at: -1 } }
       );
@@ -268,7 +277,8 @@ class BranchAccessRepository {
       logDebug('Finding approved branch access', {
         branchId,
         userId,
-        found: !!result
+        found: !!result,
+        permission: result ? result.permission : null
       });
 
       return result;
@@ -289,7 +299,8 @@ class BranchAccessRepository {
       
       const result = await collection.find({
         user_id: userId,
-        status: BranchAccessStatus.APPROVED
+        status: BranchAccessStatus.APPROVED,
+        permission: { $in: ['R', 'RW'] } // Hanya mengambil permission R atau RW
       }).toArray();
 
       logDebug('Retrieved approved branch access list', {
