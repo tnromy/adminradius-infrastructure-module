@@ -6,6 +6,7 @@ const branchRepository = require('../repositories/branch.repository');
 const { validateBranchEntity } = require('../entities/branch.entity');
 const { logDebug, logError, logInfo, logWarn, createErrorResponse } = require('../services/logger.service');
 const { getRequestContext } = require('../services/requestContext.service');
+const { ResultTypes, DeletedFilterTypes } = require('../repositories/branch.repository');
 
 /**
  * Mendapatkan semua branches
@@ -13,78 +14,52 @@ const { getRequestContext } = require('../services/requestContext.service');
  * @param {Object} res - Response object
  */
 async function getAllBranches(req, res) {
+  const context = getRequestContext();
+  const userRoles = context.getUserRoles();
+  
   try {
-    const context = getRequestContext();
-    logDebug('Menerima request getAllBranches', {
-      requestId: context.getRequestId(),
-      userId: context.getUserId(),
-      query: req.query,
-      userRoles: context.getUserRoles().map(r => r.name),
-      hasAccessFilter: !!req.accessibleBranchIds
-    });
-    
-    const { scope_level, deleted } = req.query;
-    
-    if (scope_level && !Object.values(branchRepository.ResultTypes).includes(scope_level)) {
-      logWarn('Invalid scope_level parameter', {
-        requestId: context.getRequestId(),
+    let accessibleBranchIds = null;
+
+    // Jika bukan Client Owner, gunakan branch access list untuk filter
+    if (!userRoles.some(role => role.name === 'Client Owner')) {
+      // Dapatkan list branch ID yang diizinkan dari context
+      accessibleBranchIds = context.getBranchAccessList();
+      
+      // Jika tidak ada branch yang diizinkan, kembalikan array kosong
+      if (!accessibleBranchIds || accessibleBranchIds.length === 0) {
+        logDebug('No accessible branches found', {
+          userId: context.getUserId()
+        });
+        return res.json({ data: [] });
+      }
+      
+      logDebug('Filtering branches based on access', {
         userId: context.getUserId(),
-        invalidValue: scope_level,
-        validValues: Object.values(branchRepository.ResultTypes)
+        accessibleBranchCount: accessibleBranchIds.length
       });
-      return res.status(400).json(createErrorResponse(
-        400,
-        'Invalid scope_level type',
-        { valid_values: Object.values(branchRepository.ResultTypes) }
-      ));
-    }
-    
-    let deletedFilter = branchRepository.DeletedFilterTypes.WITHOUT;
-    if (deleted && Object.values(branchRepository.DeletedFilterTypes).includes(deleted)) {
-      deletedFilter = deleted;
     }
 
-    logDebug('Mengambil data branches', {
-      requestId: context.getRequestId(),
-      userId: context.getUserId(),
-      filters: {
-        scope_level: scope_level || 'default',
-        deleted: deletedFilter,
-        accessibleBranchCount: req.accessibleBranchIds?.length
-      }
-    });
-    
-    // Gunakan accessible branch IDs jika ada (untuk non-Client Owner)
     const branches = await branchRepository.getAllBranches(
-      scope_level, 
-      deletedFilter,
-      req.accessibleBranchIds // Ini akan null untuk Client Owner
+      ResultTypes.BASIC,
+      DeletedFilterTypes.WITHOUT,
+      accessibleBranchIds
     );
-    
-    logInfo('Berhasil mengambil data branches', {
-      requestId: context.getRequestId(),
+
+    logInfo('Successfully retrieved branches', {
       userId: context.getUserId(),
-      count: branches.length,
-      scope_level: scope_level || 'default',
-      deleted: deletedFilter,
-      filteredByAccess: !!req.accessibleBranchIds
+      count: branches.length
     });
-    
-    res.status(200).json({
+
+    res.json({
       data: branches
     });
   } catch (error) {
-    logError('Error pada getAllBranches', {
-      requestId: getRequestContext().getRequestId(),
-      error: error.message,
-      stack: error.stack,
-      userId: getRequestContext().getUserId()
+    logError('Error getting branches:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      request_id: context.getRequestId(),
+      details: error.message
     });
-    res.status(500).json(createErrorResponse(
-      500,
-      'Internal server error',
-      error
-    ));
   }
 }
 

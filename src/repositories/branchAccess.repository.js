@@ -114,12 +114,17 @@ class BranchAccessRepository {
     try {
       const collection = getCollection('branch_access');
       
-      const result = await collection.find(
-        { 
-          user_id: userId,
-          status: status
-        }
-      ).toArray();
+      const result = await collection.find({ 
+        user_id: userId,
+        status: status,
+        permission: { $ne: null } // Pastikan hanya mengambil yang memiliki permission
+      }).toArray();
+
+      logDebug('Retrieved branch access by user and status', {
+        userId,
+        status,
+        count: result.length
+      });
 
       return createBranchAccessListEntity(result);
     } catch (error) {
@@ -295,6 +300,34 @@ class BranchAccessRepository {
       return createBranchAccessListEntity(result);
     } catch (error) {
       logError('Error getting approved branch access list:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Mendapatkan list branch ID yang diizinkan untuk user
+   * @param {string} userId - ID user
+   * @returns {Promise<Array<ObjectId>>} List branch ID yang diizinkan
+   */
+  async getAccessibleBranchIds(userId) {
+    try {
+      const collection = getCollection('branch_access');
+      
+      const result = await collection.find({
+        user_id: userId,
+        permission: { $in: ['R', 'RW'] }, // Hanya R atau RW
+        status: BranchAccessStatus.APPROVED
+      }).toArray();
+
+      logDebug('Retrieved accessible branch IDs', {
+        userId,
+        count: result.length
+      });
+
+      // Return array of branch_id
+      return result.map(access => access.branch_id);
+    } catch (error) {
+      logError('Error getting accessible branch IDs:', error);
       throw error;
     }
   }

@@ -19,25 +19,22 @@ const {
   checkWritePermission
 } = require('../middlewares/permission.middleware');
 const config = require('../../config/app.config');
+const { branchesPermission, branchPermission, writerBranchPermission } = require('../middlewares/branchPermission.middleware');
 
 // Route GET /api/infra/branches
 router.get('/branches', 
   authenticateJWT,
-  authorizeRoles(config.auth.allowedRoles),
-  validateDeletedParam, 
-  validateScopeLevelParam,
-  checkBranchListAccess, // Type A: Filter berdasarkan accessible branches
+  authorizeRoles(['Client Owner', 'Client Administrator']),
+  branchesPermission,
   branchController.getAllBranches
 );
 
 // Route GET /api/infra/branch/:id
 router.get('/branch/:id', 
   authenticateJWT,
-  authorizeRoles(config.auth.allowedRoles),
-  validateBranchId, 
-  validateDeletedParam, 
-  validateScopeLevelParam,
-  checkDirectBranchAccess, // Type B: Check akses ke branch spesifik
+  authorizeRoles(['Client Owner', 'Client Administrator']),
+  validateBranchId,
+  branchPermission,
   branchController.getBranchById
 );
 
@@ -52,9 +49,10 @@ router.post('/branch',
 // Route PUT /api/infra/branch/:id
 router.put('/branch/:id', 
   authenticateJWT,
-  authorizeRoles(config.auth.allowedRoles),
+  authorizeRoles(['Client Owner']),
+  validateBranchId,
   validateUpdateBranch,
-  checkWritePermission, // Type C: Check write permission
+  writerBranchPermission,
   branchController.updateBranch
 );
 
@@ -63,6 +61,7 @@ router.delete('/branch/:id',
   authenticateJWT,
   authorizeRoles(['Client Owner']), // Hanya Client Owner
   validateBranchId, 
+  writerBranchPermission,
   branchController.deleteBranch
 );
 

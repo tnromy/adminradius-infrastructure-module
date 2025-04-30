@@ -62,14 +62,15 @@ async function branchesPermission(req, res, next) {
   }
 
   try {
-    const branchAccessList = await branchAccessRepository.getApprovedBranchAccessByUserId(context.getUserId());
+    // Dapatkan list branch ID yang diizinkan
+    const accessibleBranchIds = await branchAccessRepository.getAccessibleBranchIds(context.getUserId());
     
-    // Simpan list branch access ke request context
-    context.setBranchAccessList(branchAccessList);
+    // Simpan list branch ID ke request context
+    context.setBranchAccessList(accessibleBranchIds);
     
     logDebug('Branch list permission checked', {
       userId: context.getUserId(),
-      accessibleBranchCount: branchAccessList.length
+      accessibleBranchCount: accessibleBranchIds.length
     });
 
     next();
