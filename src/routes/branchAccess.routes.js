@@ -6,7 +6,7 @@ const express = require('express');
 const router = express.Router();
 const { authenticateJWT, authorizeRoles } = require('../middlewares/auth.middleware');
 const { validateIdToken } = require('../middlewares/idToken.middleware');
-const { branchPermission } = require('../middlewares/branchPermission.middleware');
+const { branchPermission, notHasBranchPermission } = require('../middlewares/branchPermission.middleware');
 const {
   validateGetBranchAccessList,
   validateCreateBranchAccess,
@@ -33,7 +33,7 @@ router.post(
   authenticateJWT,
   authorizeRoles(['Client Owner', 'Client Administrator']),
   validateCreateBranchAccess,
-  branchPermission,
+  notHasBranchPermission,
   validateIdToken,
   createBranchAccess
 );

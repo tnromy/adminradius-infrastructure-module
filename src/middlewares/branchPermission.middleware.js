@@ -7,6 +7,7 @@ const branchAccessRepository = require('../repositories/branchAccess.repository'
 const { getRequestContext } = require('../services/requestContext.service');
 const { logDebug, logError, logWarn, createErrorResponse } = require('../services/logger.service');
 const { getCollection } = require('../repositories/database.connector');
+const { BranchAccessStatus } = require('../entities/branchAccess.entity');
 
 /**
  * Helper untuk mencari branch_id berdasarkan device
@@ -241,6 +242,86 @@ const writerOdcPermission = createDevicePermissionMiddleware('odc', true);
 const writerOdpPermission = createDevicePermissionMiddleware('odp', true);
 const writerOntPermission = createDevicePermissionMiddleware('ont', true);
 
+/**
+ * Middleware untuk mengecek bahwa user TIDAK memiliki akses ke branch (Type I)
+ * Digunakan untuk endpoint request access
+ */
+async function notHasBranchPermission(req, res, next) {
+  const context = getRequestContext();
+  const userRoles = context.getUserRoles();
+  const branchId = req.params.branch_id || req.params.id;
+
+  // Skip untuk Client Owner
+  if (userRoles.some(role => role.name === 'Client Owner')) {
+    return next();
+  }
+
+  try {
+    // Cek apakah branch exists
+    const branchCollection = getCollection('branches');
+    const branch = await branchCollection.findOne({ 
+      _id: new ObjectId(branchId),
+      deleted: { $ne: true }
+    });
+
+    if (!branch) {
+      logWarn('Branch not found', {
+        userId: context.getUserId(),
+        branchId
+      });
+      return res.status(404).json(createErrorResponse(
+        404,
+        'Branch not found or has been deleted'
+      ));
+    }
+
+    // Cek existing access
+    const existingAccess = await branchAccessRepository.findBranchAccessByBranchIdAndUserId(
+      branchId,
+      context.getUserId()
+    );
+
+    // Jika sudah ada access yang APPROVED, tolak request
+    if (existingAccess && existingAccess.status === BranchAccessStatus.APPROVED) {
+      logWarn('Access request denied - Already has access', {
+        userId: context.getUserId(),
+        branchId,
+        accessStatus: existingAccess.status
+      });
+      return res.status(403).json(createErrorResponse(
+        403,
+        'Forbidden - You already have access to this branch'
+      ));
+    }
+
+    // Jika sudah ada request yang SUBMITTED, tolak request baru
+    if (existingAccess && existingAccess.status === BranchAccessStatus.SUBMITTED) {
+      logWarn('Access request denied - Request pending', {
+        userId: context.getUserId(),
+        branchId,
+        accessStatus: existingAccess.status
+      });
+      return res.status(403).json(createErrorResponse(
+        403,
+        'Forbidden - You already have a pending access request for this branch'
+      ));
+    }
+
+    logDebug('Access request allowed - No existing access', {
+      userId: context.getUserId(),
+      branchId
+    });
+    
+    next();
+  } catch (error) {
+    logError('Error checking branch access status:', error);
+    return res.status(500).json(createErrorResponse(
+      500,
+      'Internal server error while checking branch access status'
+    ));
+  }
+}
+
 module.exports = {
   branchesPermission,
   branchPermission,
@@ -254,5 +335,6 @@ module.exports = {
   writerOltPermission,
   writerOdcPermission,
   writerOdpPermission,
-  writerOntPermission
+  writerOntPermission,
+  notHasBranchPermission
 }; 
