@@ -22,7 +22,7 @@ const {
 router.get(
   '/branch-access-list',
   authenticateJWT,
-  authorizeRoles(['Client Owner', 'Client Administrator']),
+  authorizeRoles(['Client Owner']),
   validateGetBranchAccessList,
   getBranchAccessList
 );
