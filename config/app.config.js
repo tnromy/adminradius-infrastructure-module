@@ -16,6 +16,14 @@ module.exports = {
     prefix: '/api/infra',
   },
 
+  // CORS configuration
+  cors: {
+    origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
+    credentials: true
+  },
+
   auth: {
     jwksUrl: process.env.JWKS_URL,
     jwtIssuer: process.env.JWT_ISSUER,

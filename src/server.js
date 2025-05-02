@@ -1,5 +1,8 @@
 /**
  * Entry point aplikasi
+ * 
+ * PENTING: CORS tidak diimplementasikan di level aplikasi.
+ * Semua konfigurasi CORS dikelola di level NGINX proxy.
  */
 
 const express = require('express');
@@ -20,6 +23,21 @@ global.JWKS_CLIENT = jwksClient({
   cache: true,
   rateLimit: true,
   jwksRequestsPerMinute: 5
+});
+
+// CORS Middleware
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', config.cors.origin);
+  res.header('Access-Control-Allow-Methods', config.cors.methods.join(', '));
+  res.header('Access-Control-Allow-Headers', config.cors.allowedHeaders.join(', '));
+  res.header('Access-Control-Allow-Credentials', config.cors.credentials);
+  
+  // Handle preflight
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+  
+  next();
 });
 
 // Middleware
