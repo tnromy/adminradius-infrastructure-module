@@ -1,0 +1,38 @@
+{
+  "server": {
+    "host": "0.0.0.0",
+    "port": 80,
+    "secure_cookie": false,
+    "cors": ["http://localhost"]
+  },
+  "database_url": "postgres://racenet:iccRACENET%4012@192.168.23.2:5432/adminradius_infra",
+  "redis": {
+    "host": "192.168.23.2",
+    "port": 6379,
+    "password": "iccRACENET@12",
+    "pool": {
+      "max_connections": 10,
+      "connection_timeout_seconds": 10,
+      "response_timeout_seconds": 30,
+      "retry_max_delay_seconds": 1
+    },
+    "cache": {
+      "theme_ttl_seconds": 3600
+    }
+  },
+  "s3": {
+    "access_key_id": "racenet",
+    "secret_access_key": "iccRADIUS@12",
+    "default_region": "ap-id-1",
+    "bucket": "data",
+    "use_path_style_endpoint": true,
+    "endpoint": "http://192.168.23.2:9000"
+  },
+  "base_url": "http://localhost",
+  "storage_base_url": "http://192.168.23.2:9000/data/",
+  "elastic_search": {
+    "endpoint": "http://192.168.23.2:9200",
+    "index_prefix": "adminradius-infra-log"
+  },
+
+}
