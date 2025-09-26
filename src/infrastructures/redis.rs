@@ -1,11 +1,12 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use anyhow::{Context, Result, anyhow};
+use anyhow::{anyhow, Context, Result};
 use config::Config;
-use deadpool::managed::PoolConfig;
+use deadpool::managed::{PoolConfig, QueueMode};
 use deadpool_redis::{CreatePoolError, Pool};
-use url::Url;
+use tokio::time::timeout;
+use urlencoding::encode; // ensure special chars (e.g. '@') in password are encoded
 
 #[derive(Clone)]
 #[allow(dead_code)]
@@ -39,6 +40,7 @@ impl RedisConnection {
 }
 
 pub async fn initialize_redis(config: &Config) -> Result<RedisConnection> {
+    // Basic configuration extraction
     let host = config
         .get_string("redis.host")
         .context("redis.host is not configured")?;
@@ -46,17 +48,7 @@ pub async fn initialize_redis(config: &Config) -> Result<RedisConnection> {
         .get_int("redis.port")
         .unwrap_or(6379)
         .clamp(1, u16::MAX as i64) as u16;
-
-    let mut redis_url = Url::parse(&format!("redis://{}:{}/", host, port))
-        .context("failed to construct redis url")?;
-
-    if let Ok(password) = config.get_string("redis.password") {
-        if !password.is_empty() {
-            redis_url
-                .set_password(Some(&password))
-                .map_err(|_| anyhow!("invalid redis password"))?;
-        }
-    }
+    let password = config.get_string("redis.password").unwrap_or_default();
 
     let max_connections = config
         .get_int("redis.pool.max_connections")
@@ -70,16 +62,63 @@ pub async fn initialize_redis(config: &Config) -> Result<RedisConnection> {
         .get_int("redis.pool.retry_max_delay_seconds")
         .unwrap_or(1)
         .max(1) as u64;
+    let connection_timeout_secs = config
+        .get_int("redis.pool.connection_timeout_seconds")
+        .unwrap_or(10)
+        .max(1) as u64;
 
-    let mut cfg = deadpool_redis::Config::default();
-    cfg.url = Some(redis_url.to_string());
-    let mut pool_config = PoolConfig::default();
-    pool_config.max_size = max_connections;
-    cfg.pool = Some(pool_config);
+    // Build URL explicitly. Use DB 0 by default.
+    // Encode password to safely include special characters like '@'.
+    let url = if password.is_empty() {
+        format!("redis://{}:{}/0", host, port)
+    } else {
+        format!("redis://:{}@{}:{}/0", encode(&password), host, port)
+    };
 
-    let pool = cfg
-        .create_pool(Some(deadpool_redis::Runtime::Tokio1))
-        .map_err(map_pool_error)?;
+    log::debug!(
+        "redis:init host={} port={} has_password={} url=***", // do not log full URL with password
+        host,
+        port,
+        !password.is_empty()
+    );
+
+    // Use from_url to avoid having both `connection` and `url` set which causes runtime panic.
+    let mut cfg = deadpool_redis::Config::from_url(url);
+    cfg.pool = Some(PoolConfig {
+        max_size: max_connections,
+        queue_mode: QueueMode::Fifo,
+        timeouts: deadpool_redis::Timeouts::default(),
+    });
+
+    // create_pool is sync; wrap in a future to apply a timeout if desired for symmetry.
+    let pool_result = timeout(
+        Duration::from_secs(connection_timeout_secs),
+        async { cfg.create_pool(Some(deadpool_redis::Runtime::Tokio1)) },
+    )
+    .await
+    .map_err(|_| anyhow!("Redis pool creation timeout after {}s", connection_timeout_secs))?; // timeout layer
+
+    let pool = pool_result.map_err(map_pool_error)?; // underlying pool creation error mapping
+
+    // Health check PING with the same timeout semantics.
+    timeout(Duration::from_secs(response_timeout), async {
+        let mut conn = pool
+            .get()
+            .await
+            .map_err(|e| anyhow!("Redis get connection failed: {}", e))?;
+        let reply: String = deadpool_redis::redis::cmd("PING")
+            .query_async(&mut conn)
+            .await
+            .map_err(|e| anyhow!("Redis PING failed: {}", e))?;
+        if reply.to_uppercase() != "PONG" {
+            return Err(anyhow!("Unexpected PING reply: {}", reply));
+        }
+        Ok::<_, anyhow::Error>(())
+    })
+    .await
+    .map_err(|_| anyhow!("Redis PING timeout after {}s", response_timeout))??;
+
+    log::info!("redis initialized and ping ok");
 
     Ok(RedisConnection::new(
         pool,
