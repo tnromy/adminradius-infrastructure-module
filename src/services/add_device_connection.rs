@@ -27,6 +27,10 @@ pub enum AddDeviceConnectionError {
     ToPortNotFound,
     #[error("ports must be different")]
     PortsMustBeDifferent,
+    #[error("source and destination ports cannot belong to the same device")]
+    PortsOnSameDevice,
+    #[error("source and destination ports must be within the same branch")]
+    BranchMismatch,
     #[error("connection already exists")]
     ConnectionAlreadyExists,
     #[error("database error: {0}")]
@@ -40,26 +44,40 @@ pub async fn execute(
     let pool = db.get_pool();
     let conn = pool.as_ref();
 
-    if !device_repository::exists(conn, &input.device_id).await? {
+    let Some(from_device) = device_repository::get_by_id(conn, &input.device_id).await? else {
         return Err(AddDeviceConnectionError::DeviceNotFound);
-    }
+    };
 
     if input.from_port_id == input.to_port_id {
         return Err(AddDeviceConnectionError::PortsMustBeDifferent);
     }
 
-    if device_port_repository::get_by_device_and_id(conn, &input.device_id, &input.from_port_id)
-        .await?
-        .is_none()
-    {
+    let Some(from_port) =
+        device_port_repository::get_by_device_and_id(conn, &input.device_id, &input.from_port_id)
+            .await?
+    else {
         return Err(AddDeviceConnectionError::FromPortNotFound);
+    };
+
+    let Some(to_port) = device_port_repository::get_by_id(conn, &input.to_port_id).await? else {
+        return Err(AddDeviceConnectionError::ToPortNotFound);
+    };
+
+    if to_port.device_id == from_device.id {
+        return Err(AddDeviceConnectionError::PortsOnSameDevice);
     }
 
-    if device_port_repository::get_by_device_and_id(conn, &input.device_id, &input.to_port_id)
-        .await?
-        .is_none()
-    {
+    let Some(to_device) = device_repository::get_by_id(conn, &to_port.device_id).await? else {
         return Err(AddDeviceConnectionError::ToPortNotFound);
+    };
+
+    if to_device.branch_id != from_device.branch_id {
+        return Err(AddDeviceConnectionError::BranchMismatch);
+    }
+
+    // Ensure the source port's recorded device matches the path device for consistency.
+    if from_port.device_id != from_device.id {
+        return Err(AddDeviceConnectionError::FromPortNotFound);
     }
 
     if connection_repository::exists_by_ports(conn, &input.from_port_id, &input.to_port_id, None)

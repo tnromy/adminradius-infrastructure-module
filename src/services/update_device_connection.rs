@@ -29,6 +29,10 @@ pub enum UpdateDeviceConnectionError {
     ToPortNotFound,
     #[error("ports must be different")]
     PortsMustBeDifferent,
+    #[error("source and destination ports cannot belong to the same device")]
+    PortsOnSameDevice,
+    #[error("source and destination ports must be within the same branch")]
+    BranchMismatch,
     #[error("connection already exists")]
     ConnectionAlreadyExists,
     #[error("database error: {0}")]
@@ -42,9 +46,9 @@ pub async fn execute(
     let pool = db.get_pool();
     let conn = pool.as_ref();
 
-    if !device_repository::exists(conn, &input.device_id).await? {
+    let Some(from_device) = device_repository::get_by_id(conn, &input.device_id).await? else {
         return Err(UpdateDeviceConnectionError::DeviceNotFound);
-    }
+    };
 
     let existing =
         connection_repository::get_by_device_and_id(conn, &input.device_id, &input.id).await?;
@@ -58,18 +62,31 @@ pub async fn execute(
         return Err(UpdateDeviceConnectionError::PortsMustBeDifferent);
     }
 
-    if device_port_repository::get_by_device_and_id(conn, &input.device_id, &input.from_port_id)
-        .await?
-        .is_none()
-    {
+    let Some(from_port) =
+        device_port_repository::get_by_device_and_id(conn, &input.device_id, &input.from_port_id)
+            .await?
+    else {
+        return Err(UpdateDeviceConnectionError::FromPortNotFound);
+    };
+
+    if from_port.device_id != from_device.id {
         return Err(UpdateDeviceConnectionError::FromPortNotFound);
     }
 
-    if device_port_repository::get_by_device_and_id(conn, &input.device_id, &input.to_port_id)
-        .await?
-        .is_none()
-    {
+    let Some(to_port) = device_port_repository::get_by_id(conn, &input.to_port_id).await? else {
         return Err(UpdateDeviceConnectionError::ToPortNotFound);
+    };
+
+    if to_port.device_id == from_device.id {
+        return Err(UpdateDeviceConnectionError::PortsOnSameDevice);
+    }
+
+    let Some(to_device) = device_repository::get_by_id(conn, &to_port.device_id).await? else {
+        return Err(UpdateDeviceConnectionError::ToPortNotFound);
+    };
+
+    if to_device.branch_id != from_device.branch_id {
+        return Err(UpdateDeviceConnectionError::BranchMismatch);
     }
 
     if connection_repository::exists_by_ports(

@@ -1445,7 +1445,7 @@
           }
         },
         "400": {
-          "description": "Invalid input or dependencies",
+          "description": "Invalid input or dependencies (ports must be different devices within the same branch)",
           "content": {
             "application/json": {
               "schema": {
@@ -1561,7 +1561,7 @@
           }
         },
         "400": {
-          "description": "Invalid input or dependencies",
+          "description": "Invalid input or dependencies (ports must be different devices within the same branch)",
           "content": {
             "application/json": {
               "schema": {

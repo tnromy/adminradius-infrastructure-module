@@ -100,6 +100,59 @@ where
     Ok(row.get("id"))
 }
 
+pub async fn get_by_id<'a, E>(
+    executor: E,
+    id: &str,
+) -> Result<Option<DevicePortEntity>, sqlx::Error>
+where
+    E: Executor<'a, Database = Postgres>,
+{
+    let row = sqlx::query(
+        r#"
+            SELECT
+                dp.id,
+                dp.device_id,
+                dp.port_type_id,
+                dp.port_specification_id,
+                dp.name,
+                dp.position,
+                dp.enabled,
+                dp.properties,
+                dp.created_at,
+                dp.updated_at,
+                d.id AS d_id,
+                d.branch_id AS d_branch_id,
+                d.name AS d_name,
+                d.device_type_id AS d_device_type_id,
+                d.latitude AS d_latitude,
+                d.longitude AS d_longitude,
+                d.location_details AS d_location_details,
+                d.specifications AS d_specifications,
+                d.created_at AS d_created_at,
+                d.updated_at AS d_updated_at,
+                dpi.id AS dpi_id,
+                dpi.name AS dpi_name,
+                dpi.created_at AS dpi_created_at,
+                dpi.updated_at AS dpi_updated_at,
+                dps.id AS dps_id,
+                dps.name AS dps_name,
+                dps.data AS dps_data,
+                dps.created_at AS dps_created_at,
+                dps.updated_at AS dps_updated_at
+            FROM device_ports dp
+            LEFT JOIN devices d ON d.id = dp.device_id
+            LEFT JOIN device_port_interfaces dpi ON dpi.id = dp.port_type_id
+            LEFT JOIN device_port_specifications dps ON dps.id = dp.port_specification_id
+            WHERE dp.id = $1
+        "#,
+    )
+    .bind(id)
+    .fetch_optional(executor)
+    .await?;
+
+    Ok(row.map(|r| row_to_entity(&r)))
+}
+
 pub async fn update<'a, E>(executor: E, entity: &DevicePortEntity) -> Result<bool, sqlx::Error>
 where
     E: Executor<'a, Database = Postgres>,

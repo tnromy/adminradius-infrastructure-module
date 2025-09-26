@@ -90,6 +90,14 @@ pub async fn store(
             vec!["from_port_id and to_port_id must be different".to_string()],
             request_id,
         ),
+        Err(AddDeviceConnectionError::PortsOnSameDevice) => bad_request_response(
+            vec!["source and destination ports cannot belong to the same device".to_string()],
+            request_id,
+        ),
+        Err(AddDeviceConnectionError::BranchMismatch) => bad_request_response(
+            vec!["source and destination ports must be within the same branch".to_string()],
+            request_id,
+        ),
         Err(AddDeviceConnectionError::ConnectionAlreadyExists) => {
             bad_request_response(vec!["connection already exists".to_string()], request_id)
         }
@@ -163,6 +171,14 @@ pub async fn update(
         }
         Err(UpdateDeviceConnectionError::PortsMustBeDifferent) => bad_request_response(
             vec!["from_port_id and to_port_id must be different".to_string()],
+            request_id,
+        ),
+        Err(UpdateDeviceConnectionError::PortsOnSameDevice) => bad_request_response(
+            vec!["source and destination ports cannot belong to the same device".to_string()],
+            request_id,
+        ),
+        Err(UpdateDeviceConnectionError::BranchMismatch) => bad_request_response(
+            vec!["source and destination ports must be within the same branch".to_string()],
             request_id,
         ),
         Err(UpdateDeviceConnectionError::ConnectionAlreadyExists) => {

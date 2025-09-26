@@ -128,12 +128,10 @@ where
     let result = sqlx::query(
         r#"
             DELETE FROM device_connections dc
-            USING device_ports fp, device_ports tp
+            USING device_ports fp
             WHERE dc.id = $1
               AND dc.from_port_id = fp.id
-              AND dc.to_port_id = tp.id
               AND fp.device_id = $2
-              AND tp.device_id = $2
         "#,
     )
     .bind(id)
@@ -184,9 +182,8 @@ where
             FROM device_connections dc
             JOIN device_ports fp ON fp.id = dc.from_port_id
             JOIN device_ports tp ON tp.id = dc.to_port_id
-            WHERE fp.device_id = $1
-              AND tp.device_id = $1
-              AND dc.id = $2
+                        WHERE fp.device_id = $1
+                            AND dc.id = $2
         "#,
     )
     .bind(device_id)
@@ -236,8 +233,7 @@ where
             FROM device_connections dc
             JOIN device_ports fp ON fp.id = dc.from_port_id
             JOIN device_ports tp ON tp.id = dc.to_port_id
-            WHERE fp.device_id = $1
-              AND tp.device_id = $1
+                        WHERE fp.device_id = $1
             ORDER BY LOWER(fp.name), LOWER(tp.name)
         "#,
     )
