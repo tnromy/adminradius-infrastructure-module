@@ -255,31 +255,34 @@ pub async fn exists_by_ports<'a, E>(
 where
     E: Executor<'a, Database = Postgres>,
 {
-    let query = if let Some(exclude_id) = exclude_id {
-        sqlx::query_scalar::<_, i64>(
+    if let Some(exclude_id) = exclude_id {
+        sqlx::query_scalar::<_, bool>(
             r#"
-                SELECT 1
-                FROM device_connections
-                WHERE from_port_id = $1 AND to_port_id = $2 AND id <> $3
-                LIMIT 1
+                SELECT EXISTS (
+                    SELECT 1
+                    FROM device_connections
+                    WHERE from_port_id = $1 AND to_port_id = $2 AND id <> $3
+                )
             "#,
         )
         .bind(from_port_id)
         .bind(to_port_id)
         .bind(exclude_id)
+        .fetch_one(executor)
+        .await
     } else {
-        sqlx::query_scalar::<_, i64>(
+        sqlx::query_scalar::<_, bool>(
             r#"
-                SELECT 1
-                FROM device_connections
-                WHERE from_port_id = $1 AND to_port_id = $2
-                LIMIT 1
+                SELECT EXISTS (
+                    SELECT 1
+                    FROM device_connections
+                    WHERE from_port_id = $1 AND to_port_id = $2
+                )
             "#,
         )
         .bind(from_port_id)
         .bind(to_port_id)
-    };
-
-    let row = query.fetch_optional(executor).await?;
-    Ok(row.is_some())
+        .fetch_one(executor)
+        .await
+    }
 }

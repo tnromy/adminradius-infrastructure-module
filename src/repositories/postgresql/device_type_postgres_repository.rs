@@ -109,16 +109,16 @@ pub async fn exists<'a, E>(executor: E, id: &str) -> Result<bool, sqlx::Error>
 where
     E: Executor<'a, Database = Postgres>,
 {
-    let row = sqlx::query_scalar::<_, i64>(
+    sqlx::query_scalar::<_, bool>(
         r#"
-            SELECT 1 FROM device_types WHERE id = $1
+            SELECT EXISTS (
+                SELECT 1 FROM device_types WHERE id = $1
+            )
         "#,
     )
     .bind(id)
-    .fetch_optional(executor)
-    .await?;
-
-    Ok(row.is_some())
+    .fetch_one(executor)
+    .await
 }
 
 pub async fn name_exists<'a, E>(
@@ -130,31 +130,29 @@ where
     E: Executor<'a, Database = Postgres>,
 {
     if let Some(id) = exclude_id {
-        let row = sqlx::query_scalar::<_, i64>(
+        sqlx::query_scalar::<_, bool>(
             r#"
-                SELECT 1 FROM device_types
-                WHERE LOWER(name) = LOWER($1) AND id <> $2
-                LIMIT 1
+                SELECT EXISTS (
+                    SELECT 1 FROM device_types
+                    WHERE LOWER(name) = LOWER($1) AND id <> $2
+                )
             "#,
         )
         .bind(name)
         .bind(id)
-        .fetch_optional(executor)
-        .await?;
-
-        Ok(row.is_some())
+        .fetch_one(executor)
+        .await
     } else {
-        let row = sqlx::query_scalar::<_, i64>(
+        sqlx::query_scalar::<_, bool>(
             r#"
-                SELECT 1 FROM device_types
-                WHERE LOWER(name) = LOWER($1)
-                LIMIT 1
+                SELECT EXISTS (
+                    SELECT 1 FROM device_types
+                    WHERE LOWER(name) = LOWER($1)
+                )
             "#,
         )
         .bind(name)
-        .fetch_optional(executor)
-        .await?;
-
-        Ok(row.is_some())
+        .fetch_one(executor)
+        .await
     }
 }

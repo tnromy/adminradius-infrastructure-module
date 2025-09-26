@@ -322,50 +322,50 @@ pub async fn name_exists<'a, E>(
 where
     E: Executor<'a, Database = Postgres>,
 {
-    let query = if let Some(exclude_id) = exclude_id {
-        sqlx::query_scalar::<_, i64>(
+    if let Some(exclude_id) = exclude_id {
+        sqlx::query_scalar::<_, bool>(
             r#"
-                SELECT 1
-                FROM device_ports
-                WHERE device_id = $1 AND LOWER(name) = LOWER($2) AND id <> $3
-                LIMIT 1
+                SELECT EXISTS (
+                    SELECT 1
+                    FROM device_ports
+                    WHERE device_id = $1 AND LOWER(name) = LOWER($2) AND id <> $3
+                )
             "#,
         )
         .bind(device_id)
         .bind(name)
         .bind(exclude_id)
+        .fetch_one(executor)
+        .await
     } else {
-        sqlx::query_scalar::<_, i64>(
+        sqlx::query_scalar::<_, bool>(
             r#"
-                SELECT 1
-                FROM device_ports
-                WHERE device_id = $1 AND LOWER(name) = LOWER($2)
-                LIMIT 1
+                SELECT EXISTS (
+                    SELECT 1
+                    FROM device_ports
+                    WHERE device_id = $1 AND LOWER(name) = LOWER($2)
+                )
             "#,
         )
         .bind(device_id)
         .bind(name)
-    };
-
-    let row = query.fetch_optional(executor).await?;
-    Ok(row.is_some())
+        .fetch_one(executor)
+        .await
+    }
 }
 
 pub async fn exists<'a, E>(executor: E, id: &str) -> Result<bool, sqlx::Error>
 where
     E: Executor<'a, Database = Postgres>,
 {
-    let row = sqlx::query_scalar::<_, i64>(
+    sqlx::query_scalar::<_, bool>(
         r#"
-            SELECT 1
-            FROM device_ports
-            WHERE id = $1
-            LIMIT 1
+            SELECT EXISTS (
+                SELECT 1 FROM device_ports WHERE id = $1
+            )
         "#,
     )
     .bind(id)
-    .fetch_optional(executor)
-    .await?;
-
-    Ok(row.is_some())
+    .fetch_one(executor)
+    .await
 }

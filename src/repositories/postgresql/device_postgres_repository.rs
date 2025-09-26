@@ -232,17 +232,14 @@ pub async fn exists<'a, E>(executor: E, id: &str) -> Result<bool, sqlx::Error>
 where
     E: Executor<'a, Database = Postgres>,
 {
-    let row = sqlx::query_scalar::<_, i64>(
+    sqlx::query_scalar::<_, bool>(
         r#"
-            SELECT 1
-            FROM devices
-            WHERE id = $1
-            LIMIT 1
+            SELECT EXISTS (
+                SELECT 1 FROM devices WHERE id = $1
+            )
         "#,
     )
     .bind(id)
-    .fetch_optional(executor)
-    .await?;
-
-    Ok(row.is_some())
+    .fetch_one(executor)
+    .await
 }
