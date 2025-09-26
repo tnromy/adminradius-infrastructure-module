@@ -33,6 +33,6 @@
   "elastic_search": {
     "endpoint": "http://192.168.23.2:9200",
     "index_prefix": "adminradius-infra-log"
-  },
+  }
 
 }

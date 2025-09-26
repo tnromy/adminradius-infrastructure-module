@@ -1,0 +1,32 @@
+#![allow(dead_code)]
+
+pub mod add_device;
+pub mod add_device_connection;
+pub mod add_device_port;
+pub mod add_device_port_interface;
+pub mod add_device_port_specification;
+pub mod add_device_type;
+pub mod delete_device;
+pub mod delete_device_connection;
+pub mod delete_device_port;
+pub mod delete_device_port_interface;
+pub mod delete_device_port_specification;
+pub mod delete_device_type;
+pub mod get_all_device_connections;
+pub mod get_all_device_port_interfaces;
+pub mod get_all_device_port_specifications;
+pub mod get_all_device_ports;
+pub mod get_all_device_types;
+pub mod get_all_devices;
+pub mod get_device;
+pub mod get_device_connection;
+pub mod get_device_port;
+pub mod get_device_port_interface;
+pub mod get_device_port_specification;
+pub mod get_device_type;
+pub mod update_device;
+pub mod update_device_connection;
+pub mod update_device_port;
+pub mod update_device_port_interface;
+pub mod update_device_port_specification;
+pub mod update_device_type;

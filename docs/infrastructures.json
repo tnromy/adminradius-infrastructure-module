@@ -1,0 +1,2260 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "AdminRadius Infrastructure Service API",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/device-port-specifications": {
+      "get": {
+        "summary": "List device port specifications",
+        "operationId": "listDevicePortSpecifications",
+        "responses": {
+          "200": {
+            "description": "Device port specifications retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "$ref": "#/components/schemas/ResponseStatus"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/DevicePortSpecification"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "success": {
+                    "value": {
+                      "status": {
+                        "code": 200,
+                        "message": "Ok"
+                      },
+                      "request_id": "9c62dbb4-3ed1-4018-9ccb-7b2c82c7fca4",
+                      "data": {
+                        "items": [
+                          {
+                            "id": "0d2db452-05f0-4a8c-a0b5-9f0ffecfd72b",
+                            "name": "Gigabit Ethernet RJ45",
+                            "data": {
+                              "speed": "1Gbps",
+                              "connector": "RJ45"
+                            },
+                            "created_at": "2025-09-01T10:15:12Z",
+                            "updated_at": "2025-09-01T10:15:12Z"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a device port specification",
+        "operationId": "createDevicePortSpecification",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StoreDevicePortSpecificationRequest"
+              },
+              "examples": {
+                "default": {
+                  "value": {
+                    "name": "Gigabit Ethernet RJ45",
+                    "data": {
+                      "speed": "1Gbps",
+                      "connector": "RJ45"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Device port specification created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "$ref": "#/components/schemas/ResponseStatus"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "item": {
+                          "$ref": "#/components/schemas/DevicePortSpecification"
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "success": {
+                    "value": {
+                      "status": {
+                        "code": 200,
+                        "message": "Ok"
+                      },
+                      "request_id": "a5707c5a-23a3-4371-91a6-d919d421d4f3",
+                      "data": {
+                        "item": {
+                          "id": "0d2db452-05f0-4a8c-a0b5-9f0ffecfd72b",
+                          "name": "Gigabit Ethernet RJ45",
+                          "data": {
+                            "speed": "1Gbps",
+                            "connector": "RJ45"
+                          },
+                          "created_at": "2025-09-01T10:15:12Z",
+                          "updated_at": "2025-09-01T10:15:12Z"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or duplicate name",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/device-port-specifications/{id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/DevicePortSpecificationId"
+        }
+      ],
+      "get": {
+        "summary": "Get a device port specification",
+        "operationId": "getDevicePortSpecification",
+        "responses": {
+          "200": {
+            "description": "Device port specification retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "$ref": "#/components/schemas/ResponseStatus"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "item": {
+                          "$ref": "#/components/schemas/DevicePortSpecification"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Device port specification not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update a device port specification",
+        "operationId": "updateDevicePortSpecification",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDevicePortSpecificationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Device port specification updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "$ref": "#/components/schemas/ResponseStatus"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "item": {
+                          "$ref": "#/components/schemas/DevicePortSpecification"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or duplicate name",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Device port specification not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a device port specification",
+        "operationId": "deleteDevicePortSpecification",
+        "responses": {
+          "200": {
+            "description": "Device port specification deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "$ref": "#/components/schemas/ResponseStatus"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "deleted": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Device port specification not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/device-port-interfaces": {
+      "get": {
+        "summary": "List device port interfaces",
+        "operationId": "listDevicePortInterfaces",
+        "responses": {
+          "200": {
+            "description": "Device port interfaces retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "$ref": "#/components/schemas/ResponseStatus"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/DevicePortInterface"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a device port interface",
+        "operationId": "createDevicePortInterface",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StoreDevicePortInterfaceRequest"
+              },
+              "examples": {
+                "default": {
+                  "value": {
+                    "name": "RJ45"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Device port interface created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "$ref": "#/components/schemas/ResponseStatus"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "item": {
+                          "$ref": "#/components/schemas/DevicePortInterface"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or duplicate name",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/device-port-interfaces/{id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/DevicePortInterfaceId"
+        }
+      ],
+      "get": {
+        "summary": "Get a device port interface",
+        "operationId": "getDevicePortInterface",
+        "responses": {
+          "200": {
+            "description": "Device port interface retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "$ref": "#/components/schemas/ResponseStatus"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "item": {
+                          "$ref": "#/components/schemas/DevicePortInterface"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Device port interface not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update a device port interface",
+        "operationId": "updateDevicePortInterface",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDevicePortInterfaceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Device port interface updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "$ref": "#/components/schemas/ResponseStatus"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "item": {
+                          "$ref": "#/components/schemas/DevicePortInterface"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or duplicate name",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Device port interface not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a device port interface",
+        "operationId": "deleteDevicePortInterface",
+        "responses": {
+          "200": {
+            "description": "Device port interface deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "$ref": "#/components/schemas/ResponseStatus"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "deleted": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Device port interface not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/device-types": {
+      "get": {
+        "summary": "List device types",
+        "operationId": "listDeviceTypes",
+        "responses": {
+          "200": {
+            "description": "Device types retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "$ref": "#/components/schemas/ResponseStatus"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/DeviceType"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a device type",
+        "operationId": "createDeviceType",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StoreDeviceTypeRequest"
+              },
+              "examples": {
+                "default": {
+                  "value": {
+                    "name": "Router"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Device type created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "$ref": "#/components/schemas/ResponseStatus"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "item": {
+                          "$ref": "#/components/schemas/DeviceType"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or duplicate name",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/device-types/{id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/DeviceTypeId"
+        }
+      ],
+      "get": {
+        "summary": "Get a device type",
+        "operationId": "getDeviceType",
+        "responses": {
+          "200": {
+            "description": "Device type retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "$ref": "#/components/schemas/ResponseStatus"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "item": {
+                          "$ref": "#/components/schemas/DeviceType"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Device type not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update a device type",
+        "operationId": "updateDeviceType",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDeviceTypeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Device type updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "$ref": "#/components/schemas/ResponseStatus"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "item": {
+                          "$ref": "#/components/schemas/DeviceType"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or duplicate name",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Device type not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a device type",
+        "operationId": "deleteDeviceType",
+        "responses": {
+          "200": {
+            "description": "Device type deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "$ref": "#/components/schemas/ResponseStatus"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "deleted": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Device type not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/branch/{branch_id}/devices": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/BranchId"
+        }
+      ],
+      "get": {
+        "summary": "List devices for branch",
+        "operationId": "listDevices",
+        "responses": {
+          "200": {
+            "description": "Devices retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "$ref": "#/components/schemas/ResponseStatus"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Device"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/branch/{branch_id}/device": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/BranchId"
+        }
+      ],
+      "post": {
+        "summary": "Create a device",
+        "operationId": "createDevice",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StoreDeviceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Device created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "$ref": "#/components/schemas/ResponseStatus"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "item": {
+                          "$ref": "#/components/schemas/Device"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or dependencies",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/branch/{branch_id}/device/{device_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/BranchId"
+        },
+        {
+          "$ref": "#/components/parameters/DeviceId"
+        }
+      ],
+      "get": {
+        "summary": "Get a device",
+        "operationId": "getDevice",
+        "responses": {
+          "200": {
+            "description": "Device retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "$ref": "#/components/schemas/ResponseStatus"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "item": {
+                          "$ref": "#/components/schemas/Device"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Device not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update a device",
+        "operationId": "updateDevice",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDeviceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Device updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "$ref": "#/components/schemas/ResponseStatus"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "item": {
+                          "$ref": "#/components/schemas/Device"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or dependencies",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Device not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a device",
+        "operationId": "deleteDevice",
+        "responses": {
+          "200": {
+            "description": "Device deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "$ref": "#/components/schemas/ResponseStatus"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "deleted": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Device not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/device/{device_id}/ports": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/DeviceId"
+        }
+      ],
+      "get": {
+        "summary": "List ports for device",
+        "operationId": "listDevicePorts",
+        "responses": {
+          "200": {
+            "description": "Device ports retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "$ref": "#/components/schemas/ResponseStatus"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/DevicePort"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/device/{device_id}/port": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/DeviceId"
+        }
+      ],
+      "post": {
+        "summary": "Create a device port",
+        "operationId": "createDevicePort",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StoreDevicePortRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Device port created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "$ref": "#/components/schemas/ResponseStatus"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "item": {
+                          "$ref": "#/components/schemas/DevicePort"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or dependencies",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Device not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/device/{device_id}/port/{port_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/DeviceId"
+        },
+        {
+          "$ref": "#/components/parameters/DevicePortId"
+        }
+      ],
+      "get": {
+        "summary": "Get a device port",
+        "operationId": "getDevicePort",
+        "responses": {
+          "200": {
+            "description": "Device port retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "$ref": "#/components/schemas/ResponseStatus"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "item": {
+                          "$ref": "#/components/schemas/DevicePort"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Device port not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update a device port",
+        "operationId": "updateDevicePort",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDevicePortRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Device port updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "$ref": "#/components/schemas/ResponseStatus"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "item": {
+                          "$ref": "#/components/schemas/DevicePort"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or dependencies",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Device port not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a device port",
+        "operationId": "deleteDevicePort",
+        "responses": {
+          "200": {
+            "description": "Device port deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "$ref": "#/components/schemas/ResponseStatus"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "deleted": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Device port not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/device/{device_id}/connections": {
+    "parameters": [
+      {
+        "$ref": "#/components/parameters/DeviceId"
+      }
+    ],
+    "get": {
+      "summary": "List device connections",
+      "operationId": "listDeviceConnections",
+      "responses": {
+        "200": {
+          "description": "Device connections retrieved",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "$ref": "#/components/schemas/ResponseStatus"
+                  },
+                  "request_id": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "items": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/DeviceConnection"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/device/{device_id}/connection": {
+    "parameters": [
+      {
+        "$ref": "#/components/parameters/DeviceId"
+      }
+    ],
+    "post": {
+      "summary": "Create a device connection",
+      "operationId": "createDeviceConnection",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/StoreDeviceConnectionRequest"
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Device connection created",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "$ref": "#/components/schemas/ResponseStatus"
+                  },
+                  "request_id": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "item": {
+                        "$ref": "#/components/schemas/DeviceConnection"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Invalid input or dependencies",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ErrorResponse"
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Device not found",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ErrorResponse"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/device/{device_id}/connection/{connection_id}": {
+    "parameters": [
+      {
+        "$ref": "#/components/parameters/DeviceId"
+      },
+      {
+        "$ref": "#/components/parameters/DeviceConnectionId"
+      }
+    ],
+    "get": {
+      "summary": "Get a device connection",
+      "operationId": "getDeviceConnection",
+      "responses": {
+        "200": {
+          "description": "Device connection retrieved",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "$ref": "#/components/schemas/ResponseStatus"
+                  },
+                  "request_id": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "item": {
+                        "$ref": "#/components/schemas/DeviceConnection"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Device connection not found",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ErrorResponse"
+              }
+            }
+          }
+        }
+      }
+    },
+    "put": {
+      "summary": "Update a device connection",
+      "operationId": "updateDeviceConnection",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/UpdateDeviceConnectionRequest"
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Device connection updated",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "$ref": "#/components/schemas/ResponseStatus"
+                  },
+                  "request_id": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "item": {
+                        "$ref": "#/components/schemas/DeviceConnection"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Invalid input or dependencies",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ErrorResponse"
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Device connection not found",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ErrorResponse"
+              }
+            }
+          }
+        }
+      }
+    },
+    "delete": {
+      "summary": "Delete a device connection",
+      "operationId": "deleteDeviceConnection",
+      "responses": {
+        "200": {
+          "description": "Device connection deleted",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "$ref": "#/components/schemas/ResponseStatus"
+                  },
+                  "request_id": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "deleted": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Device connection not found",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ErrorResponse"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "BranchId": {
+        "name": "branch_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid",
+          "minLength": 36,
+          "maxLength": 36
+        },
+        "description": "Branch identifier"
+      },
+      "DeviceId": {
+        "name": "device_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid",
+          "minLength": 36,
+          "maxLength": 36
+        },
+        "description": "Device identifier"
+      },
+      "DevicePortId": {
+        "name": "port_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid",
+          "minLength": 36,
+          "maxLength": 36
+        },
+        "description": "Device port identifier"
+      },
+      "DeviceConnectionId": {
+        "name": "connection_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid",
+          "minLength": 36,
+          "maxLength": 36
+        },
+        "description": "Device connection identifier"
+      },
+      "DevicePortSpecificationId": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid",
+          "minLength": 36,
+          "maxLength": 36
+        },
+        "description": "Device port specification identifier"
+      },
+      "DevicePortInterfaceId": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid",
+          "minLength": 36,
+          "maxLength": 36
+        },
+        "description": "Device port interface identifier"
+      },
+      "DeviceTypeId": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid",
+          "minLength": 36,
+          "maxLength": 36
+        },
+        "description": "Device type identifier"
+      }
+    },
+    "schemas": {
+      "ResponseStatus": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": ["code", "message"]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/ResponseStatus"
+          },
+          "request_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "errors": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "required": ["status", "data"]
+      },
+      "DevicePortSpecification": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "additionalProperties": {}
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["id", "name", "data", "created_at", "updated_at"]
+      },
+      "StoreDevicePortSpecificationRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "data": {
+            "type": "object",
+            "additionalProperties": {}
+          }
+        },
+        "required": ["name"]
+      },
+      "UpdateDevicePortSpecificationRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "data": {
+            "type": "object",
+            "additionalProperties": {}
+          }
+        },
+        "required": ["name"]
+      },
+      "DevicePortInterface": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["id", "name", "created_at", "updated_at"]
+      },
+      "StoreDevicePortInterfaceRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255
+          }
+        },
+        "required": ["name"]
+      },
+      "UpdateDevicePortInterfaceRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255
+          }
+        },
+        "required": ["name"]
+      },
+      "DeviceType": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["id", "name", "created_at", "updated_at"]
+      },
+      "StoreDeviceTypeRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255
+          }
+        },
+        "required": ["name"]
+      },
+      "UpdateDeviceTypeRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255
+          }
+        },
+        "required": ["name"]
+      },
+      "Device": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "branch_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "device_type_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "location_details": {
+            "type": "object",
+            "additionalProperties": {}
+          },
+          "specifications": {
+            "type": "object",
+            "additionalProperties": {}
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "device_type": {
+            "$ref": "#/components/schemas/DeviceType",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "branch_id",
+          "name",
+          "device_type_id",
+          "location_details",
+          "specifications",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "StoreDeviceRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "device_type_id": {
+            "type": "string",
+            "format": "uuid",
+            "minLength": 36,
+            "maxLength": 36
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "location_details": {
+            "type": "object",
+            "additionalProperties": {},
+            "default": {}
+          },
+          "specifications": {
+            "type": "object",
+            "additionalProperties": {},
+            "default": {}
+          }
+        },
+        "required": ["name", "device_type_id"]
+      },
+      "UpdateDeviceRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "device_type_id": {
+            "type": "string",
+            "format": "uuid",
+            "minLength": 36,
+            "maxLength": 36
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "location_details": {
+            "type": "object",
+            "additionalProperties": {},
+            "default": {}
+          },
+          "specifications": {
+            "type": "object",
+            "additionalProperties": {},
+            "default": {}
+          }
+        },
+        "required": ["name", "device_type_id"]
+      },
+      "DevicePort": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "device_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "port_type_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "port_specification_id": {
+            "type": "string",
+            "format": "uuid",
+            "minLength": 36,
+            "maxLength": 36,
+            "nullable": true
+          },
+          "name": {
+            "type": "string"
+          },
+          "position": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": {}
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "device": {
+            "$ref": "#/components/schemas/Device",
+            "nullable": true
+          },
+          "port_type": {
+            "$ref": "#/components/schemas/DevicePortInterface",
+            "nullable": true
+          },
+          "port_specification": {
+            "$ref": "#/components/schemas/DevicePortSpecification",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "device_id",
+          "port_type_id",
+          "name",
+          "enabled",
+          "properties",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "StoreDevicePortRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "port_type_id": {
+            "type": "string",
+            "format": "uuid",
+            "minLength": 36,
+            "maxLength": 36
+          },
+          "port_specification_id": {
+            "type": "string",
+            "format": "uuid",
+            "minLength": 36,
+            "maxLength": 36,
+            "nullable": true
+          },
+          "position": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "enabled": {
+            "type": "boolean",
+            "default": true
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": {},
+            "default": {}
+          }
+        },
+        "required": ["name", "port_type_id"]
+      },
+      "UpdateDevicePortRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "port_type_id": {
+            "type": "string",
+            "format": "uuid",
+            "minLength": 36,
+            "maxLength": 36
+          },
+          "port_specification_id": {
+            "type": "string",
+            "format": "uuid",
+            "minLength": 36,
+            "maxLength": 36,
+            "nullable": true
+          },
+          "position": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": {},
+            "default": {}
+          }
+        },
+        "required": ["name", "port_type_id", "enabled"]
+      },
+      "DeviceConnection": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "from_port_id": {
+            "type": "string",
+            "format": "uuid",
+            "minLength": 36,
+            "maxLength": 36
+          },
+          "to_port_id": {
+            "type": "string",
+            "format": "uuid",
+            "minLength": 36,
+            "maxLength": 36
+          },
+          "details": {
+            "type": "object",
+            "additionalProperties": {}
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "from_port": {
+            "$ref": "#/components/schemas/DevicePort",
+            "nullable": true
+          },
+          "to_port": {
+            "$ref": "#/components/schemas/DevicePort",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "from_port_id",
+          "to_port_id",
+          "details",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "StoreDeviceConnectionRequest": {
+        "type": "object",
+        "properties": {
+          "from_port_id": {
+            "type": "string",
+            "format": "uuid",
+            "minLength": 36,
+            "maxLength": 36
+          },
+          "to_port_id": {
+            "type": "string",
+            "format": "uuid",
+            "minLength": 36,
+            "maxLength": 36
+          },
+          "details": {
+            "type": "object",
+            "additionalProperties": {},
+            "default": {}
+          }
+        },
+        "required": ["from_port_id", "to_port_id"]
+      },
+      "UpdateDeviceConnectionRequest": {
+        "type": "object",
+        "properties": {
+          "from_port_id": {
+            "type": "string",
+            "format": "uuid",
+            "minLength": 36,
+            "maxLength": 36
+          },
+          "to_port_id": {
+            "type": "string",
+            "format": "uuid",
+            "minLength": 36,
+            "maxLength": 36
+          },
+          "details": {
+            "type": "object",
+            "additionalProperties": {},
+            "default": {}
+          }
+        },
+        "required": ["from_port_id", "to_port_id"]
+      }
+    }
+  }
+}

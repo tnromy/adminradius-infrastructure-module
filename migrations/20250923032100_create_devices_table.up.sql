@@ -3,6 +3,7 @@
 -- Reworked: normalized device_type into device_types table, added geo + location details
 CREATE TABLE IF NOT EXISTS devices (
 	id               VARCHAR(36) PRIMARY KEY,
+	branch_id        VARCHAR(36) NOT NULL, -- reference to external system (no FK constraint)
 	name             TEXT NOT NULL,
 	device_type_id   VARCHAR(36) NOT NULL REFERENCES device_types(id) ON UPDATE CASCADE ON DELETE RESTRICT,
 	latitude         DOUBLE PRECISION,      -- kept nullable; application may populate later
