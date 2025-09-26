@@ -47,6 +47,16 @@ impl HttpService {
         let config_arc = self.config.clone();
         let es_service = ElasticSearchService::new(config_arc.as_ref()).ok();
 
+        // Best-effort ES connectivity check so failures are clearer at startup
+        if let Some(es) = es_service.as_ref() {
+            match es.ping().await {
+                Ok(()) => log::info!("elasticsearch reachable and healthy"),
+                Err(e) => log::warn!("elasticsearch health check failed: {}", e),
+            }
+        } else {
+            log::warn!("elasticsearch service not initialized; logging to ES will be disabled");
+        }
+
         // Read optional HTTP path prefix from config; default to empty (no prefix)
         let http_path_prefix = self
             .config

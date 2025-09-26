@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use std::time::Duration;
 
 use anyhow::{Context, Result, anyhow};
 use chrono::{Datelike, Utc};
@@ -54,6 +55,8 @@ impl ElasticSearchService {
 
         let client = Client::builder()
             .user_agent("adminradius-infrastructure-service")
+            .connect_timeout(Duration::from_secs(3))
+            .timeout(Duration::from_secs(5))
             .build()
             .context("failed to build Elasticsearch HTTP client")?;
 
@@ -79,6 +82,28 @@ impl ElasticSearchService {
         self.endpoint.trim_end_matches('/')
     }
 
+    /// Simple health check against the cluster to validate connectivity
+    pub async fn ping(&self) -> Result<()> {
+        let url = format!("{}/_cluster/health", self.base_endpoint());
+        let response = self
+            .client
+            .get(url)
+            .send()
+            .await
+            .context("failed to reach Elasticsearch cluster health endpoint")?;
+
+        if response.status().is_success() {
+            Ok(())
+        } else {
+            let status = response.status();
+            let body = response.text().await.unwrap_or_default();
+            Err(anyhow!(
+                "elasticsearch cluster health check failed: status={}, body={}",
+                status, body
+            ))
+        }
+    }
+
     pub async fn create(&self, request_id: &str, doc: &RequestLogDoc) -> Result<()> {
         let index = self.index_for_today();
         let url = format!("{}/{}/_doc/{}", self.base_endpoint(), index, request_id);
@@ -89,7 +114,10 @@ impl ElasticSearchService {
             .json(doc)
             .send()
             .await
-            .context("failed to send log to Elasticsearch")?;
+            .with_context(|| format!(
+                "failed to send log to Elasticsearch (endpoint={}, index_prefix={})",
+                self.base_endpoint(), self.index_prefix
+            ))?;
 
         if response.status().is_success() {
             Ok(())
@@ -97,9 +125,7 @@ impl ElasticSearchService {
             let status = response.status();
             let body = response.text().await.unwrap_or_default();
             Err(anyhow!(
-                "elasticsearch rejected document: status={}, body={}",
-                status,
-                body
+                "elasticsearch rejected document: status={}, body={}", status, body
             ))
         }
     }
