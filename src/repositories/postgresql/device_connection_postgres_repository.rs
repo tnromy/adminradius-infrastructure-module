@@ -179,11 +179,11 @@ where
                 tp.properties AS tp_properties,
                 tp.created_at AS tp_created_at,
                 tp.updated_at AS tp_updated_at
-            FROM device_connections dc
-            JOIN device_ports fp ON fp.id = dc.from_port_id
-            JOIN device_ports tp ON tp.id = dc.to_port_id
-                        WHERE fp.device_id = $1
-                            AND dc.id = $2
+                        FROM device_connections dc
+                        JOIN device_ports fp ON fp.id = dc.from_port_id
+                        JOIN device_ports tp ON tp.id = dc.to_port_id
+                        WHERE dc.id = $2
+                            AND (fp.device_id = $1 OR tp.device_id = $1)
         "#,
     )
     .bind(device_id)
@@ -233,8 +233,10 @@ where
             FROM device_connections dc
             JOIN device_ports fp ON fp.id = dc.from_port_id
             JOIN device_ports tp ON tp.id = dc.to_port_id
-                        WHERE fp.device_id = $1
-            ORDER BY LOWER(fp.name), LOWER(tp.name)
+            WHERE fp.device_id = $1 OR tp.device_id = $1
+            ORDER BY
+                LOWER(CASE WHEN fp.device_id = $1 THEN fp.name ELSE tp.name END),
+                LOWER(CASE WHEN fp.device_id = $1 THEN tp.name ELSE fp.name END)
         "#,
     )
     .bind(device_id)

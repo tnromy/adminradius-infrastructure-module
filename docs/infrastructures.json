@@ -64,14 +64,16 @@
                       "data": {
                         "items": [
                           {
-                            "id": "0d2db452-05f0-4a8c-a0b5-9f0ffecfd72b",
+                            "id": "00000000-0000-0000-0000-000000000201",
                             "name": "Gigabit Ethernet RJ45",
                             "data": {
-                              "speed": "1Gbps",
-                              "connector": "RJ45"
+                              "speed_gbps": 1,
+                              "connector": "RJ45",
+                              "medium": "Copper",
+                              "standard": "IEEE 802.3ab"
                             },
-                            "created_at": "2025-09-01T10:15:12Z",
-                            "updated_at": "2025-09-01T10:15:12Z"
+                            "created_at": "2025-09-23T03:20:49Z",
+                            "updated_at": "2025-09-23T03:20:49Z"
                           }
                         ]
                       }
@@ -100,8 +102,10 @@
                   "value": {
                     "name": "Gigabit Ethernet RJ45",
                     "data": {
-                      "speed": "1Gbps",
-                      "connector": "RJ45"
+                      "speed_gbps": 1,
+                      "connector": "RJ45",
+                      "medium": "Copper",
+                      "standard": "IEEE 802.3ab"
                     }
                   }
                 }
@@ -144,14 +148,16 @@
                       "request_id": "a5707c5a-23a3-4371-91a6-d919d421d4f3",
                       "data": {
                         "item": {
-                          "id": "0d2db452-05f0-4a8c-a0b5-9f0ffecfd72b",
+                          "id": "00000000-0000-0000-0000-000000000201",
                           "name": "Gigabit Ethernet RJ45",
                           "data": {
-                            "speed": "1Gbps",
-                            "connector": "RJ45"
+                            "speed_gbps": 1,
+                            "connector": "RJ45",
+                            "medium": "Copper",
+                            "standard": "IEEE 802.3ab"
                           },
-                          "created_at": "2025-09-01T10:15:12Z",
-                          "updated_at": "2025-09-01T10:15:12Z"
+                          "created_at": "2025-09-23T03:20:49Z",
+                          "updated_at": "2025-09-23T03:20:49Z"
                         }
                       }
                     }
@@ -381,7 +387,7 @@
               "examples": {
                 "default": {
                   "value": {
-                    "name": "RJ45"
+                    "name": "RJ45 Copper Ethernet"
                   }
                 }
               }
@@ -1660,7 +1666,8 @@
           "minLength": 36,
           "maxLength": 36
         },
-        "description": "Branch identifier"
+        "description": "Branch identifier",
+        "example": "10000000-0000-0000-0000-000000000001"
       },
       "DeviceId": {
         "name": "device_id",
@@ -1672,7 +1679,8 @@
           "minLength": 36,
           "maxLength": 36
         },
-        "description": "Device identifier"
+        "description": "Device identifier",
+        "example": "00000000-0000-0000-0000-000000000501"
       },
       "DevicePortId": {
         "name": "port_id",
@@ -1684,7 +1692,8 @@
           "minLength": 36,
           "maxLength": 36
         },
-        "description": "Device port identifier"
+        "description": "Device port identifier",
+        "example": "00000000-0000-0000-0000-000000000601"
       },
       "DeviceConnectionId": {
         "name": "connection_id",
@@ -1696,7 +1705,8 @@
           "minLength": 36,
           "maxLength": 36
         },
-        "description": "Device connection identifier"
+        "description": "Device connection identifier",
+        "example": "00000000-0000-0000-0000-000000000701"
       },
       "DevicePortSpecificationId": {
         "name": "id",
@@ -1708,7 +1718,8 @@
           "minLength": 36,
           "maxLength": 36
         },
-        "description": "Device port specification identifier"
+        "description": "Device port specification identifier",
+        "example": "00000000-0000-0000-0000-000000000201"
       },
       "DevicePortInterfaceId": {
         "name": "id",
@@ -1720,7 +1731,8 @@
           "minLength": 36,
           "maxLength": 36
         },
-        "description": "Device port interface identifier"
+        "description": "Device port interface identifier",
+        "example": "00000000-0000-0000-0000-000000000302"
       },
       "DeviceTypeId": {
         "name": "id",
@@ -1732,7 +1744,8 @@
           "minLength": 36,
           "maxLength": 36
         },
-        "description": "Device type identifier"
+        "description": "Device type identifier",
+        "example": "00000000-0000-0000-0000-000000000401"
       }
     },
     "schemas": {
