@@ -28,6 +28,7 @@
     "use_path_style_endpoint": true,
     "endpoint": "http://192.168.23.2:9000"
   },
+  "http_path_prefix": "/api-infra",
   "base_url": "http://localhost",
   "storage_base_url": "http://192.168.23.2:9000/data/",
   "elastic_search": {

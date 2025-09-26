@@ -4,6 +4,22 @@
     "title": "AdminRadius Infrastructure Service API",
     "version": "1.0.0"
   },
+  "servers": [
+    {
+      "url": "{baseUrl}{http_path_prefix}",
+      "description": "Default server with configurable base URL and HTTP path prefix",
+      "variables": {
+        "baseUrl": {
+          "default": "http://localhost",
+          "description": "Server base URL including scheme and host:port"
+        },
+        "http_path_prefix": {
+          "default": "/api-infra",
+          "description": "HTTP path prefix applied to all endpoints"
+        }
+      }
+    }
+  ],
   "paths": {
     "/device-port-specifications": {
       "get": {
