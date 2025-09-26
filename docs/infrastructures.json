@@ -82,93 +82,6 @@
             }
           }
         }
-      },
-      "post": {
-        "summary": "Create a device port specification",
-        "operationId": "createDevicePortSpecification",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/StoreDevicePortSpecificationRequest"
-              },
-              "examples": {
-                "default": {
-                  "value": {
-                    "name": "Gigabit Ethernet RJ45",
-                    "data": {
-                      "speed": "1Gbps",
-                      "connector": "RJ45"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Device port specification created",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "status": {
-                      "$ref": "#/components/schemas/ResponseStatus"
-                    },
-                    "request_id": {
-                      "type": "string",
-                      "nullable": true
-                    },
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "item": {
-                          "$ref": "#/components/schemas/DevicePortSpecification"
-                        }
-                      }
-                    }
-                  }
-                },
-                "examples": {
-                  "success": {
-                    "value": {
-                      "status": {
-                        "code": 200,
-                        "message": "Ok"
-                      },
-                      "request_id": "a5707c5a-23a3-4371-91a6-d919d421d4f3",
-                      "data": {
-                        "item": {
-                          "id": "0d2db452-05f0-4a8c-a0b5-9f0ffecfd72b",
-                          "name": "Gigabit Ethernet RJ45",
-                          "data": {
-                            "speed": "1Gbps",
-                            "connector": "RJ45"
-                          },
-                          "created_at": "2025-09-01T10:15:12Z",
-                          "updated_at": "2025-09-01T10:15:12Z"
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid input or duplicate name",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
       }
     },
     "/device-port-specification": {
@@ -452,66 +365,6 @@
             }
           }
         }
-      },
-      "post": {
-        "summary": "Create a device port interface",
-        "operationId": "createDevicePortInterface",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/StoreDevicePortInterfaceRequest"
-              },
-              "examples": {
-                "default": {
-                  "value": {
-                    "name": "RJ45"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Device port interface created",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "status": {
-                      "$ref": "#/components/schemas/ResponseStatus"
-                    },
-                    "request_id": {
-                      "type": "string",
-                      "nullable": true
-                    },
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "item": {
-                          "$ref": "#/components/schemas/DevicePortInterface"
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid input or duplicate name",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
       }
     },
     "/device-port-interface": {
@@ -763,66 +616,6 @@
                       }
                     }
                   }
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "summary": "Create a device type",
-        "operationId": "createDeviceType",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/StoreDeviceTypeRequest"
-              },
-              "examples": {
-                "default": {
-                  "value": {
-                    "name": "Router"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Device type created",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "status": {
-                      "$ref": "#/components/schemas/ResponseStatus"
-                    },
-                    "request_id": {
-                      "type": "string",
-                      "nullable": true
-                    },
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "item": {
-                          "$ref": "#/components/schemas/DeviceType"
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid input or duplicate name",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1581,9 +1374,8 @@
           }
         }
       }
-    }
-  },
-  "/device/{device_id}/connections": {
+    },
+    "/device/{device_id}/connections": {
     "parameters": [
       {
         "$ref": "#/components/parameters/DeviceId"
@@ -1853,6 +1645,7 @@
           }
         }
       }
+    }
     }
   },
   "components": {
