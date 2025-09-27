@@ -66,11 +66,11 @@ where
             topology AS (
                 SELECT
                     r.device_id,
-                    NULL::UUID AS parent_device_id,
-                    NULL::UUID AS connection_id,
+                    NULL::TEXT AS parent_device_id,
+                    NULL::TEXT AS connection_id,
                     NULL::JSONB AS connection_details,
                     0 AS level,
-                    ARRAY[r.device_id] AS path
+                    ARRAY[r.device_id]::TEXT[] AS path
                 FROM roots r
 
                 UNION ALL
@@ -81,11 +81,11 @@ where
                     e.connection_id,
                     e.details AS connection_details,
                     t.level + 1 AS level,
-                    path || e.to_device_id
+                                        path || e.to_device_id
                 FROM topology t
                 JOIN device_edges e ON e.from_device_id = t.device_id
                 WHERE ($2::INTEGER IS NULL OR t.level < $2)
-                  AND NOT e.to_device_id = ANY(path)
+                                    AND NOT e.to_device_id = ANY(path)
             )
             SELECT
                 t.device_id,
