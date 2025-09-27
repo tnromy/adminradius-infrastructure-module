@@ -6,7 +6,7 @@ use crate::utils::xss_security_helper;
 #[derive(Debug, Deserialize)]
 pub struct UpdateDevicePortPayload {
     pub name: String,
-    pub port_type_id: String,
+    pub port_interface_id: String,
     pub port_specification_id: Option<String>,
     pub position: Option<i32>,
     pub enabled: bool,
@@ -16,7 +16,7 @@ pub struct UpdateDevicePortPayload {
 #[derive(Debug)]
 pub struct UpdateDevicePortValidated {
     pub name: String,
-    pub port_type_id: String,
+    pub port_interface_id: String,
     pub port_specification_id: Option<String>,
     pub position: Option<i32>,
     pub enabled: bool,
@@ -34,10 +34,12 @@ pub fn validate(
         errors.push("name is required".to_string());
     }
 
-    let sanitized_port_type_id = xss_security_helper::sanitize_input(&payload.port_type_id, 64);
-    let safe_port_type_id = xss_security_helper::strip_dangerous_tags(&sanitized_port_type_id);
-    if safe_port_type_id.len() != 36 {
-        errors.push("port_type_id must be a valid UUID".to_string());
+    let sanitized_port_interface_id =
+        xss_security_helper::sanitize_input(&payload.port_interface_id, 64);
+    let safe_port_interface_id =
+        xss_security_helper::strip_dangerous_tags(&sanitized_port_interface_id);
+    if safe_port_interface_id.len() != 36 {
+        errors.push("port_interface_id must be a valid UUID".to_string());
     }
 
     let safe_port_specification_id = if let Some(ref spec_id) = payload.port_specification_id {
@@ -60,7 +62,7 @@ pub fn validate(
     if errors.is_empty() {
         Ok(UpdateDevicePortValidated {
             name: safe_name,
-            port_type_id: safe_port_type_id,
+            port_interface_id: safe_port_interface_id,
             port_specification_id: safe_port_specification_id,
             position: payload.position,
             enabled: payload.enabled,

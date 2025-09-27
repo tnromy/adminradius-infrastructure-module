@@ -133,16 +133,16 @@ This table links ports to their parent device. A router might have 4 ports, a sw
     - etc...
     - The `device_id` is part of the URL path and must be extracted in the controller. It should not be part of the request body.
 3.  **Entity**:
-    - This table has foreign keys to `devices`, `port_types`, and `port_specifications`.
+    - This table has foreign keys to `devices`, `device_port_interfaces`, and `device_port_specifications`.
     - In the entity, create three corresponding optional properties to hold the joined data:
         - `pub device: Option<DeviceEntity>`
-        - `pub port_type: Option<DevicePortTypeEntity>`
+        - `pub port_interface: Option<DevicePortInterfaceEntity>`
         - `pub port_specification: Option<DevicePortSpecificationEntity>`
     - Handle the `properties` `JSONB` column with `serde_json::Value`.
 4.  **Repository**:
     - In `get` functions, perform `JOIN`s with the three related tables to populate the optional fields in the entity. This must be done in a single, efficient query.
 5.  **Validations**:
-    - For `store` and `update`, validate that the `device_id` (from path), `port_type_id`, and `port_specification_id` all exist by calling the `exists` function in their respective repositories.
+    - For `store` and `update`, validate that the `device_id` (from path), `port_interface_id`, and `port_specification_id` all exist by calling the `exists` function in their respective repositories.
 6.  **Implementation**: Complete the rest of the vertical slice.
 
 ---

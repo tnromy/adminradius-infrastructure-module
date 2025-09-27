@@ -3,7 +3,7 @@
 CREATE TABLE IF NOT EXISTS device_ports (
 	id                       VARCHAR(36) PRIMARY KEY,
 	device_id                VARCHAR(36) NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
-	port_type_id             VARCHAR(36) NOT NULL REFERENCES device_port_interfaces(id) ON DELETE RESTRICT,
+	port_interface_id        VARCHAR(36) NOT NULL REFERENCES device_port_interfaces(id) ON DELETE RESTRICT,
 	port_specification_id    VARCHAR(36) REFERENCES device_port_specifications(id) ON DELETE SET NULL,
 	name                     VARCHAR(100) NOT NULL,
 	position                 INTEGER, -- optional ordering on device (nullable)
@@ -20,7 +20,7 @@ FOR EACH ROW EXECUTE FUNCTION set_updated_at_timestamp();
 
 -- Indexes aiding lookups / joins
 CREATE INDEX IF NOT EXISTS idx_device_ports_device_id ON device_ports(device_id);
-CREATE INDEX IF NOT EXISTS idx_device_ports_port_type_id ON device_ports(port_type_id);
+CREATE INDEX IF NOT EXISTS idx_device_ports_port_interface_id ON device_ports(port_interface_id);
 CREATE INDEX IF NOT EXISTS idx_device_ports_port_specification_id ON device_ports(port_specification_id);
 
 -- Composite index for enumerating ports by device quickly with natural ordering
@@ -36,7 +36,7 @@ CREATE INDEX IF NOT EXISTS idx_device_ports_properties_gin ON device_ports USING
 INSERT INTO device_ports (
 	id,
 	device_id,
-	port_type_id,
+	port_interface_id,
 	port_specification_id,
 	name,
 	position,

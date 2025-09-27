@@ -2064,7 +2064,7 @@
             "type": "string",
             "format": "uuid"
           },
-          "port_type_id": {
+          "port_interface_id": {
             "type": "string",
             "format": "uuid"
           },
@@ -2102,7 +2102,7 @@
             "$ref": "#/components/schemas/Device",
             "nullable": true
           },
-          "port_type": {
+          "port_interface": {
             "$ref": "#/components/schemas/DevicePortInterface",
             "nullable": true
           },
@@ -2114,7 +2114,7 @@
         "required": [
           "id",
           "device_id",
-          "port_type_id",
+          "port_interface_id",
           "name",
           "enabled",
           "properties",
@@ -2129,7 +2129,7 @@
             "type": "string",
             "maxLength": 255
           },
-          "port_type_id": {
+          "port_interface_id": {
             "type": "string",
             "format": "uuid",
             "minLength": 36,
@@ -2157,7 +2157,7 @@
             "default": {}
           }
         },
-        "required": ["name", "port_type_id"]
+  "required": ["name", "port_interface_id"]
       },
       "UpdateDevicePortRequest": {
         "type": "object",
@@ -2166,7 +2166,7 @@
             "type": "string",
             "maxLength": 255
           },
-          "port_type_id": {
+          "port_interface_id": {
             "type": "string",
             "format": "uuid",
             "minLength": 36,
@@ -2193,7 +2193,7 @@
             "default": {}
           }
         },
-        "required": ["name", "port_type_id", "enabled"]
+  "required": ["name", "port_interface_id", "enabled"]
       },
       "DeviceConnection": {
         "type": "object",

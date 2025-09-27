@@ -13,7 +13,7 @@ use crate::repositories::postgresql::device_postgres_repository as device_reposi
 pub struct UpdateDevicePortInput {
     pub id: String,
     pub device_id: String,
-    pub port_type_id: String,
+    pub port_interface_id: String,
     pub port_specification_id: Option<String>,
     pub name: String,
     pub position: Option<i32>,
@@ -27,8 +27,8 @@ pub enum UpdateDevicePortError {
     DeviceNotFound,
     #[error("device port not found")]
     PortNotFound,
-    #[error("port type not found")]
-    PortTypeNotFound,
+    #[error("port interface not found")]
+    PortInterfaceNotFound,
     #[error("port specification not found")]
     PortSpecificationNotFound,
     #[error("port name already exists for device")]
@@ -48,8 +48,8 @@ pub async fn execute(
         return Err(UpdateDevicePortError::DeviceNotFound);
     }
 
-    if !port_interface_repository::exists(conn, &input.port_type_id).await? {
-        return Err(UpdateDevicePortError::PortTypeNotFound);
+    if !port_interface_repository::exists(conn, &input.port_interface_id).await? {
+        return Err(UpdateDevicePortError::PortInterfaceNotFound);
     }
 
     if let Some(ref specification_id) = input.port_specification_id {
@@ -73,7 +73,7 @@ pub async fn execute(
     let entity = DevicePortEntity {
         id: existing.id,
         device_id: input.device_id,
-        port_type_id: input.port_type_id,
+        port_interface_id: input.port_interface_id,
         port_specification_id: input.port_specification_id,
         name: input.name,
         position: input.position,
@@ -82,7 +82,7 @@ pub async fn execute(
         created_at: existing.created_at,
         updated_at: Utc::now(),
         device: None,
-        port_type: None,
+        port_interface: None,
         port_specification: None,
     };
 

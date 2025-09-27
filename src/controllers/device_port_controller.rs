@@ -61,7 +61,7 @@ pub async fn store(
 
     let input = AddDevicePortInput {
         device_id,
-        port_type_id: validated.port_type_id,
+        port_interface_id: validated.port_interface_id,
         port_specification_id: validated.port_specification_id,
         name: validated.name,
         position: validated.position,
@@ -75,8 +75,8 @@ pub async fn store(
             ok_response(json!({ "item": entity }), request_id)
         }
         Err(AddDevicePortError::DeviceNotFound) => not_found_response(request_id),
-        Err(AddDevicePortError::PortTypeNotFound) => {
-            bad_request_response(vec!["port_type_id not found".to_string()], request_id)
+        Err(AddDevicePortError::PortInterfaceNotFound) => {
+            bad_request_response(vec!["port_interface_id not found".to_string()], request_id)
         }
         Err(AddDevicePortError::PortSpecificationNotFound) => bad_request_response(
             vec!["port_specification_id not found".to_string()],
@@ -134,7 +134,7 @@ pub async fn update(
     let input = UpdateDevicePortInput {
         id: port_id,
         device_id,
-        port_type_id: validated.port_type_id,
+        port_interface_id: validated.port_interface_id,
         port_specification_id: validated.port_specification_id,
         name: validated.name,
         position: validated.position,
@@ -149,8 +149,8 @@ pub async fn update(
         }
         Err(UpdateDevicePortError::DeviceNotFound) => not_found_response(request_id),
         Err(UpdateDevicePortError::PortNotFound) => not_found_response(request_id),
-        Err(UpdateDevicePortError::PortTypeNotFound) => {
-            bad_request_response(vec!["port_type_id not found".to_string()], request_id)
+        Err(UpdateDevicePortError::PortInterfaceNotFound) => {
+            bad_request_response(vec!["port_interface_id not found".to_string()], request_id)
         }
         Err(UpdateDevicePortError::PortSpecificationNotFound) => bad_request_response(
             vec!["port_specification_id not found".to_string()],

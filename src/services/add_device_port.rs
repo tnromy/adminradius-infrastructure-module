@@ -13,7 +13,7 @@ use crate::utils::uuid_helper;
 #[derive(Debug)]
 pub struct AddDevicePortInput {
     pub device_id: String,
-    pub port_type_id: String,
+    pub port_interface_id: String,
     pub port_specification_id: Option<String>,
     pub name: String,
     pub position: Option<i32>,
@@ -25,8 +25,8 @@ pub struct AddDevicePortInput {
 pub enum AddDevicePortError {
     #[error("device not found")]
     DeviceNotFound,
-    #[error("port type not found")]
-    PortTypeNotFound,
+    #[error("port interface not found")]
+    PortInterfaceNotFound,
     #[error("port specification not found")]
     PortSpecificationNotFound,
     #[error("port name already exists for device")]
@@ -46,8 +46,8 @@ pub async fn execute(
         return Err(AddDevicePortError::DeviceNotFound);
     }
 
-    if !port_interface_repository::exists(conn, &input.port_type_id).await? {
-        return Err(AddDevicePortError::PortTypeNotFound);
+    if !port_interface_repository::exists(conn, &input.port_interface_id).await? {
+        return Err(AddDevicePortError::PortInterfaceNotFound);
     }
 
     if let Some(ref specification_id) = input.port_specification_id {
@@ -64,7 +64,7 @@ pub async fn execute(
     let entity = DevicePortEntity {
         id: uuid_helper::generate(),
         device_id: input.device_id,
-        port_type_id: input.port_type_id,
+        port_interface_id: input.port_interface_id,
         port_specification_id: input.port_specification_id,
         name: input.name,
         position: input.position,
@@ -73,7 +73,7 @@ pub async fn execute(
         created_at: now,
         updated_at: now,
         device: None,
-        port_type: None,
+        port_interface: None,
         port_specification: None,
     };
 

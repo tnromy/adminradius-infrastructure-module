@@ -24,7 +24,7 @@ fn row_to_entity(row: &PgRow) -> DevicePortEntity {
         Err(_) => None,
     };
 
-    let port_type = match row.try_get::<String, _>("dpi_id") {
+    let port_interface = match row.try_get::<String, _>("dpi_id") {
         Ok(id) => Some(DevicePortInterfaceEntity {
             id,
             name: row.get("dpi_name"),
@@ -48,7 +48,7 @@ fn row_to_entity(row: &PgRow) -> DevicePortEntity {
     DevicePortEntity {
         id: row.get("id"),
         device_id: row.get("device_id"),
-        port_type_id: row.get("port_type_id"),
+        port_interface_id: row.get("port_interface_id"),
         port_specification_id: row.get("port_specification_id"),
         name: row.get("name"),
         position: row.get("position"),
@@ -57,7 +57,7 @@ fn row_to_entity(row: &PgRow) -> DevicePortEntity {
         created_at: row.get("created_at"),
         updated_at: row.get("updated_at"),
         device,
-        port_type,
+        port_interface,
         port_specification,
     }
 }
@@ -71,7 +71,7 @@ where
             INSERT INTO device_ports (
                 id,
                 device_id,
-                port_type_id,
+                port_interface_id,
                 port_specification_id,
                 name,
                 position,
@@ -86,7 +86,7 @@ where
     )
     .bind(&entity.id)
     .bind(&entity.device_id)
-    .bind(&entity.port_type_id)
+    .bind(&entity.port_interface_id)
     .bind(&entity.port_specification_id)
     .bind(&entity.name)
     .bind(entity.position)
@@ -112,7 +112,7 @@ where
             SELECT
                 dp.id,
                 dp.device_id,
-                dp.port_type_id,
+                dp.port_interface_id,
                 dp.port_specification_id,
                 dp.name,
                 dp.position,
@@ -141,7 +141,7 @@ where
                 dps.updated_at AS dps_updated_at
             FROM device_ports dp
             LEFT JOIN devices d ON d.id = dp.device_id
-            LEFT JOIN device_port_interfaces dpi ON dpi.id = dp.port_type_id
+            LEFT JOIN device_port_interfaces dpi ON dpi.id = dp.port_interface_id
             LEFT JOIN device_port_specifications dps ON dps.id = dp.port_specification_id
             WHERE dp.id = $1
         "#,
@@ -161,7 +161,7 @@ where
         r#"
             UPDATE device_ports
             SET
-                port_type_id = $2,
+                port_interface_id = $2,
                 port_specification_id = $3,
                 name = $4,
                 position = $5,
@@ -172,7 +172,7 @@ where
         "#,
     )
     .bind(&entity.id)
-    .bind(&entity.port_type_id)
+    .bind(&entity.port_interface_id)
     .bind(&entity.port_specification_id)
     .bind(&entity.name)
     .bind(entity.position)
@@ -217,7 +217,7 @@ where
             SELECT
                 dp.id,
                 dp.device_id,
-                dp.port_type_id,
+                dp.port_interface_id,
                 dp.port_specification_id,
                 dp.name,
                 dp.position,
@@ -246,7 +246,7 @@ where
                 dps.updated_at AS dps_updated_at
             FROM device_ports dp
             LEFT JOIN devices d ON d.id = dp.device_id
-            LEFT JOIN device_port_interfaces dpi ON dpi.id = dp.port_type_id
+            LEFT JOIN device_port_interfaces dpi ON dpi.id = dp.port_interface_id
             LEFT JOIN device_port_specifications dps ON dps.id = dp.port_specification_id
             WHERE dp.device_id = $1 AND dp.id = $2
         "#,
@@ -271,7 +271,7 @@ where
             SELECT
                 dp.id,
                 dp.device_id,
-                dp.port_type_id,
+                dp.port_interface_id,
                 dp.port_specification_id,
                 dp.name,
                 dp.position,
@@ -300,7 +300,7 @@ where
                 dps.updated_at AS dps_updated_at
             FROM device_ports dp
             LEFT JOIN devices d ON d.id = dp.device_id
-            LEFT JOIN device_port_interfaces dpi ON dpi.id = dp.port_type_id
+            LEFT JOIN device_port_interfaces dpi ON dpi.id = dp.port_interface_id
             LEFT JOIN device_port_specifications dps ON dps.id = dp.port_specification_id
             WHERE dp.device_id = $1
             ORDER BY COALESCE(dp.position, 2147483647), LOWER(dp.name)
