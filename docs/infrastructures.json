@@ -953,9 +953,27 @@
                               "location_details": null,
                               "specifications": null,
                               "created_at": "2025-09-23T03:20:49Z",
-                              "updated_at": "2025-09-23T03:20:49Z"
+                              "updated_at": "2025-09-23T03:20:49Z",
+                              "device_ports": [
+                                {
+                                  "id": "00000000-0000-0000-0000-000000000601",
+                                  "device_id": "00000000-0000-0000-0000-000000000501",
+                                  "port_interface_id": "00000000-0000-0000-0000-000000000302",
+                                  "port_specification_id": "00000000-0000-0000-0000-000000000202",
+                                  "name": "sfpplus-1",
+                                  "position": 1,
+                                  "enabled": true,
+                                  "properties": {
+                                    "speed_gbps": 10,
+                                    "medium": "fiber",
+                                    "role": "core-uplink"
+                                  },
+                                  "created_at": "2025-09-23T03:20:49Z",
+                                  "updated_at": "2025-09-23T03:20:49Z"
+                                }
+                              ]
                             },
-                            "parent_device_id": null,
+                            "parent_device_port_id": null,
                             "connection_id": null,
                             "connection_details": null,
                             "level": 0
@@ -971,9 +989,27 @@
                               "location_details": null,
                               "specifications": null,
                               "created_at": "2025-09-23T03:20:49Z",
-                              "updated_at": "2025-09-23T03:20:49Z"
+                              "updated_at": "2025-09-23T03:20:49Z",
+                              "device_ports": [
+                                {
+                                  "id": "00000000-0000-0000-0000-000000000602",
+                                  "device_id": "00000000-0000-0000-0000-000000000502",
+                                  "port_interface_id": "00000000-0000-0000-0000-000000000302",
+                                  "port_specification_id": "00000000-0000-0000-0000-000000000202",
+                                  "name": "uplink-sfpplus-1",
+                                  "position": 1,
+                                  "enabled": true,
+                                  "properties": {
+                                    "speed_gbps": 10,
+                                    "medium": "fiber",
+                                    "role": "uplink-to-core"
+                                  },
+                                  "created_at": "2025-09-23T03:20:49Z",
+                                  "updated_at": "2025-09-23T03:20:49Z"
+                                }
+                              ]
                             },
-                            "parent_device_id": "00000000-0000-0000-0000-000000000501",
+                            "parent_device_port_id": "00000000-0000-0000-0000-000000000601",
                             "connection_id": "00000000-0000-0000-0000-000000000701",
                             "connection_details": {
                               "link_type": "fiber",
@@ -1904,9 +1940,9 @@
         "type": "object",
         "properties": {
           "device": {
-            "$ref": "#/components/schemas/Device"
+            "$ref": "#/components/schemas/BranchTopologyDevice"
           },
-          "parent_device_id": {
+          "parent_device_port_id": {
             "type": "string",
             "format": "uuid",
             "nullable": true
@@ -1930,6 +1966,80 @@
         "required": [
           "device",
           "level"
+        ]
+      },
+      "BranchTopologyDevice": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Device"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "device_ports": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/BranchTopologyDevicePort"
+                }
+              }
+            },
+            "required": ["device_ports"]
+          }
+        ]
+      },
+      "BranchTopologyDevicePort": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "device_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "port_interface_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "port_specification_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "name": {
+            "type": "string"
+          },
+          "position": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": {}
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "device_id",
+          "port_interface_id",
+          "name",
+          "enabled",
+          "properties",
+          "created_at",
+          "updated_at"
         ]
       },
       "DevicePortSpecification": {

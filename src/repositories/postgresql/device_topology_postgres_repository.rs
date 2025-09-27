@@ -7,6 +7,7 @@ use crate::entities::device_entity::DeviceEntity;
 pub struct DeviceTopologyNode {
     pub device: DeviceEntity,
     pub parent_device_id: Option<String>,
+    pub parent_device_port_id: Option<String>,
     pub connection_id: Option<String>,
     pub connection_details: Option<Value>,
     pub level: i32,
@@ -43,6 +44,7 @@ where
                     fp.device_id AS from_device_id,
                     tp.device_id AS to_device_id,
                     dc.id AS connection_id,
+                    dc.from_port_id,
                     dc.details,
                     dc.created_at,
                     dc.updated_at
@@ -67,6 +69,7 @@ where
                 SELECT
                     r.device_id,
                     NULL::TEXT AS parent_device_id,
+                                        NULL::TEXT AS parent_device_port_id,
                     NULL::TEXT AS connection_id,
                     NULL::JSONB AS connection_details,
                     0 AS level,
@@ -78,6 +81,7 @@ where
                 SELECT
                     e.to_device_id,
                     e.from_device_id AS parent_device_id,
+                                        e.from_port_id AS parent_device_port_id,
                     e.connection_id,
                     e.details AS connection_details,
                     t.level + 1 AS level,
@@ -90,6 +94,7 @@ where
             SELECT
                 t.device_id,
                 t.parent_device_id,
+                                t.parent_device_port_id,
                 t.connection_id,
                 t.connection_details,
                 t.level,
@@ -117,6 +122,7 @@ where
         .map(|row| DeviceTopologyNode {
             device: row_to_device(row),
             parent_device_id: row.get("parent_device_id"),
+            parent_device_port_id: row.get("parent_device_port_id"),
             connection_id: row.get("connection_id"),
             connection_details: row.get("connection_details"),
             level: row.get("level"),
