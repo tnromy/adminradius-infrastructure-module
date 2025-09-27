@@ -18,6 +18,7 @@ pub mod get_all_device_port_specifications;
 pub mod get_all_device_ports;
 pub mod get_all_device_types;
 pub mod get_all_devices;
+pub mod get_branch_topology;
 pub mod get_device;
 pub mod get_device_connection;
 pub mod get_device_port;
