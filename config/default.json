@@ -1,14 +1,14 @@
 {
   "server": {
     "host": "0.0.0.0",
-    "port": 80,
+    "port": 8014,
     "secure_cookie": false,
     "cors": ["http://localhost"]
   },
-  "database_url": "postgres://racenet:iccRACENET%4012@192.168.23.2:5432/adminradius_infra",
+  "database_url": "postgres://racenet:iccRACENET%4012@192.168.23.2:15432/adminradius_infra",
   "redis": {
     "host": "192.168.23.2",
-    "port": 6379,
+    "port": 16379,
     "password": "iccRACENET@12",
     "pool": {
       "max_connections": 10,
@@ -22,17 +22,17 @@
   },
   "s3": {
     "access_key_id": "racenet",
-    "secret_access_key": "iccRADIUS@12",
+    "secret_access_key": "iccRACENET@12",
     "default_region": "ap-id-1",
     "bucket": "data",
     "use_path_style_endpoint": true,
-    "endpoint": "http://192.168.23.2:9000"
+    "endpoint": "http://192.168.23.2:19000"
   },
   "http_path_prefix": "/api-infra",
   "base_url": "http://localhost",
-  "storage_base_url": "http://192.168.23.2:9000/data/",
+  "storage_base_url": "http://192.168.23.2:19000/data/",
   "elastic_search": {
-    "endpoint": "http://192.168.23.2:9200",
+    "endpoint": "http://192.168.23.2:19200",
     "index_prefix": "adminradius-infra-log"
   }
 
