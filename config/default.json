@@ -7,7 +7,7 @@
   },
   "database_url": "postgres://racenet:iccRACENET%4012@10.88.11.1:5432/adminradius_infra",
   "redis": {
-    "host": "10.44.88.1",
+    "host": "10.88.11.1",
     "port": 6379,
     "password": "iccRACENET@12",
     "pool": {
