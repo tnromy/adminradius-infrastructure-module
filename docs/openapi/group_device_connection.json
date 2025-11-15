@@ -1,0 +1,749 @@
+{
+  "paths": {
+    "/api-infra/device/{device_id}/connections": {
+      "get": {
+        "tags": [
+          "Device Connection"
+        ],
+        "summary": "Get all connections of a device",
+        "description": "Retrieve a list of all port connections belonging to a specific device",
+        "operationId": "getAllDeviceConnections",
+        "parameters": [
+          {
+            "name": "device_id",
+            "in": "path",
+            "description": "Device UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "660e8400-e29b-41d4-a716-446655440001"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/DeviceConnection"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/api-infra/device/{device_id}/connection": {
+      "post": {
+        "tags": [
+          "Device Connection"
+        ],
+        "summary": "Create a new device connection",
+        "description": "Create a new connection between two device ports",
+        "operationId": "createDeviceConnection",
+        "parameters": [
+          {
+            "name": "device_id",
+            "in": "path",
+            "description": "Device UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "660e8400-e29b-41d4-a716-446655440001"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceConnectionCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Device connection created successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "item": {
+                          "$ref": "#/components/schemas/DeviceConnection"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/api-infra/device/{device_id}/connection/{connection_id}": {
+      "get": {
+        "tags": [
+          "Device Connection"
+        ],
+        "summary": "Get device connection by ID",
+        "description": "Retrieve detailed information about a specific device connection",
+        "operationId": "getDeviceConnectionById",
+        "parameters": [
+          {
+            "name": "device_id",
+            "in": "path",
+            "description": "Device UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "660e8400-e29b-41d4-a716-446655440001"
+            }
+          },
+          {
+            "name": "connection_id",
+            "in": "path",
+            "description": "Device Connection UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "bb0e8400-e29b-41d4-a716-446655440006"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "item": {
+                          "$ref": "#/components/schemas/DeviceConnection"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Device Connection"
+        ],
+        "summary": "Update device connection",
+        "description": "Update an existing device connection's information",
+        "operationId": "updateDeviceConnection",
+        "parameters": [
+          {
+            "name": "device_id",
+            "in": "path",
+            "description": "Device UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "660e8400-e29b-41d4-a716-446655440001"
+            }
+          },
+          {
+            "name": "connection_id",
+            "in": "path",
+            "description": "Device Connection UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "bb0e8400-e29b-41d4-a716-446655440006"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceConnectionUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Device connection updated successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "item": {
+                          "$ref": "#/components/schemas/DeviceConnection"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Device Connection"
+        ],
+        "summary": "Delete device connection",
+        "description": "Remove a device connection from the system",
+        "operationId": "deleteDeviceConnection",
+        "parameters": [
+          {
+            "name": "device_id",
+            "in": "path",
+            "description": "Device UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "660e8400-e29b-41d4-a716-446655440001"
+            }
+          },
+          {
+            "name": "connection_id",
+            "in": "path",
+            "description": "Device Connection UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "bb0e8400-e29b-41d4-a716-446655440006"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Device connection deleted successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "deleted": {
+                          "type": "boolean",
+                          "example": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "DeviceConnection": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Device connection unique identifier",
+            "example": "bb0e8400-e29b-41d4-a716-446655440006"
+          },
+          "from_port_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Source port identifier",
+            "example": "880e8400-e29b-41d4-a716-446655440003"
+          },
+          "to_port_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Destination port identifier",
+            "example": "880e8400-e29b-41d4-a716-446655440007"
+          },
+          "details": {
+            "type": "object",
+            "description": "Additional connection details",
+            "example": {
+              "cable_type": "fiber",
+              "cable_length": "10m",
+              "installation_date": "2025-01-10"
+            }
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation timestamp",
+            "example": "2025-01-15T10:30:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last update timestamp",
+            "example": "2025-01-15T14:45:00Z"
+          },
+          "from_port": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DevicePort"
+              }
+            ],
+            "nullable": true,
+            "description": "Source port information"
+          },
+          "to_port": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DevicePort"
+              }
+            ],
+            "nullable": true,
+            "description": "Destination port information"
+          }
+        },
+        "required": [
+          "id",
+          "from_port_id",
+          "to_port_id",
+          "details",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "DeviceConnectionCreateRequest": {
+        "type": "object",
+        "required": [
+          "from_port_id",
+          "to_port_id"
+        ],
+        "properties": {
+          "from_port_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Source port UUID (required, must be valid UUID)",
+            "example": "880e8400-e29b-41d4-a716-446655440003"
+          },
+          "to_port_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Destination port UUID (required, must be valid UUID, must be different from from_port_id)",
+            "example": "880e8400-e29b-41d4-a716-446655440007"
+          },
+          "details": {
+            "type": "object",
+            "nullable": true,
+            "description": "Additional connection details (defaults to {})",
+            "example": {
+              "cable_type": "fiber",
+              "cable_length": "10m"
+            }
+          }
+        }
+      },
+      "DeviceConnectionUpdateRequest": {
+        "type": "object",
+        "required": [
+          "from_port_id",
+          "to_port_id"
+        ],
+        "properties": {
+          "from_port_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Source port UUID (required, must be valid UUID)",
+            "example": "880e8400-e29b-41d4-a716-446655440003"
+          },
+          "to_port_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Destination port UUID (required, must be valid UUID, must be different from from_port_id)",
+            "example": "880e8400-e29b-41d4-a716-446655440007"
+          },
+          "details": {
+            "type": "object",
+            "nullable": true,
+            "description": "Additional connection details (defaults to {})",
+            "example": {
+              "cable_type": "fiber",
+              "cable_length": "10m",
+              "installation_date": "2025-01-10"
+            }
+          }
+        }
+      },
+      "DevicePort": {
+        "type": "object",
+        "description": "Device port entity reference"
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Bad Request - Invalid input parameters or validation errors",
+        "headers": {
+          "x-request-id": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Request identifier for tracing"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 400
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Bad Request"
+                    }
+                  }
+                },
+                "request_id": {
+                  "type": "string",
+                  "nullable": true,
+                  "example": "req_abc123xyz"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": [
+                        "name is required",
+                        "device_type_id must be a valid UUID"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Not Found - Resource does not exist",
+        "headers": {
+          "x-request-id": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Request identifier for tracing"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 404
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Not Found"
+                    }
+                  }
+                },
+                "request_id": {
+                  "type": "string",
+                  "nullable": true,
+                  "example": "req_abc123xyz"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": [
+                        "Resource not found"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "InternalServerError": {
+        "description": "Internal Server Error - An unexpected error occurred",
+        "headers": {
+          "x-request-id": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Request identifier for tracing"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 500
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Internal Server Error"
+                    }
+                  }
+                },
+                "request_id": {
+                  "type": "string",
+                  "nullable": true,
+                  "example": "req_abc123xyz"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": [
+                        "An internal error occurred"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

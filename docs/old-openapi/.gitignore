@@ -1,0 +1,22 @@
+# Bundled output files
+final_*.json
+final_*.yaml
+bundled*.json
+bundled*.yaml
+complete-api-spec.*
+
+# Redocly cache
+.redocly/
+
+# Node modules (jika ada local install)
+node_modules/
+
+# Editor files
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Temporary files
+*.tmp
+*.bak

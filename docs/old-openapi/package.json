@@ -1,0 +1,27 @@
+{
+  "name": "adminradius-infrastructure-api-docs",
+  "version": "1.0.0",
+  "description": "OpenAPI documentation for AdminRadius Infrastructure Service API",
+  "private": true,
+  "scripts": {
+    "lint": "redocly lint infrastructure_service_adminradius.json",
+    "bundle": "redocly bundle infrastructure_service_adminradius.json -o bundled-api.json",
+    "bundle:dereferenced": "redocly bundle infrastructure_service_adminradius.json --dereferenced -o bundled-api-dereferenced.json",
+    "bundle:yaml": "redocly bundle infrastructure_service_adminradius.json --ext yaml -o bundled-api.yaml",
+    "preview": "redocly preview-docs infrastructure_service_adminradius.json",
+    "stats": "redocly stats infrastructure_service_adminradius.json",
+    "validate": "redocly lint infrastructure_service_adminradius.json --format stylish"
+  },
+  "devDependencies": {
+    "@redocly/cli": "^1.10.0"
+  },
+  "keywords": [
+    "openapi",
+    "api",
+    "documentation",
+    "adminradius",
+    "infrastructure"
+  ],
+  "author": "AdminRadius Team",
+  "license": "UNLICENSED"
+}
