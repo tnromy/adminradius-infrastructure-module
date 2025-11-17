@@ -7,3 +7,4 @@ pub mod device_port_specification_postgres_repository;
 pub mod device_postgres_repository;
 pub mod device_type_postgres_repository;
 pub mod device_topology_postgres_repository;
+pub mod openvpn_server_postgres_repository;
