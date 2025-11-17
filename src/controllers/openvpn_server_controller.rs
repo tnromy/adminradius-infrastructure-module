@@ -36,7 +36,7 @@ pub async fn index(
     let request_id = include_request_id_middleware::extract_request_id(&req);
 
     match get_openvpn_servers(db.get_ref(), redis.get_ref(), true).await {
-        Ok(items) => ok_response(json!({ "items": items }), request_id),
+        Ok(items) => ok_response(items, request_id),
         Err(err) => internal_error_response(&req, request_id, "failed to fetch openvpn servers", err),
     }
 }
@@ -72,7 +72,7 @@ pub async fn store(
     match add_openvpn_server(db.get_ref(), redis.get_ref(), input).await {
         Ok(entity) => {
             log_middleware::set_extra(&req, "openvpn_server_id", entity.id.clone());
-            ok_response(json!({ "item": entity }), request_id)
+            ok_response(entity, request_id)
         }
         Err(AddOpenvpnServerError::NameAlreadyExists) => {
             bad_request_response(vec!["name already exists".to_string()], request_id)
@@ -97,7 +97,7 @@ pub async fn show(
     };
 
     match show_openvpn_server(db.get_ref(), &id).await {
-        Ok(Some(entity)) => ok_response(json!({ "item": entity }), request_id),
+        Ok(Some(entity)) => ok_response(entity, request_id),
         Ok(None) => not_found_response(request_id),
         Err(err) => internal_error_response(&req, request_id, "failed to fetch openvpn server", err),
     }
@@ -139,7 +139,7 @@ pub async fn update(
     match update_openvpn_server(db.get_ref(), redis.get_ref(), input).await {
         Ok(entity) => {
             log_middleware::set_extra(&req, "openvpn_server_id", entity.id.clone());
-            ok_response(json!({ "item": entity }), request_id)
+            ok_response(entity, request_id)
         }
         Err(UpdateOpenvpnServerError::NotFound) => not_found_response(request_id),
         Err(UpdateOpenvpnServerError::NameAlreadyExists) => {
@@ -166,7 +166,7 @@ pub async fn destroy(
     };
 
     match delete_openvpn_server(db.get_ref(), redis.get_ref(), &id).await {
-        Ok(()) => ok_response(json!({ "deleted": true }), request_id),
+        Ok(()) => ok_response(json!({ "message": "deleted" }), request_id),
         Err(DeleteOpenvpnServerError::NotFound) => not_found_response(request_id),
         Err(DeleteOpenvpnServerError::Database(err)) => {
             internal_error_response(&req, request_id, "failed to delete openvpn server", err)

@@ -1,7 +1,6 @@
 use actix_web::{web, HttpRequest, HttpResponse};
 use log::error;
 use serde::Deserialize;
-use serde_json::json;
 
 use crate::infrastructures::database::DatabaseConnection;
 use crate::middlewares::include_request_id_middleware;
@@ -38,7 +37,7 @@ pub async fn index(
     };
 
     match get_branch_topology::execute(db.get_ref(), &branch_id, limit_level).await {
-        Ok(nodes) => ok_response(json!({ "items": nodes }), request_id),
+        Ok(nodes) => ok_response(nodes, request_id),
         Err(err) => internal_error_response(&req, request_id, "failed to fetch branch topology", err),
     }
 }

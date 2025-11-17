@@ -38,7 +38,7 @@ pub async fn index(
     };
 
     match get_all_device_ports::execute(db.get_ref(), &device_id).await {
-        Ok(items) => ok_response(json!({ "items": items }), request_id),
+        Ok(items) => ok_response(items, request_id),
         Err(err) => internal_error_response(&req, request_id, "failed to fetch device ports", err),
     }
 }
@@ -72,7 +72,7 @@ pub async fn store(
     match add_device_port::execute(db.get_ref(), input).await {
         Ok(entity) => {
             log_middleware::set_extra(&req, "device_port_id", entity.id.clone());
-            ok_response(json!({ "item": entity }), request_id)
+            ok_response(entity, request_id)
         }
         Err(AddDevicePortError::DeviceNotFound) => not_found_response(request_id),
         Err(AddDevicePortError::PortInterfaceNotFound) => {
@@ -106,7 +106,7 @@ pub async fn show(
     };
 
     match get_device_port::execute(db.get_ref(), &device_id, &port_id).await {
-        Ok(Some(entity)) => ok_response(json!({ "item": entity }), request_id),
+        Ok(Some(entity)) => ok_response(entity, request_id),
         Ok(None) => not_found_response(request_id),
         Err(err) => internal_error_response(&req, request_id, "failed to fetch device port", err),
     }
@@ -145,7 +145,7 @@ pub async fn update(
     match update_device_port::execute(db.get_ref(), input).await {
         Ok(entity) => {
             log_middleware::set_extra(&req, "device_port_id", entity.id.clone());
-            ok_response(json!({ "item": entity }), request_id)
+            ok_response(entity, request_id)
         }
         Err(UpdateDevicePortError::DeviceNotFound) => not_found_response(request_id),
         Err(UpdateDevicePortError::PortNotFound) => not_found_response(request_id),
@@ -180,7 +180,7 @@ pub async fn destroy(
     };
 
     match delete_device_port::execute(db.get_ref(), &device_id, &port_id).await {
-        Ok(()) => ok_response(json!({ "deleted": true }), request_id),
+        Ok(()) => ok_response(json!({ "message": "deleted" }), request_id),
         Err(DeleteDevicePortError::NotFound) => not_found_response(request_id),
         Err(DeleteDevicePortError::Database(err)) => {
             internal_error_response(&req, request_id, "failed to delete device port", err)

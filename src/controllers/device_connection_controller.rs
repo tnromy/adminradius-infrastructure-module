@@ -44,7 +44,7 @@ pub async fn index(
     };
 
     match get_all_device_connections::execute(db.get_ref(), &device_id).await {
-        Ok(items) => ok_response(json!({ "items": items }), request_id),
+        Ok(items) => ok_response(items, request_id),
         Err(err) => {
             internal_error_response(&req, request_id, "failed to fetch device connections", err)
         }
@@ -77,7 +77,7 @@ pub async fn store(
     match add_device_connection::execute(db.get_ref(), input).await {
         Ok(entity) => {
             log_middleware::set_extra(&req, "device_connection_id", entity.id.clone());
-            ok_response(json!({ "item": entity }), request_id)
+            ok_response(entity, request_id)
         }
         Err(AddDeviceConnectionError::DeviceNotFound) => not_found_response(request_id),
         Err(AddDeviceConnectionError::FromPortNotFound) => {
@@ -121,7 +121,7 @@ pub async fn show(
     };
 
     match get_device_connection::execute(db.get_ref(), &device_id, &connection_id).await {
-        Ok(Some(entity)) => ok_response(json!({ "item": entity }), request_id),
+        Ok(Some(entity)) => ok_response(entity, request_id),
         Ok(None) => not_found_response(request_id),
         Err(err) => {
             internal_error_response(&req, request_id, "failed to fetch device connection", err)
@@ -159,7 +159,7 @@ pub async fn update(
     match update_device_connection::execute(db.get_ref(), input).await {
         Ok(entity) => {
             log_middleware::set_extra(&req, "device_connection_id", entity.id.clone());
-            ok_response(json!({ "item": entity }), request_id)
+            ok_response(entity, request_id)
         }
         Err(UpdateDeviceConnectionError::DeviceNotFound) => not_found_response(request_id),
         Err(UpdateDeviceConnectionError::ConnectionNotFound) => not_found_response(request_id),
@@ -204,7 +204,7 @@ pub async fn destroy(
     };
 
     match delete_device_connection::execute(db.get_ref(), &device_id, &connection_id).await {
-        Ok(()) => ok_response(json!({ "deleted": true }), request_id),
+        Ok(()) => ok_response(json!({ "message": "deleted" }), request_id),
         Err(DeleteDeviceConnectionError::NotFound) => not_found_response(request_id),
         Err(DeleteDeviceConnectionError::Database(err)) => {
             internal_error_response(&req, request_id, "failed to delete device connection", err)

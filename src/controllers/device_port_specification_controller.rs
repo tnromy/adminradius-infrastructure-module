@@ -37,7 +37,7 @@ pub async fn index(req: HttpRequest, db: web::Data<DatabaseConnection>) -> HttpR
     let request_id = include_request_id_middleware::extract_request_id(&req);
 
     match get_all_device_port_specifications(db.get_ref()).await {
-        Ok(items) => ok_response(json!({ "items": items }), request_id),
+        Ok(items) => ok_response(items, request_id),
         Err(err) => internal_error_response(
             &req,
             request_id,
@@ -67,7 +67,7 @@ pub async fn store(
     match add_device_port_specification(db.get_ref(), input).await {
         Ok(entity) => {
             log_middleware::set_extra(&req, "device_port_specification_id", entity.id.clone());
-            ok_response(json!({ "item": entity }), request_id)
+            ok_response(entity, request_id)
         }
         Err(AddDevicePortSpecificationError::NameAlreadyExists) => {
             bad_request_response(vec!["name already exists".to_string()], request_id)
@@ -92,7 +92,7 @@ pub async fn show(
     };
 
     match get_device_port_specification(db.get_ref(), &id).await {
-        Ok(Some(entity)) => ok_response(json!({ "item": entity }), request_id),
+        Ok(Some(entity)) => ok_response(entity, request_id),
         Ok(None) => not_found_response(request_id),
         Err(err) => internal_error_response(
             &req,
@@ -128,7 +128,7 @@ pub async fn update(
     match update_device_port_specification(db.get_ref(), input).await {
         Ok(entity) => {
             log_middleware::set_extra(&req, "device_port_specification_id", entity.id.clone());
-            ok_response(json!({ "item": entity }), request_id)
+            ok_response(entity, request_id)
         }
         Err(UpdateDevicePortSpecificationError::NotFound) => not_found_response(request_id),
         Err(UpdateDevicePortSpecificationError::NameAlreadyExists) => {
@@ -154,7 +154,7 @@ pub async fn destroy(
     };
 
     match delete_device_port_specification(db.get_ref(), &id).await {
-        Ok(()) => ok_response(json!({ "deleted": true }), request_id),
+        Ok(()) => ok_response(json!({ "message": "deleted" }), request_id),
         Err(DeleteDevicePortSpecificationError::NotFound) => not_found_response(request_id),
         Err(DeleteDevicePortSpecificationError::Database(err)) => internal_error_response(
             &req,
