@@ -1,0 +1,854 @@
+{
+  "paths": {
+    "/api-infra/openvpn-servers": {
+      "get": {
+        "tags": [
+          "OpenVPN Server"
+        ],
+        "summary": "Get all OpenVPN servers",
+        "description": "Retrieve a list of all configured OpenVPN servers. Results are cached in Redis for performance.",
+        "operationId": "getAllOpenvpnServers",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/OpenvpnServer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/api-infra/openvpn-server": {
+      "post": {
+        "tags": [
+          "OpenVPN Server"
+        ],
+        "summary": "Create a new OpenVPN server",
+        "description": "Register a new OpenVPN server in the system. Automatically refreshes the Redis cache after creation.",
+        "operationId": "createOpenvpnServer",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OpenvpnServerCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OpenVPN server created successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "item": {
+                          "$ref": "#/components/schemas/OpenvpnServer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/api-infra/openvpn-server/{id}": {
+      "get": {
+        "tags": [
+          "OpenVPN Server"
+        ],
+        "summary": "Get OpenVPN server by ID",
+        "description": "Retrieve detailed information about a specific OpenVPN server",
+        "operationId": "getOpenvpnServerById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "OpenVPN server UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "019a34a2-cb9e-78ad-a4be-b2e83a1ff440"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "item": {
+                          "$ref": "#/components/schemas/OpenvpnServer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "OpenVPN Server"
+        ],
+        "summary": "Update an OpenVPN server",
+        "description": "Update an existing OpenVPN server configuration. Automatically refreshes the Redis cache after update.",
+        "operationId": "updateOpenvpnServer",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "OpenVPN server UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "019a34a2-cb9e-78ad-a4be-b2e83a1ff440"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OpenvpnServerUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OpenVPN server updated successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "item": {
+                          "$ref": "#/components/schemas/OpenvpnServer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "OpenVPN Server"
+        ],
+        "summary": "Delete an OpenVPN server",
+        "description": "Remove an OpenVPN server from the system. Automatically refreshes the Redis cache after deletion.",
+        "operationId": "deleteOpenvpnServer",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "OpenVPN server UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "019a34a2-cb9e-78ad-a4be-b2e83a1ff440"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OpenVPN server deleted successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "deleted": {
+                          "type": "boolean",
+                          "example": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "OpenvpnServer": {
+        "type": "object",
+        "description": "OpenVPN server configuration entity",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique identifier (UUIDv7)",
+            "example": "019a34a2-cb9e-78ad-a4be-b2e83a1ff440"
+          },
+          "name": {
+            "type": "string",
+            "description": "OpenVPN server name (unique)",
+            "maxLength": 255,
+            "example": "server.racenet.openvpn.adminradius.com"
+          },
+          "host": {
+            "type": "string",
+            "description": "Server hostname or IP address",
+            "maxLength": 45,
+            "example": "192.168.23.2"
+          },
+          "port": {
+            "type": "integer",
+            "description": "OpenVPN server port",
+            "minimum": 1,
+            "maximum": 65535,
+            "example": 1194
+          },
+          "proto": {
+            "type": "string",
+            "description": "Protocol (tcp or udp)",
+            "enum": ["tcp", "udp"],
+            "example": "tcp"
+          },
+          "cipher": {
+            "type": "string",
+            "nullable": true,
+            "description": "Encryption cipher algorithm",
+            "maxLength": 50,
+            "example": "AES-256-CBC"
+          },
+          "auth_algorithm": {
+            "type": "string",
+            "description": "Authentication algorithm",
+            "maxLength": 50,
+            "example": "SHA256"
+          },
+          "tls_key_pem": {
+            "type": "string",
+            "nullable": true,
+            "description": "TLS authentication key in PEM format",
+            "example": "-----BEGIN OpenVPN Static key V1-----\\n...\\n-----END OpenVPN Static key V1-----"
+          },
+          "tls_key_mode": {
+            "type": "string",
+            "nullable": true,
+            "description": "TLS key mode (0, 1, or null)",
+            "maxLength": 10,
+            "example": "1"
+          },
+          "ca_chain_pem": {
+            "type": "string",
+            "description": "CA certificate chain in PEM format (required)",
+            "example": "-----BEGIN CERTIFICATE-----\\n...\\n-----END CERTIFICATE-----"
+          },
+          "dh_pem": {
+            "type": "string",
+            "description": "Diffie-Hellman parameters in PEM format (required)",
+            "example": "-----BEGIN DH PARAMETERS-----\\n...\\n-----END DH PARAMETERS-----"
+          },
+          "remote_cert_tls_name": {
+            "type": "string",
+            "description": "Remote certificate TLS name verification",
+            "maxLength": 100,
+            "example": "server"
+          },
+          "crl_distribution_point": {
+            "type": "string",
+            "nullable": true,
+            "description": "Certificate Revocation List distribution URL",
+            "maxLength": 1000,
+            "example": "http://ca.certy.id/racenet-openvpn/crl.pem"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation timestamp",
+            "example": "2025-10-30T09:00:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last update timestamp",
+            "example": "2025-10-30T09:00:00Z"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "host",
+          "port",
+          "proto",
+          "auth_algorithm",
+          "ca_chain_pem",
+          "dh_pem",
+          "remote_cert_tls_name",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "OpenvpnServerCreateRequest": {
+        "type": "object",
+        "description": "Request body for creating a new OpenVPN server",
+        "required": [
+          "name",
+          "host",
+          "ca_chain_pem",
+          "dh_pem"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "OpenVPN server name (sanitized, max 255 characters, required, must be unique)",
+            "maxLength": 255,
+            "minLength": 1,
+            "example": "vpn-server-01.example.com"
+          },
+          "host": {
+            "type": "string",
+            "description": "Server hostname or IP address (sanitized, max 45 characters, required)",
+            "maxLength": 45,
+            "minLength": 1,
+            "example": "10.0.1.100"
+          },
+          "port": {
+            "type": "integer",
+            "description": "OpenVPN server port (default: 1194)",
+            "minimum": 1,
+            "maximum": 65535,
+            "default": 1194,
+            "example": 1194
+          },
+          "proto": {
+            "type": "string",
+            "description": "Protocol - tcp or udp (default: udp)",
+            "enum": ["tcp", "udp"],
+            "default": "udp",
+            "example": "tcp"
+          },
+          "cipher": {
+            "type": "string",
+            "nullable": true,
+            "description": "Encryption cipher algorithm (optional, max 50 characters)",
+            "maxLength": 50,
+            "example": "AES-256-GCM"
+          },
+          "auth_algorithm": {
+            "type": "string",
+            "description": "Authentication algorithm (default: SHA256, max 50 characters)",
+            "maxLength": 50,
+            "default": "SHA256",
+            "example": "SHA256"
+          },
+          "tls_key_pem": {
+            "type": "string",
+            "nullable": true,
+            "description": "TLS authentication key in PEM format (optional)",
+            "example": "-----BEGIN OpenVPN Static key V1-----\\n...\\n-----END OpenVPN Static key V1-----"
+          },
+          "tls_key_mode": {
+            "type": "string",
+            "nullable": true,
+            "description": "TLS key mode (optional)",
+            "maxLength": 10,
+            "example": "1"
+          },
+          "ca_chain_pem": {
+            "type": "string",
+            "description": "CA certificate chain in PEM format (required)",
+            "minLength": 1,
+            "example": "-----BEGIN CERTIFICATE-----\\nMIIG8jCCBNqgAwIBAgICA...\\n-----END CERTIFICATE-----"
+          },
+          "dh_pem": {
+            "type": "string",
+            "description": "Diffie-Hellman parameters in PEM format (required)",
+            "minLength": 1,
+            "example": "-----BEGIN DH PARAMETERS-----\\nMIIBCAKCAQEA...\\n-----END DH PARAMETERS-----"
+          },
+          "remote_cert_tls_name": {
+            "type": "string",
+            "description": "Remote certificate TLS name verification (default: server, max 100 characters)",
+            "maxLength": 100,
+            "default": "server",
+            "example": "server"
+          },
+          "crl_distribution_point": {
+            "type": "string",
+            "nullable": true,
+            "description": "Certificate Revocation List distribution URL (optional, max 1000 characters)",
+            "maxLength": 1000,
+            "example": "http://ca.example.com/crl.pem"
+          }
+        }
+      },
+      "OpenvpnServerUpdateRequest": {
+        "type": "object",
+        "description": "Request body for updating an OpenVPN server",
+        "required": [
+          "name",
+          "host",
+          "port",
+          "proto",
+          "auth_algorithm",
+          "ca_chain_pem",
+          "dh_pem",
+          "remote_cert_tls_name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "OpenVPN server name (sanitized, max 255 characters, required, must be unique)",
+            "maxLength": 255,
+            "minLength": 1,
+            "example": "vpn-server-01-updated.example.com"
+          },
+          "host": {
+            "type": "string",
+            "description": "Server hostname or IP address (sanitized, max 45 characters, required)",
+            "maxLength": 45,
+            "minLength": 1,
+            "example": "10.0.1.101"
+          },
+          "port": {
+            "type": "integer",
+            "description": "OpenVPN server port (required)",
+            "minimum": 1,
+            "maximum": 65535,
+            "example": 1194
+          },
+          "proto": {
+            "type": "string",
+            "description": "Protocol - tcp or udp (required)",
+            "enum": ["tcp", "udp"],
+            "example": "udp"
+          },
+          "cipher": {
+            "type": "string",
+            "nullable": true,
+            "description": "Encryption cipher algorithm (optional, max 50 characters)",
+            "maxLength": 50,
+            "example": "AES-256-GCM"
+          },
+          "auth_algorithm": {
+            "type": "string",
+            "description": "Authentication algorithm (required, max 50 characters)",
+            "maxLength": 50,
+            "example": "SHA256"
+          },
+          "tls_key_pem": {
+            "type": "string",
+            "nullable": true,
+            "description": "TLS authentication key in PEM format (optional)",
+            "example": "-----BEGIN OpenVPN Static key V1-----\\n...\\n-----END OpenVPN Static key V1-----"
+          },
+          "tls_key_mode": {
+            "type": "string",
+            "nullable": true,
+            "description": "TLS key mode (optional)",
+            "maxLength": 10,
+            "example": "1"
+          },
+          "ca_chain_pem": {
+            "type": "string",
+            "description": "CA certificate chain in PEM format (required)",
+            "minLength": 1,
+            "example": "-----BEGIN CERTIFICATE-----\\nMIIG8jCCBNqgAwIBAgICA...\\n-----END CERTIFICATE-----"
+          },
+          "dh_pem": {
+            "type": "string",
+            "description": "Diffie-Hellman parameters in PEM format (required)",
+            "minLength": 1,
+            "example": "-----BEGIN DH PARAMETERS-----\\nMIIBCAKCAQEA...\\n-----END DH PARAMETERS-----"
+          },
+          "remote_cert_tls_name": {
+            "type": "string",
+            "description": "Remote certificate TLS name verification (required, max 100 characters)",
+            "maxLength": 100,
+            "example": "server"
+          },
+          "crl_distribution_point": {
+            "type": "string",
+            "nullable": true,
+            "description": "Certificate Revocation List distribution URL (optional, max 1000 characters)",
+            "maxLength": 1000,
+            "example": "http://ca.example.com/crl.pem"
+          }
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Bad Request - Invalid input parameters or validation errors",
+        "headers": {
+          "x-request-id": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Request identifier for tracing"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 400
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Bad Request"
+                    }
+                  }
+                },
+                "request_id": {
+                  "type": "string",
+                  "nullable": true,
+                  "example": "req_abc123xyz"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": [
+                        "name is required",
+                        "host is required",
+                        "ca_chain_pem is required",
+                        "name already exists",
+                        "host and port combination already exists"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Not Found - Resource does not exist",
+        "headers": {
+          "x-request-id": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Request identifier for tracing"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 404
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Not Found"
+                    }
+                  }
+                },
+                "request_id": {
+                  "type": "string",
+                  "nullable": true,
+                  "example": "req_abc123xyz"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": [
+                        "openvpn server not found"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "InternalServerError": {
+        "description": "Internal Server Error - An unexpected error occurred",
+        "headers": {
+          "x-request-id": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Request identifier for tracing"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 500
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Internal Server Error"
+                    }
+                  }
+                },
+                "request_id": {
+                  "type": "string",
+                  "nullable": true,
+                  "example": "req_abc123xyz"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": [
+                        "An internal error occurred"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

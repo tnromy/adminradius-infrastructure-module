@@ -63,6 +63,10 @@
     {
       "name": "Branch Topology",
       "description": "Network topology operations - Retrieve complete network topology information for branches"
+    },
+    {
+      "name": "OpenVPN Server",
+      "description": "OpenVPN server management - Configure and manage OpenVPN servers with certificates and authentication"
     }
   ],
   "paths": {
@@ -122,6 +126,15 @@
     },
     "/branch/{branch_id}/topologies": {
       "$ref": "./group_branch_topology.json#/paths/~1api-infra~1branch~1{branch_id}~1topologies"
+    },
+    "/openvpn-servers": {
+      "$ref": "./group_openvpn_server.json#/paths/~1api-infra~1openvpn-servers"
+    },
+    "/openvpn-server": {
+      "$ref": "./group_openvpn_server.json#/paths/~1api-infra~1openvpn-server"
+    },
+    "/openvpn-server/{id}": {
+      "$ref": "./group_openvpn_server.json#/paths/~1api-infra~1openvpn-server~1{id}"
     }
   },
   "components": {
@@ -434,6 +447,15 @@
       },
       "DeviceConnectionUpdateRequest": {
         "$ref": "./group_device_connection.json#/components/schemas/DeviceConnectionUpdateRequest"
+      },
+      "OpenvpnServer": {
+        "$ref": "./group_openvpn_server.json#/components/schemas/OpenvpnServer"
+      },
+      "OpenvpnServerCreateRequest": {
+        "$ref": "./group_openvpn_server.json#/components/schemas/OpenvpnServerCreateRequest"
+      },
+      "OpenvpnServerUpdateRequest": {
+        "$ref": "./group_openvpn_server.json#/components/schemas/OpenvpnServerUpdateRequest"
       }
     },
     "securitySchemes": {
