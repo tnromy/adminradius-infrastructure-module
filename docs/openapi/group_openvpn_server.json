@@ -43,14 +43,9 @@
                       "example": "req_abc123xyz"
                     },
                     "data": {
-                      "type": "object",
-                      "properties": {
-                        "items": {
-                          "type": "array",
-                          "items": {
-                            "$ref": "#/components/schemas/OpenvpnServer"
-                          }
-                        }
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/OpenvpnServer"
                       }
                     }
                   }
@@ -117,12 +112,7 @@
                       "example": "req_abc123xyz"
                     },
                     "data": {
-                      "type": "object",
-                      "properties": {
-                        "item": {
-                          "$ref": "#/components/schemas/OpenvpnServer"
-                        }
-                      }
+                      "$ref": "#/components/schemas/OpenvpnServer"
                     }
                   }
                 }
@@ -194,12 +184,7 @@
                       "example": "req_abc123xyz"
                     },
                     "data": {
-                      "type": "object",
-                      "properties": {
-                        "item": {
-                          "$ref": "#/components/schemas/OpenvpnServer"
-                        }
-                      }
+                      "$ref": "#/components/schemas/OpenvpnServer"
                     }
                   }
                 }
@@ -282,12 +267,7 @@
                       "example": "req_abc123xyz"
                     },
                     "data": {
-                      "type": "object",
-                      "properties": {
-                        "item": {
-                          "$ref": "#/components/schemas/OpenvpnServer"
-                        }
-                      }
+                      "$ref": "#/components/schemas/OpenvpnServer"
                     }
                   }
                 }
@@ -362,9 +342,9 @@
                     "data": {
                       "type": "object",
                       "properties": {
-                        "deleted": {
-                          "type": "boolean",
-                          "example": true
+                        "message": {
+                          "type": "string",
+                          "example": "deleted"
                         }
                       }
                     }
