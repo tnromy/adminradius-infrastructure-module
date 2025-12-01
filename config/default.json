@@ -34,6 +34,9 @@
   "elastic_search": {
     "endpoint": "http://10.44.88.1:9200",
     "index_prefix": "adminradius-infra-log"
+  },
+  "openvpn": {
+    "network_address": "10.8.9.0/24"
   }
 
 }

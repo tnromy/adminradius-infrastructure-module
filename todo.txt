@@ -1,0 +1,10 @@
+untuk openvpn client ->
+	lakukan pemanggilan api untuk request cert baru
+		-> niali rserved ip address disimpan
+			-> langsung approve
+				hasil response dari approve langusng get PKCS12
+					langusng update ualgn niali kolom di client
+
+atau pertimbangkan buat api di ca openvpn
+	-> auto reqeust csr + approve + get pkcs12
+	
