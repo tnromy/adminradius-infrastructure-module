@@ -18,7 +18,6 @@ pub struct UpdateOpenvpnServerInput {
     pub tls_key_pem: Option<String>,
     pub tls_key_mode: Option<String>,
     pub ca_chain_pem: String,
-    pub dh_pem: String,
     pub remote_cert_tls_name: String,
     pub crl_distribution_point: Option<String>,
 }
@@ -70,7 +69,6 @@ pub async fn execute(
         input.tls_key_pem.as_deref(),
         input.tls_key_mode.as_deref(),
         &input.ca_chain_pem,
-        &input.dh_pem,
         &input.remote_cert_tls_name,
         input.crl_distribution_point.as_deref(),
     )

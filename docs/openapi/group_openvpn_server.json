@@ -434,11 +434,6 @@
             "description": "CA certificate chain in PEM format (required)",
             "example": "-----BEGIN CERTIFICATE-----\\n...\\n-----END CERTIFICATE-----"
           },
-          "dh_pem": {
-            "type": "string",
-            "description": "Diffie-Hellman parameters in PEM format (required)",
-            "example": "-----BEGIN DH PARAMETERS-----\\n...\\n-----END DH PARAMETERS-----"
-          },
           "remote_cert_tls_name": {
             "type": "string",
             "description": "Remote certificate TLS name verification",
@@ -473,7 +468,6 @@
           "proto",
           "auth_algorithm",
           "ca_chain_pem",
-          "dh_pem",
           "remote_cert_tls_name",
           "created_at",
           "updated_at"
@@ -485,8 +479,7 @@
         "required": [
           "name",
           "host",
-          "ca_chain_pem",
-          "dh_pem"
+          "ca_chain_pem"
         ],
         "properties": {
           "name": {
@@ -551,12 +544,6 @@
             "minLength": 1,
             "example": "-----BEGIN CERTIFICATE-----\\nMIIG8jCCBNqgAwIBAgICA...\\n-----END CERTIFICATE-----"
           },
-          "dh_pem": {
-            "type": "string",
-            "description": "Diffie-Hellman parameters in PEM format (required)",
-            "minLength": 1,
-            "example": "-----BEGIN DH PARAMETERS-----\\nMIIBCAKCAQEA...\\n-----END DH PARAMETERS-----"
-          },
           "remote_cert_tls_name": {
             "type": "string",
             "description": "Remote certificate TLS name verification (default: server, max 100 characters)",
@@ -583,7 +570,6 @@
           "proto",
           "auth_algorithm",
           "ca_chain_pem",
-          "dh_pem",
           "remote_cert_tls_name"
         ],
         "properties": {
@@ -645,12 +631,6 @@
             "description": "CA certificate chain in PEM format (required)",
             "minLength": 1,
             "example": "-----BEGIN CERTIFICATE-----\\nMIIG8jCCBNqgAwIBAgICA...\\n-----END CERTIFICATE-----"
-          },
-          "dh_pem": {
-            "type": "string",
-            "description": "Diffie-Hellman parameters in PEM format (required)",
-            "minLength": 1,
-            "example": "-----BEGIN DH PARAMETERS-----\\nMIIBCAKCAQEA...\\n-----END DH PARAMETERS-----"
           },
           "remote_cert_tls_name": {
             "type": "string",

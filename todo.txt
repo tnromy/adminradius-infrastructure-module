@@ -5,6 +5,25 @@ untuk openvpn client ->
 				hasil response dari approve langusng get PKCS12
 					langusng update ualgn niali kolom di client
 
-atau pertimbangkan buat api di ca openvpn
-	-> auto reqeust csr + approve + get pkcs12
+jangan gabugnkan reqeust, aprove dan get pkcs12 agar function bisa reuseable masing-masing
+
+buat repostory api untuk openvpn CA
 	
+
+
+	---
+	response req cert vpn:
+
+	{
+    "status": {
+        "code": 200,
+        "message": "Ok"
+    },
+    "request_id": "d88dfef9-2b3c-47c3-bbb2-1de484595233",
+    "data": {
+        "certificate_request_id": "5da002e2-4dbc-41f7-aea9-7734e9bdfd9e",
+        "message": "Certificate request generated successfully",
+        "requested_at": "2025-12-01T07:50:46.369087+00:00",
+        "reserved_ip_address": "10.8.9.5"
+    }
+}

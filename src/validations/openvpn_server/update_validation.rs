@@ -13,7 +13,6 @@ pub struct UpdateOpenvpnServerPayload {
     pub tls_key_pem: Option<String>,
     pub tls_key_mode: Option<String>,
     pub ca_chain_pem: String,
-    pub dh_pem: String,
     pub remote_cert_tls_name: String,
     pub crl_distribution_point: Option<String>,
 }
@@ -29,7 +28,6 @@ pub struct UpdateOpenvpnServerValidated {
     pub tls_key_pem: Option<String>,
     pub tls_key_mode: Option<String>,
     pub ca_chain_pem: String,
-    pub dh_pem: String,
     pub remote_cert_tls_name: String,
     pub crl_distribution_point: Option<String>,
 }
@@ -95,13 +93,6 @@ pub fn validate(payload: UpdateOpenvpnServerPayload) -> Result<UpdateOpenvpnServ
         errors.push("ca_chain_pem is required".to_string());
     }
 
-    // Validate dh_pem (required)
-    let sanitized_dh = xss_security_helper::sanitize_input(&payload.dh_pem, 10000);
-    let safe_dh = xss_security_helper::strip_dangerous_tags(&sanitized_dh);
-    if safe_dh.is_empty() {
-        errors.push("dh_pem is required".to_string());
-    }
-
     // Validate remote_cert_tls_name
     let sanitized_remote = xss_security_helper::sanitize_input(&payload.remote_cert_tls_name, 100);
     let safe_remote = xss_security_helper::strip_dangerous_tags(&sanitized_remote);
@@ -126,7 +117,6 @@ pub fn validate(payload: UpdateOpenvpnServerPayload) -> Result<UpdateOpenvpnServ
             tls_key_pem,
             tls_key_mode,
             ca_chain_pem: safe_ca,
-            dh_pem: safe_dh,
             remote_cert_tls_name: safe_remote,
             crl_distribution_point,
         })

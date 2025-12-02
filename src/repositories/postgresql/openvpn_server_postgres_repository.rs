@@ -13,7 +13,6 @@ fn row_to_entity(row: &PgRow) -> OpenvpnServerEntity {
         tls_key_pem: row.get("tls_key_pem"),
         tls_key_mode: row.get("tls_key_mode"),
         ca_chain_pem: row.get("ca_chain_pem"),
-        dh_pem: row.get("dh_pem"),
         remote_cert_tls_name: row.get("remote_cert_tls_name"),
         crl_distribution_point: row.get("crl_distribution_point"),
         created_at: row.get("created_at"),
@@ -29,11 +28,11 @@ where
         r#"
             INSERT INTO openvpn_servers (
                 id, name, host, port, proto, cipher, auth_algorithm,
-                tls_key_pem, tls_key_mode, ca_chain_pem, dh_pem,
+                tls_key_pem, tls_key_mode, ca_chain_pem,
                 remote_cert_tls_name, crl_distribution_point,
                 created_at, updated_at
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
             RETURNING id
         "#,
     )
@@ -47,7 +46,6 @@ where
     .bind(&entity.tls_key_pem)
     .bind(&entity.tls_key_mode)
     .bind(&entity.ca_chain_pem)
-    .bind(&entity.dh_pem)
     .bind(&entity.remote_cert_tls_name)
     .bind(&entity.crl_distribution_point)
     .bind(entity.created_at)
@@ -70,7 +68,6 @@ pub async fn update<'a, E>(
     tls_key_pem: Option<&str>,
     tls_key_mode: Option<&str>,
     ca_chain_pem: &str,
-    dh_pem: &str,
     remote_cert_tls_name: &str,
     crl_distribution_point: Option<&str>,
 ) -> Result<bool, sqlx::Error>
@@ -89,9 +86,8 @@ where
                 tls_key_pem = $8,
                 tls_key_mode = $9,
                 ca_chain_pem = $10,
-                dh_pem = $11,
-                remote_cert_tls_name = $12,
-                crl_distribution_point = $13
+                remote_cert_tls_name = $11,
+                crl_distribution_point = $12
             WHERE id = $1
         "#,
     )
@@ -105,7 +101,6 @@ where
     .bind(tls_key_pem)
     .bind(tls_key_mode)
     .bind(ca_chain_pem)
-    .bind(dh_pem)
     .bind(remote_cert_tls_name)
     .bind(crl_distribution_point)
     .execute(executor)
@@ -124,7 +119,7 @@ where
     let row = sqlx::query(
         r#"
             SELECT id, name, host, port, proto, cipher, auth_algorithm,
-                   tls_key_pem, tls_key_mode, ca_chain_pem, dh_pem,
+                   tls_key_pem, tls_key_mode, ca_chain_pem,
                    remote_cert_tls_name, crl_distribution_point,
                    created_at, updated_at
             FROM openvpn_servers
@@ -145,7 +140,7 @@ where
     let rows = sqlx::query(
         r#"
             SELECT id, name, host, port, proto, cipher, auth_algorithm,
-                   tls_key_pem, tls_key_mode, ca_chain_pem, dh_pem,
+                   tls_key_pem, tls_key_mode, ca_chain_pem,
                    remote_cert_tls_name, crl_distribution_point,
                    created_at, updated_at
             FROM openvpn_servers

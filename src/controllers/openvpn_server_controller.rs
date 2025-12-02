@@ -64,7 +64,6 @@ pub async fn store(
         tls_key_pem: validated.tls_key_pem,
         tls_key_mode: validated.tls_key_mode,
         ca_chain_pem: validated.ca_chain_pem,
-        dh_pem: validated.dh_pem,
         remote_cert_tls_name: validated.remote_cert_tls_name,
         crl_distribution_point: validated.crl_distribution_point,
     };
@@ -131,7 +130,6 @@ pub async fn update(
         tls_key_pem: validated.tls_key_pem,
         tls_key_mode: validated.tls_key_mode,
         ca_chain_pem: validated.ca_chain_pem,
-        dh_pem: validated.dh_pem,
         remote_cert_tls_name: validated.remote_cert_tls_name,
         crl_distribution_point: validated.crl_distribution_point,
     };

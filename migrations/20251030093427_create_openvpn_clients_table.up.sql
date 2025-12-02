@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS openvpn_clients (
 	cn                   VARCHAR(64) NOT NULL,
 	reserved_ip_address  VARCHAR(45),
 	certificate_pem      TEXT NOT NULL,
-	private_key_pem      TEXT NOT NULL,
+	encrypted_private_key_pem      TEXT NOT NULL,
 	revoked_at           TIMESTAMPTZ DEFAULT NULL,
 	expired_at           TIMESTAMPTZ NOT NULL,
 	created_at           TIMESTAMPTZ NOT NULL DEFAULT NOW(),
