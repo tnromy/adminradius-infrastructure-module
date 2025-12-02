@@ -40,6 +40,10 @@
   },
   "radius": {
     "base_api_endpoint": "http://10.88.9.1:8461/api-radius"
+  },
+  "ca_openvpn": {
+    "base_api_endpoint": "http://10.77.78.1:3001/racenet-openvpn",
+    "access_token": ""
   }
 
 }
