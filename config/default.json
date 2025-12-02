@@ -37,6 +37,9 @@
   },
   "openvpn": {
     "network_address": "10.8.9.0/24"
+  },
+  "radius": {
+    "base_api_endpoint": "http://10.88.9.1:8461/api-radius"
   }
 
 }
