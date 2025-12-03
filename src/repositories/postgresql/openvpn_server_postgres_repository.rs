@@ -14,6 +14,8 @@ fn row_to_entity(row: &PgRow) -> OpenvpnServerEntity {
         tls_key_mode: row.get("tls_key_mode"),
         ca_chain_pem: row.get("ca_chain_pem"),
         encrypted_private_key_pem: row.get("encrypted_private_key_pem"),
+        serial_number: row.get("serial_number"),
+        expired_at: row.get("expired_at"),
         remote_cert_tls_name: row.get("remote_cert_tls_name"),
         crl_distribution_point: row.get("crl_distribution_point"),
         created_at: row.get("created_at"),
@@ -30,10 +32,11 @@ where
             INSERT INTO openvpn_servers (
                 id, name, host, port, proto, cipher, auth_algorithm,
                 tls_key_pem, tls_key_mode, ca_chain_pem, encrypted_private_key_pem,
+                serial_number, expired_at,
                 remote_cert_tls_name, crl_distribution_point,
                 created_at, updated_at
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
             RETURNING id
         "#,
     )
@@ -48,6 +51,8 @@ where
     .bind(&entity.tls_key_mode)
     .bind(&entity.ca_chain_pem)
     .bind(&entity.encrypted_private_key_pem)
+    .bind(entity.serial_number)
+    .bind(entity.expired_at)
     .bind(&entity.remote_cert_tls_name)
     .bind(&entity.crl_distribution_point)
     .bind(entity.created_at)
@@ -116,6 +121,7 @@ where
         r#"
             SELECT id, name, host, port, proto, cipher, auth_algorithm,
                    tls_key_pem, tls_key_mode, ca_chain_pem, encrypted_private_key_pem,
+                   serial_number, expired_at,
                    remote_cert_tls_name, crl_distribution_point,
                    created_at, updated_at
             FROM openvpn_servers
@@ -137,6 +143,7 @@ where
         r#"
             SELECT id, name, host, port, proto, cipher, auth_algorithm,
                    tls_key_pem, tls_key_mode, ca_chain_pem, encrypted_private_key_pem,
+                   serial_number, expired_at,
                    remote_cert_tls_name, crl_distribution_point,
                    created_at, updated_at
             FROM openvpn_servers

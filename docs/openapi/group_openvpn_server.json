@@ -434,11 +434,17 @@
             "description": "CA certificate chain in PEM format (auto-generated, contains server cert + intermediate CA)",
             "example": "-----BEGIN CERTIFICATE-----\\n...\\n-----END CERTIFICATE-----"
           },
-          "encrypted_private_key_pem": {
+          "serial_number": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Certificate serial number from CA (unique)",
+            "example": 1234567890
+          },
+          "expired_at": {
             "type": "string",
-            "nullable": true,
-            "description": "Encrypted private key in PEM format (auto-generated, encrypted with system passphrase)",
-            "example": "-----BEGIN ENCRYPTED PRIVATE KEY-----\\n...\\n-----END ENCRYPTED PRIVATE KEY-----"
+            "format": "date-time",
+            "description": "Certificate expiration timestamp",
+            "example": "2026-10-30T09:00:00Z"
           },
           "remote_cert_tls_name": {
             "type": "string",
@@ -474,6 +480,8 @@
           "proto",
           "auth_algorithm",
           "ca_chain_pem",
+          "serial_number",
+          "expired_at",
           "remote_cert_tls_name",
           "created_at",
           "updated_at"

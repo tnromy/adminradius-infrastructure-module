@@ -1,4 +1,4 @@
-use chrono::Utc;
+use chrono::{DateTime, Utc};
 use config::Config;
 use thiserror::Error;
 
@@ -116,7 +116,12 @@ pub async fn execute(
         server_certificates.intermediate_ca_pem
     );
 
-    // Step 7: Create entity with generated certificate data
+    // Step 7: Parse expired_at from certificate_data
+    let expired_at = DateTime::parse_from_rfc3339(&certificate_data.expired_at)
+        .map(|dt| dt.with_timezone(&Utc))
+        .map_err(|e| AddOpenvpnServerError::CertificateGeneration(format!("Failed to parse expired_at: {}", e)))?;
+
+    // Step 8: Create entity with generated certificate data
     let now = Utc::now();
     let entity = OpenvpnServerEntity {
         id: uuid_helper::generate(),
@@ -130,6 +135,8 @@ pub async fn execute(
         tls_key_mode: input.tls_key_mode,
         ca_chain_pem: fullchain_pem,
         encrypted_private_key_pem: Some(server_certificates.encrypted_private_key_pem),
+        serial_number: certificate_data.serial_number,
+        expired_at,
         remote_cert_tls_name: input.remote_cert_tls_name,
         crl_distribution_point: input.crl_distribution_point,
         created_at: now,

@@ -4,6 +4,7 @@ use log::error;
 use serde::Deserialize;
 use serde_json::json;
 
+use crate::entities::openvpn_server_entity::OpenvpnServerResponse;
 use crate::infrastructures::database::DatabaseConnection;
 use crate::infrastructures::redis::RedisConnection;
 use crate::middlewares::include_request_id_middleware;
@@ -37,7 +38,10 @@ pub async fn index(
     let request_id = include_request_id_middleware::extract_request_id(&req);
 
     match get_openvpn_servers(db.get_ref(), redis.get_ref(), true).await {
-        Ok(items) => ok_response(items, request_id),
+        Ok(items) => {
+            let responses: Vec<OpenvpnServerResponse> = items.into_iter().map(|e| e.into()).collect();
+            ok_response(responses, request_id)
+        }
         Err(err) => internal_error_response(&req, request_id, "failed to fetch openvpn servers", err),
     }
 }
@@ -72,7 +76,8 @@ pub async fn store(
     match add_openvpn_server(db.get_ref(), redis.get_ref(), config.get_ref(), input).await {
         Ok(entity) => {
             log_middleware::set_extra(&req, "openvpn_server_id", entity.id.clone());
-            ok_response(entity, request_id)
+            let response: OpenvpnServerResponse = entity.into();
+            ok_response(response, request_id)
         }
         Err(AddOpenvpnServerError::NameAlreadyExists) => {
             bad_request_response(vec!["name already exists".to_string()], request_id)
@@ -106,7 +111,10 @@ pub async fn show(
     };
 
     match show_openvpn_server(db.get_ref(), &id).await {
-        Ok(Some(entity)) => ok_response(entity, request_id),
+        Ok(Some(entity)) => {
+            let response: OpenvpnServerResponse = entity.into();
+            ok_response(response, request_id)
+        }
         Ok(None) => not_found_response(request_id),
         Err(err) => internal_error_response(&req, request_id, "failed to fetch openvpn server", err),
     }
@@ -145,7 +153,8 @@ pub async fn update(
     match update_openvpn_server(db.get_ref(), redis.get_ref(), input).await {
         Ok(entity) => {
             log_middleware::set_extra(&req, "openvpn_server_id", entity.id.clone());
-            ok_response(entity, request_id)
+            let response: OpenvpnServerResponse = entity.into();
+            ok_response(response, request_id)
         }
         Err(UpdateOpenvpnServerError::NotFound) => not_found_response(request_id),
         Err(UpdateOpenvpnServerError::HostPortAlreadyExists) => {
