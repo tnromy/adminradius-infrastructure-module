@@ -12,7 +12,6 @@ pub struct StoreOpenvpnServerPayload {
     pub auth_algorithm: Option<String>,
     pub tls_key_pem: Option<String>,
     pub tls_key_mode: Option<String>,
-    pub ca_chain_pem: String,
     pub remote_cert_tls_name: Option<String>,
     pub crl_distribution_point: Option<String>,
 }
@@ -27,7 +26,6 @@ pub struct StoreOpenvpnServerValidated {
     pub auth_algorithm: String,
     pub tls_key_pem: Option<String>,
     pub tls_key_mode: Option<String>,
-    pub ca_chain_pem: String,
     pub remote_cert_tls_name: String,
     pub crl_distribution_point: Option<String>,
 }
@@ -99,13 +97,6 @@ pub fn validate(payload: StoreOpenvpnServerPayload) -> Result<StoreOpenvpnServer
         xss_security_helper::strip_dangerous_tags(&sanitized)
     }).filter(|s| !s.is_empty());
 
-    // Validate ca_chain_pem (required)
-    let sanitized_ca = xss_security_helper::sanitize_input(&payload.ca_chain_pem, 100000);
-    let safe_ca = xss_security_helper::strip_dangerous_tags(&sanitized_ca);
-    if safe_ca.is_empty() {
-        errors.push("ca_chain_pem is required".to_string());
-    }
-
     // Validate remote_cert_tls_name (default "server" if not provided)
     let remote_cert_tls_name = if let Some(r) = payload.remote_cert_tls_name {
         let sanitized_remote = xss_security_helper::sanitize_input(&r, 100);
@@ -135,7 +126,6 @@ pub fn validate(payload: StoreOpenvpnServerPayload) -> Result<StoreOpenvpnServer
             auth_algorithm,
             tls_key_pem,
             tls_key_mode,
-            ca_chain_pem: safe_ca,
             remote_cert_tls_name,
             crl_distribution_point,
         })

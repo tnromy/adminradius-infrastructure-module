@@ -1,4 +1,5 @@
 use actix_web::{HttpRequest, HttpResponse, web};
+use config::Config;
 use log::error;
 use serde::Deserialize;
 use serde_json::json;
@@ -45,6 +46,7 @@ pub async fn store(
     req: HttpRequest,
     db: web::Data<DatabaseConnection>,
     redis: web::Data<RedisConnection>,
+    config: web::Data<Config>,
     payload: web::Json<StoreOpenvpnServerPayload>,
 ) -> HttpResponse {
     let request_id = include_request_id_middleware::extract_request_id(&req);
@@ -63,12 +65,11 @@ pub async fn store(
         auth_algorithm: validated.auth_algorithm,
         tls_key_pem: validated.tls_key_pem,
         tls_key_mode: validated.tls_key_mode,
-        ca_chain_pem: validated.ca_chain_pem,
         remote_cert_tls_name: validated.remote_cert_tls_name,
         crl_distribution_point: validated.crl_distribution_point,
     };
 
-    match add_openvpn_server(db.get_ref(), redis.get_ref(), input).await {
+    match add_openvpn_server(db.get_ref(), redis.get_ref(), config.get_ref(), input).await {
         Ok(entity) => {
             log_middleware::set_extra(&req, "openvpn_server_id", entity.id.clone());
             ok_response(entity, request_id)
@@ -78,6 +79,15 @@ pub async fn store(
         }
         Err(AddOpenvpnServerError::HostPortAlreadyExists) => {
             bad_request_response(vec!["host and port combination already exists".to_string()], request_id)
+        }
+        Err(AddOpenvpnServerError::Config(msg)) => {
+            internal_error_response(&req, request_id, "configuration error", msg)
+        }
+        Err(AddOpenvpnServerError::CaService(msg)) => {
+            internal_error_response(&req, request_id, "CA service error", msg)
+        }
+        Err(AddOpenvpnServerError::CertificateGeneration(msg)) => {
+            internal_error_response(&req, request_id, "certificate generation error", msg)
         }
         Err(AddOpenvpnServerError::Database(err)) => {
             internal_error_response(&req, request_id, "failed to create openvpn server", err)
@@ -121,7 +131,6 @@ pub async fn update(
 
     let input = UpdateOpenvpnServerInput {
         id,
-        name: validated.name,
         host: validated.host,
         port: validated.port,
         proto: validated.proto,
@@ -129,7 +138,6 @@ pub async fn update(
         auth_algorithm: validated.auth_algorithm,
         tls_key_pem: validated.tls_key_pem,
         tls_key_mode: validated.tls_key_mode,
-        ca_chain_pem: validated.ca_chain_pem,
         remote_cert_tls_name: validated.remote_cert_tls_name,
         crl_distribution_point: validated.crl_distribution_point,
     };
@@ -140,9 +148,6 @@ pub async fn update(
             ok_response(entity, request_id)
         }
         Err(UpdateOpenvpnServerError::NotFound) => not_found_response(request_id),
-        Err(UpdateOpenvpnServerError::NameAlreadyExists) => {
-            bad_request_response(vec!["name already exists".to_string()], request_id)
-        }
         Err(UpdateOpenvpnServerError::HostPortAlreadyExists) => {
             bad_request_response(vec!["host and port combination already exists".to_string()], request_id)
         }

@@ -14,6 +14,7 @@ pub struct OpenvpnServerEntity {
     pub tls_key_pem: Option<String>,
     pub tls_key_mode: Option<String>,
     pub ca_chain_pem: String,
+    pub encrypted_private_key_pem: Option<String>,
     pub remote_cert_tls_name: String,
     pub crl_distribution_point: Option<String>,
     pub created_at: DateTime<Utc>,

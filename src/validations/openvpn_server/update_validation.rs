@@ -4,7 +4,6 @@ use crate::utils::xss_security_helper;
 
 #[derive(Debug, Deserialize)]
 pub struct UpdateOpenvpnServerPayload {
-    pub name: String,
     pub host: String,
     pub port: i32,
     pub proto: String,
@@ -12,14 +11,12 @@ pub struct UpdateOpenvpnServerPayload {
     pub auth_algorithm: String,
     pub tls_key_pem: Option<String>,
     pub tls_key_mode: Option<String>,
-    pub ca_chain_pem: String,
     pub remote_cert_tls_name: String,
     pub crl_distribution_point: Option<String>,
 }
 
 #[derive(Debug)]
 pub struct UpdateOpenvpnServerValidated {
-    pub name: String,
     pub host: String,
     pub port: i32,
     pub proto: String,
@@ -27,20 +24,12 @@ pub struct UpdateOpenvpnServerValidated {
     pub auth_algorithm: String,
     pub tls_key_pem: Option<String>,
     pub tls_key_mode: Option<String>,
-    pub ca_chain_pem: String,
     pub remote_cert_tls_name: String,
     pub crl_distribution_point: Option<String>,
 }
 
 pub fn validate(payload: UpdateOpenvpnServerPayload) -> Result<UpdateOpenvpnServerValidated, Vec<String>> {
     let mut errors = Vec::new();
-
-    // Validate name
-    let sanitized_name = xss_security_helper::sanitize_input(&payload.name, 255);
-    let safe_name = xss_security_helper::strip_dangerous_tags(&sanitized_name);
-    if safe_name.is_empty() {
-        errors.push("name is required".to_string());
-    }
 
     // Validate host
     let sanitized_host = xss_security_helper::sanitize_input(&payload.host, 45);
@@ -86,13 +75,6 @@ pub fn validate(payload: UpdateOpenvpnServerPayload) -> Result<UpdateOpenvpnServ
         xss_security_helper::strip_dangerous_tags(&sanitized)
     }).filter(|s| !s.is_empty());
 
-    // Validate ca_chain_pem (required)
-    let sanitized_ca = xss_security_helper::sanitize_input(&payload.ca_chain_pem, 100000);
-    let safe_ca = xss_security_helper::strip_dangerous_tags(&sanitized_ca);
-    if safe_ca.is_empty() {
-        errors.push("ca_chain_pem is required".to_string());
-    }
-
     // Validate remote_cert_tls_name
     let sanitized_remote = xss_security_helper::sanitize_input(&payload.remote_cert_tls_name, 100);
     let safe_remote = xss_security_helper::strip_dangerous_tags(&sanitized_remote);
@@ -108,7 +90,6 @@ pub fn validate(payload: UpdateOpenvpnServerPayload) -> Result<UpdateOpenvpnServ
 
     if errors.is_empty() {
         Ok(UpdateOpenvpnServerValidated {
-            name: safe_name,
             host: safe_host,
             port: payload.port,
             proto: safe_proto,
@@ -116,7 +97,6 @@ pub fn validate(payload: UpdateOpenvpnServerPayload) -> Result<UpdateOpenvpnServ
             auth_algorithm: safe_auth,
             tls_key_pem,
             tls_key_mode,
-            ca_chain_pem: safe_ca,
             remote_cert_tls_name: safe_remote,
             crl_distribution_point,
         })

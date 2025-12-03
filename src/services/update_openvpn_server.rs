@@ -9,7 +9,6 @@ use crate::services::get_openvpn_servers;
 #[derive(Debug)]
 pub struct UpdateOpenvpnServerInput {
     pub id: String,
-    pub name: String,
     pub host: String,
     pub port: i32,
     pub proto: String,
@@ -17,7 +16,6 @@ pub struct UpdateOpenvpnServerInput {
     pub auth_algorithm: String,
     pub tls_key_pem: Option<String>,
     pub tls_key_mode: Option<String>,
-    pub ca_chain_pem: String,
     pub remote_cert_tls_name: String,
     pub crl_distribution_point: Option<String>,
 }
@@ -26,8 +24,6 @@ pub struct UpdateOpenvpnServerInput {
 pub enum UpdateOpenvpnServerError {
     #[error("openvpn server not found")]
     NotFound,
-    #[error("openvpn server name already exists")]
-    NameAlreadyExists,
     #[error("openvpn server host and port combination already exists")]
     HostPortAlreadyExists,
     #[error("database error: {0}")]
@@ -47,20 +43,16 @@ pub async fn execute(
         return Err(UpdateOpenvpnServerError::NotFound);
     }
 
-    // Check name uniqueness (excluding current ID)
-    if repository::name_exists(conn, &input.name, Some(&input.id)).await? {
-        return Err(UpdateOpenvpnServerError::NameAlreadyExists);
-    }
-
     // Check host+port uniqueness (excluding current ID)
     if repository::host_port_exists(conn, &input.host, input.port, Some(&input.id)).await? {
         return Err(UpdateOpenvpnServerError::HostPortAlreadyExists);
     }
 
+    // Note: name, ca_chain_pem, and encrypted_private_key_pem are immutable
+    // They are not included in the update operation
     repository::update(
         conn,
         &input.id,
-        &input.name,
         &input.host,
         input.port,
         &input.proto,
@@ -68,7 +60,6 @@ pub async fn execute(
         &input.auth_algorithm,
         input.tls_key_pem.as_deref(),
         input.tls_key_mode.as_deref(),
-        &input.ca_chain_pem,
         &input.remote_cert_tls_name,
         input.crl_distribution_point.as_deref(),
     )

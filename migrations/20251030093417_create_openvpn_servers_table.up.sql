@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS openvpn_servers (
 	tls_key_pem              TEXT,
 	tls_key_mode             VARCHAR(10) DEFAULT NULL,
 	ca_chain_pem             TEXT NOT NULL,
+	encrypted_private_key_pem TEXT,
 	remote_cert_tls_name     VARCHAR(100) NOT NULL DEFAULT 'server',
 	crl_distribution_point   TEXT,
 	created_at               TIMESTAMPTZ NOT NULL DEFAULT NOW(),
