@@ -68,7 +68,7 @@ impl HttpService {
                 .app_data(web::Data::new(db_connection.clone()))
                 .app_data(web::Data::new(redis_connection.clone()))
                 .app_data(web::Data::new(s3_service.clone()))
-                .app_data(web::Data::new(config_arc.clone()))
+                .app_data(web::Data::from(config_arc.clone()))
                 .app_data(web::Data::new(es_service.clone()))
                 .wrap(LogMiddleware)
                 .wrap(RequestIdMiddleware);
