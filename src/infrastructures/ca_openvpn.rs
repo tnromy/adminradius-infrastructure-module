@@ -296,4 +296,57 @@ impl CaOpenvpnService {
             )
         }
     }
+
+    /// Send GET request with JSON body to the OpenVPN CA API and return binary response
+    ///
+    /// # Arguments
+    /// * `path` - The API endpoint path
+    /// * `body` - The JSON body to send with the request
+    ///
+    /// # Returns
+    /// * `Vec<u8>` containing the raw binary response data
+    pub async fn get_binary<B>(&self, path: &str, body: &B) -> Result<Vec<u8>>
+    where
+        B: Serialize,
+    {
+        let url = format!("{}{}", self.base_endpoint(), path);
+        log::debug!("ca_openvpn:get_binary:request url={}", url);
+
+        let response = self
+            .client
+            .get(&url)
+            .headers(self.auth_headers())
+            .json(body)
+            .send()
+            .await
+            .with_context(|| {
+                format!(
+                    "failed to send GET binary request to OpenVPN CA API: {}",
+                    url
+                )
+            })?;
+
+        if !response.status().is_success() {
+            let status = response.status();
+            let error_body = response.text().await.unwrap_or_default();
+            anyhow::bail!(
+                "OpenVPN CA API returned error: status={}, body={}",
+                status,
+                error_body
+            );
+        }
+
+        let bytes = response
+            .bytes()
+            .await
+            .context("failed to read binary response from OpenVPN CA API")?;
+
+        log::debug!(
+            "ca_openvpn:get_binary:success url={} size={}",
+            url,
+            bytes.len()
+        );
+
+        Ok(bytes.to_vec())
+    }
 }

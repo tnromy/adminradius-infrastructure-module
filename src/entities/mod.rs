@@ -10,5 +10,7 @@ pub mod device_port_interface_entity;
 pub mod device_port_specification_entity;
 pub mod device_type_entity;
 pub mod openvpn_server_entity;
+pub mod parsed_pkcs12_entity;
 pub mod radius_client_entity;
+pub mod radius_group_profile_entity;
 pub mod radius_vendor_entity;

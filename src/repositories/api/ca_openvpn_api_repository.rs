@@ -22,6 +22,13 @@ struct CsrRequestBody {
     passphrase: String,
 }
 
+/// Internal struct for PKCS#12 request body
+#[derive(Serialize)]
+struct Pkcs12RequestBody {
+    passphrase: String,
+    pkcs12_password: String,
+}
+
 /// Create a certificate signing request (CSR) for a client certificate.
 ///
 /// # Arguments
@@ -155,6 +162,55 @@ pub async fn approve_csr(
             log::error!(
                 "ca_openvpn_api:approve_csr:err cert_req_id={} err={} elapsed_ms={}",
                 certificate_request_id,
+                e,
+                start.elapsed().as_millis()
+            );
+            Err(e)
+        }
+    }
+}
+
+/// Get PKCS#12 certificate bundle by serial number.
+///
+/// # Arguments
+/// * `ca_openvpn_service` - The OpenVPN CA service instance
+/// * `serial_number` - The serial number of the certificate
+/// * `passphrase` - The passphrase used for PKCS#12 encryption
+///
+/// # Returns
+/// * `Vec<u8>` containing the PKCS#12 DER binary data
+pub async fn get_pkcs12(
+    ca_openvpn_service: &CaOpenvpnService,
+    serial_number: i64,
+    passphrase: &str,
+) -> Result<Vec<u8>> {
+    log::debug!(
+        "ca_openvpn_api:get_pkcs12:prepare serial_number={}",
+        serial_number
+    );
+    let start = Instant::now();
+
+    let endpoint = format!("/certificate/{}/pkcs12", serial_number);
+
+    let body = Pkcs12RequestBody {
+        passphrase: passphrase.to_string(),
+        pkcs12_password: passphrase.to_string(),
+    };
+
+    match ca_openvpn_service.get_binary(&endpoint, &body).await {
+        Ok(result) => {
+            log::debug!(
+                "ca_openvpn_api:get_pkcs12:ok serial_number={} size={} elapsed_ms={}",
+                serial_number,
+                result.len(),
+                start.elapsed().as_millis()
+            );
+            Ok(result)
+        }
+        Err(e) => {
+            log::error!(
+                "ca_openvpn_api:get_pkcs12:err serial_number={} err={} elapsed_ms={}",
+                serial_number,
                 e,
                 start.elapsed().as_millis()
             );

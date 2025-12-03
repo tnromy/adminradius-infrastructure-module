@@ -27,3 +27,44 @@ buat repostory api untuk openvpn CA
         "reserved_ip_address": "10.8.9.5"
     }
 }
+
+### prompt:
+bagus. mari kita lanjutkan.
+
+selanjutnya kita akan memperbaiki table migration aaa agar menambahkan kolom 'encrypted_private_key_pem'
+pahami konteks bahwa project saat ini masih di tahap development sehingga tidak dibutuhkan alter table untuk menambahkan kolom itu. langsung saja lakukan perubahan pada file tersebut.
+
+akibat menambah kolom itu, maka kita perlu menyesuaikan ulang file entity, repository, service, validation dan documentation.
+
+namun agar pekerjaan lebih efisien, saya ingin sekali  memperbaiki mekanisme kerja dari service add openvpn server.
+perhatikan service add openvpn service bbb saat ini. pahami konteksnya, telusuri secara vertikal slicing mulai dari route hingga repositorynya.
+karena ada hal yang akan saya ubah pada route endpoint add openvpn server yaitu:
+1. endpoint untuk add openvpn server yang saat ini sudah ada yaitu path: '/openvpn-server', method post
+kondisi saat ini, endpoint ini menerima body request seperti ini:
+{
+    "name": "vpn-server-01.example.com",
+    "host": "10.0.1.100",
+    "ca_chain_pem": "-----BEGIN CERTIFICATE-----\\nMIIG8jCCBNqgAwIBAgICA...\\n-----END CERTIFICATE-----",
+    "dh_pem": "-----BEGIN DH PARAMETERS-----\\nMIIBCAKCAQEA...\\n-----END DH PARAMETERS-----",
+    "port": 1194,
+    "proto": "tcp",
+    "cipher": "AES-256-GCM",
+    "auth_algorithm": "SHA256",
+    "tls_key_pem": "-----BEGIN OpenVPN Static key V1-----\\n...\\n-----END OpenVPN Static key V1-----",
+    "tls_key_mode": "1",
+    "remote_cert_tls_name": "server",
+    "crl_distribution_point": "http://ca.example.com/crl.pem"
+}
+
+hal inilah yang akan kita perbaiki.
+
+1. dh_pem sudah tidak diperlukan lagi. sepertinya ini sudah kita hapus di tahap sebelumnya. tapi bisa dipastikan kembali.
+2. nilai "ca_chain_pem" tidak ditulis hard code dari body reqeust lagi. tapi akan didapatkan dari proses otomatis nantinya.
+
+pada file src/services/add_openvpn_server.rs,  sebelum menyimpan nilai-nilai itu ke database maka kita panggil dulu repository api CA openvpn yang telah kita buat di tahap sebelumnya.
+yaitu:
+1. buatlah nilai baru di config/default.json dengan nama default_passphrase di bagian ca_openvpn. nilai ini akan digunakan untuk banyak proses kedepannya.
+2. persiapkan infrastructure untuk ca openvpn yang ada di file src/infrastructures/ca_openvpn.rs karena ini akan dibutuhkan di tahap selanjutnya sebagai params.
+3. di file service src/services/add_openvpn_server.rs, di awal proses, sebelum menyimpan nilai ke database, lakukan pemanggilan repository api ca openvpn pada function create_csr_server() dengan meneruskan params pertama adalh infrasturctures ca openvpn yang disiapkan di tahap kedua di atas. lalu params kedua adalah passphrase yagn diambil dari config default.json pada nilai ca_openvpn -> default_passphrase, lalu params ketiga adalah nilai 'name' dari body request. function ini akan return entity sesuai yang tadi kita kerjakan. simpan hasil return itu pada variable csr_server_data. buka dan pahami terlebih dahulu file repository api ca openvpn dan hubungannya dengan file src/infrastructures/ca_openvpn.rs agar anda memiliki informasi yang cukup.
+4. selanjutnya setelah selesai memanggil function create_csr_server() dan telah mendapatkan response, maka lakukan pemanggilan repository api ca openvpn pada function approve_csr() dengan meneruskan params pertama adalh infrasturcture ca openvpn di tahap 2 di atas, lalu params kedua adalah csr_server_data.certificate_reqeust_id. function itu akan return data dalam format entity yang telah ditentukan pada tahap sebelumnya. simpan response itu ke variabel certificate_data
+5. langkah selanjutnay adalah, memanggil repository api ca openvpn pada function 
