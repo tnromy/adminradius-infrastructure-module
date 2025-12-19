@@ -19,4 +19,11 @@ pub fn configure(cfg: &mut ServiceConfig) {
             .route(web::put().to(controller::update))
             .route(web::delete().to(controller::destroy)),
     );
+
+    // Device OpenVPN Client assignment routes
+    cfg.service(
+        web::resource("/device/{device_id}/openvpn-client/{openvpn_client_id}")
+            .route(web::put().to(controller::assign_openvpn_client))
+            .route(web::delete().to(controller::unassign_openvpn_client)),
+    );
 }

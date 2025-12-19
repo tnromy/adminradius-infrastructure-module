@@ -71,6 +71,10 @@
     {
       "name": "OpenVPN Client",
       "description": "OpenVPN client management - Create and manage OpenVPN client certificates for VPN connections"
+    },
+    {
+      "name": "Device OpenVPN Client",
+      "description": "Device OpenVPN client assignment - Associate devices with OpenVPN clients (only Router type devices)"
     }
   ],
   "paths": {
@@ -148,6 +152,9 @@
     },
     "/openvpn-client/{id}": {
       "$ref": "./group_openvpn_client.json#/paths/~1api-infra~1openvpn-client~1{id}"
+    },
+    "/device/{device_id}/openvpn-client/{openvpn_client_id}": {
+      "$ref": "./group_device_openvpn_client.json#/paths/~1api-infra~1device~1{device_id}~1openvpn-client~1{openvpn_client_id}"
     }
   },
   "components": {

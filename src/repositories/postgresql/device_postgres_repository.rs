@@ -243,3 +243,24 @@ where
     .fetch_one(executor)
     .await
 }
+
+/// Check if a device exists and its device_type.name is 'Router'
+pub async fn is_device_router<'a, E>(executor: E, device_id: &str) -> Result<bool, sqlx::Error>
+where
+    E: Executor<'a, Database = Postgres>,
+{
+    sqlx::query_scalar::<_, bool>(
+        r#"
+            SELECT EXISTS (
+                SELECT 1
+                FROM devices d
+                JOIN device_types dt ON d.device_type_id = dt.id
+                WHERE d.id = $1 AND dt.name = 'Router'
+            )
+        "#,
+    )
+    .bind(device_id)
+    .fetch_one(executor)
+    .await
+}
+
