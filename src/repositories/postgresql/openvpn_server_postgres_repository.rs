@@ -13,6 +13,7 @@ fn row_to_entity(row: &PgRow) -> OpenvpnServerEntity {
         tls_key_pem: row.get("tls_key_pem"),
         tls_key_mode: row.get("tls_key_mode"),
         ca_chain_pem: row.get("ca_chain_pem"),
+        certificate_pem: row.get("certificate_pem"),
         encrypted_private_key_pem: row.get("encrypted_private_key_pem"),
         serial_number: row.get("serial_number"),
         expired_at: row.get("expired_at"),
@@ -31,12 +32,12 @@ where
         r#"
             INSERT INTO openvpn_servers (
                 id, name, host, port, proto, cipher, auth_algorithm,
-                tls_key_pem, tls_key_mode, ca_chain_pem, encrypted_private_key_pem,
-                serial_number, expired_at,
+                tls_key_pem, tls_key_mode, ca_chain_pem, certificate_pem,
+                encrypted_private_key_pem, serial_number, expired_at,
                 remote_cert_tls_name, crl_distribution_point,
                 created_at, updated_at
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
             RETURNING id
         "#,
     )
@@ -50,6 +51,7 @@ where
     .bind(&entity.tls_key_pem)
     .bind(&entity.tls_key_mode)
     .bind(&entity.ca_chain_pem)
+    .bind(&entity.certificate_pem)
     .bind(&entity.encrypted_private_key_pem)
     .bind(entity.serial_number)
     .bind(entity.expired_at)
@@ -120,8 +122,8 @@ where
     let row = sqlx::query(
         r#"
             SELECT id, name, host, port, proto, cipher, auth_algorithm,
-                   tls_key_pem, tls_key_mode, ca_chain_pem, encrypted_private_key_pem,
-                   serial_number, expired_at,
+                   tls_key_pem, tls_key_mode, ca_chain_pem, certificate_pem,
+                   encrypted_private_key_pem, serial_number, expired_at,
                    remote_cert_tls_name, crl_distribution_point,
                    created_at, updated_at
             FROM openvpn_servers
@@ -142,8 +144,8 @@ where
     let rows = sqlx::query(
         r#"
             SELECT id, name, host, port, proto, cipher, auth_algorithm,
-                   tls_key_pem, tls_key_mode, ca_chain_pem, encrypted_private_key_pem,
-                   serial_number, expired_at,
+                   tls_key_pem, tls_key_mode, ca_chain_pem, certificate_pem,
+                   encrypted_private_key_pem, serial_number, expired_at,
                    remote_cert_tls_name, crl_distribution_point,
                    created_at, updated_at
             FROM openvpn_servers

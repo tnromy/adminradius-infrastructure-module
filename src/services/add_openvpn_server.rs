@@ -3,6 +3,7 @@ use config::Config;
 use thiserror::Error;
 
 use crate::entities::openvpn_server_entity::OpenvpnServerEntity;
+use crate::entities::root_ca_entity;
 use crate::infrastructures::ca_openvpn::CaOpenvpnService;
 use crate::infrastructures::database::DatabaseConnection;
 use crate::infrastructures::redis::RedisConnection;
@@ -109,19 +110,26 @@ pub async fn execute(
 
     log::debug!("add_openvpn_server:pkcs12_parsed");
 
-    // Step 6: Build fullchain PEM (certificate + intermediate CA)
-    let fullchain_pem = format!(
+    // Step 6: Get root CA PEM from embedded binary
+    let root_ca_pem = root_ca_entity::get_pem();
+
+    // Step 7: Build CA chain PEM (Root CA + Intermediate CA)
+    // Note: CA chain contains only CA certificates, not the server certificate
+    let ca_chain_pem = format!(
         "{}{}",
-        server_certificates.certificate_pem,
+        root_ca_pem,
         server_certificates.intermediate_ca_pem
     );
 
-    // Step 7: Parse expired_at from certificate_data
+    // Step 8: Server certificate (the server's own certificate)
+    let certificate_pem = server_certificates.certificate_pem.clone();
+
+    // Step 9: Parse expired_at from certificate_data
     let expired_at = DateTime::parse_from_rfc3339(&certificate_data.expired_at)
         .map(|dt| dt.with_timezone(&Utc))
         .map_err(|e| AddOpenvpnServerError::CertificateGeneration(format!("Failed to parse expired_at: {}", e)))?;
 
-    // Step 8: Create entity with generated certificate data
+    // Step 10: Create entity with generated certificate data
     let now = Utc::now();
     let entity = OpenvpnServerEntity {
         id: uuid_helper::generate(),
@@ -133,7 +141,8 @@ pub async fn execute(
         auth_algorithm: input.auth_algorithm,
         tls_key_pem: input.tls_key_pem,
         tls_key_mode: input.tls_key_mode,
-        ca_chain_pem: fullchain_pem,
+        ca_chain_pem,
+        certificate_pem,
         encrypted_private_key_pem: Some(server_certificates.encrypted_private_key_pem),
         serial_number: certificate_data.serial_number,
         expired_at,

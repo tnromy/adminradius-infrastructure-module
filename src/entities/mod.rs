@@ -14,3 +14,4 @@ pub mod parsed_pkcs12_entity;
 pub mod radius_client_entity;
 pub mod radius_group_profile_entity;
 pub mod radius_vendor_entity;
+pub mod root_ca_entity;

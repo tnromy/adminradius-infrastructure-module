@@ -15,7 +15,10 @@ pub struct OpenvpnServerEntity {
     pub auth_algorithm: String,
     pub tls_key_pem: Option<String>,
     pub tls_key_mode: Option<String>,
+    /// CA certificate chain: Root CA + Intermediate CA (in that order)
     pub ca_chain_pem: String,
+    /// The server's own certificate in PEM format
+    pub certificate_pem: String,
     pub encrypted_private_key_pem: Option<String>,
     pub serial_number: i64,
     pub expired_at: DateTime<Utc>,
@@ -38,7 +41,10 @@ pub struct OpenvpnServerResponse {
     pub auth_algorithm: String,
     pub tls_key_pem: Option<String>,
     pub tls_key_mode: Option<String>,
+    /// CA certificate chain: Root CA + Intermediate CA (in that order)
     pub ca_chain_pem: String,
+    /// The server's own certificate in PEM format
+    pub certificate_pem: String,
     pub serial_number: i64,
     pub expired_at: DateTime<Utc>,
     pub remote_cert_tls_name: String,
@@ -60,6 +66,7 @@ impl From<OpenvpnServerEntity> for OpenvpnServerResponse {
             tls_key_pem: entity.tls_key_pem,
             tls_key_mode: entity.tls_key_mode,
             ca_chain_pem: entity.ca_chain_pem,
+            certificate_pem: entity.certificate_pem,
             serial_number: entity.serial_number,
             expired_at: entity.expired_at,
             remote_cert_tls_name: entity.remote_cert_tls_name,

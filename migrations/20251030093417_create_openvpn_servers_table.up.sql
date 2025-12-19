@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS openvpn_servers (
 	tls_key_pem              TEXT,
 	tls_key_mode             VARCHAR(10) DEFAULT NULL,
 	ca_chain_pem             TEXT NOT NULL,
+	certificate_pem          TEXT NOT NULL,
 	encrypted_private_key_pem TEXT,
 	serial_number            BIGINT,
 	expired_at               TIMESTAMPTZ,
