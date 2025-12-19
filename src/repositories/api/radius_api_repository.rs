@@ -1,10 +1,33 @@
 use anyhow::Result;
+use serde::{Deserialize, Serialize};
 use tokio::time::Instant;
 
 use crate::entities::radius_client_entity::RadiusClientEntity;
 use crate::entities::radius_group_profile_entity::RadiusGroupProfileEntity;
 use crate::entities::radius_vendor_entity::RadiusVendorEntity;
 use crate::infrastructures::radius::RadiusService;
+
+/// Request body for adding a new RADIUS client
+#[derive(Debug, Serialize)]
+pub struct AddRadiusClientRequest {
+    pub host: String,
+    pub name: String,
+    pub secret: String,
+    pub description: String,
+    pub vendor_id: i32,
+}
+
+/// Response from adding a new RADIUS client
+#[derive(Debug, Deserialize)]
+pub struct AddRadiusClientResponse {
+    pub id: i32,
+}
+
+/// Response from deleting a RADIUS client
+#[derive(Debug, Deserialize)]
+pub struct DeleteRadiusClientResponse {
+    pub deleted: bool,
+}
 
 /// Get all RADIUS vendors from the Radius API
 pub async fn get_vendors(radius_service: &RadiusService) -> Result<Vec<RadiusVendorEntity>> {
@@ -104,6 +127,71 @@ pub async fn get_group_profile_by_vendor_id(
             log::error!(
                 "radius_api:get_group_profile_by_vendor_id:err vendor_id={} err={} elapsed_ms={}",
                 vendor_id,
+                e,
+                start.elapsed().as_millis()
+            );
+            Err(e)
+        }
+    }
+}
+
+/// Add a new RADIUS client via the Radius API
+pub async fn add_client(
+    radius_service: &RadiusService,
+    request: &AddRadiusClientRequest,
+) -> Result<AddRadiusClientResponse> {
+    log::debug!(
+        "radius_api:add_client:prepare host={} name={} vendor_id={}",
+        request.host,
+        request.name,
+        request.vendor_id
+    );
+    let start = Instant::now();
+
+    match radius_service.post::<AddRadiusClientResponse, _>("/client", request).await {
+        Ok(response) => {
+            log::debug!(
+                "radius_api:add_client:ok id={} elapsed_ms={}",
+                response.id,
+                start.elapsed().as_millis()
+            );
+            Ok(response)
+        }
+        Err(e) => {
+            log::error!(
+                "radius_api:add_client:err host={} err={} elapsed_ms={}",
+                request.host,
+                e,
+                start.elapsed().as_millis()
+            );
+            Err(e)
+        }
+    }
+}
+
+/// Delete a RADIUS client via the Radius API
+pub async fn delete_client(
+    radius_service: &RadiusService,
+    client_id: i32,
+) -> Result<DeleteRadiusClientResponse> {
+    log::debug!("radius_api:delete_client:prepare client_id={}", client_id);
+    let start = Instant::now();
+
+    let endpoint = format!("/radius-client/{}", client_id);
+    match radius_service.delete::<DeleteRadiusClientResponse>(&endpoint).await {
+        Ok(response) => {
+            log::debug!(
+                "radius_api:delete_client:ok client_id={} deleted={} elapsed_ms={}",
+                client_id,
+                response.deleted,
+                start.elapsed().as_millis()
+            );
+            Ok(response)
+        }
+        Err(e) => {
+            log::error!(
+                "radius_api:delete_client:err client_id={} err={} elapsed_ms={}",
+                client_id,
                 e,
                 start.elapsed().as_millis()
             );

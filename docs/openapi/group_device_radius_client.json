@@ -1,0 +1,350 @@
+{
+  "paths": {
+    "/api-infra/device/{device_id}/radius-client": {
+      "put": {
+        "tags": [
+          "Device Radius Client"
+        ],
+        "summary": "Activate RADIUS client for a device",
+        "description": "Activate a RADIUS client for a device that has an assigned OpenVPN client. The device must have an OpenVPN client with a reserved IP address. A new RADIUS client will be created via the RADIUS API and the secret will be encrypted and stored.",
+        "operationId": "activateDeviceRadiusClient",
+        "parameters": [
+          {
+            "name": "device_id",
+            "in": "path",
+            "description": "Device UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "660e8400-e29b-41d4-a716-446655440001"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActivateRadiusClientRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "RADIUS client activated successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DeviceRadiusClient"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Device Radius Client"
+        ],
+        "summary": "Deactivate RADIUS client for a device",
+        "description": "Deactivate and remove the RADIUS client for a device. This will delete the RADIUS client from the RADIUS API and remove the local database record.",
+        "operationId": "deactivateDeviceRadiusClient",
+        "parameters": [
+          {
+            "name": "device_id",
+            "in": "path",
+            "description": "Device UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "660e8400-e29b-41d4-a716-446655440001"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "RADIUS client deactivated successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "deactivated"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "DeviceRadiusClient": {
+        "type": "object",
+        "description": "Device Radius Client entity representing the association between a device (via OpenVPN client) and a RADIUS client",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique identifier for the device radius client record",
+            "example": "aa0e8400-e29b-41d4-a716-446655440010"
+          },
+          "device_openvpn_client_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Reference to the device_openvpn_client assignment",
+            "example": "bb0e8400-e29b-41d4-a716-446655440005"
+          },
+          "radius_client_id": {
+            "type": "integer",
+            "description": "RADIUS client ID from the external RADIUS API",
+            "example": 123
+          },
+          "encrypted_secret": {
+            "type": "string",
+            "description": "Encrypted RADIUS client secret (AES-256-CBC encrypted, base64 encoded)",
+            "example": "U2FsdGVkX1..."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the record was created",
+            "example": "2024-01-15T10:30:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the record was last updated",
+            "example": "2024-01-15T10:30:00Z"
+          }
+        },
+        "required": [
+          "id",
+          "device_openvpn_client_id",
+          "radius_client_id",
+          "encrypted_secret",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "ActivateRadiusClientRequest": {
+        "type": "object",
+        "description": "Request body for activating a RADIUS client for a device",
+        "properties": {
+          "device_vendor_id": {
+            "type": "integer",
+            "description": "RADIUS vendor ID to associate with the client",
+            "example": 1
+          }
+        },
+        "required": [
+          "device_vendor_id"
+        ]
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Bad request - validation error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 400
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Bad Request"
+                    }
+                  }
+                },
+                "request_id": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "errors": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "example": [
+                    "device has no OpenVPN client assigned"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Resource not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 404
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Not Found"
+                    }
+                  }
+                },
+                "request_id": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "errors": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "example": [
+                    "device not found"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "InternalServerError": {
+        "description": "Internal server error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 500
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Internal Server Error"
+                    }
+                  }
+                },
+                "request_id": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "errors": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "example": [
+                    "failed to activate radius client"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

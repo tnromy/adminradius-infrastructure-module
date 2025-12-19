@@ -26,4 +26,11 @@ pub fn configure(cfg: &mut ServiceConfig) {
             .route(web::put().to(controller::assign_openvpn_client))
             .route(web::delete().to(controller::unassign_openvpn_client)),
     );
+
+    // Device Radius Client activation routes
+    cfg.service(
+        web::resource("/device/{device_id}/radius-client")
+            .route(web::put().to(controller::activate_radius_client))
+            .route(web::delete().to(controller::deactivate_radius_client)),
+    );
 }

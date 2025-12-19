@@ -39,12 +39,12 @@
     "network_address": "10.8.9.0/24"
   },
   "radius": {
-    "base_api_endpoint": "http://10.88.9.1:8461/api-radius"
+    "base_api_endpoint": "http://10.88.9.1:8461/api-radius",
+    "default_passphrase": "asdfasdf"
   },
   "ca_openvpn": {
     "base_api_endpoint": "http://10.77.78.1:3001/racenet-openvpn",
     "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6ImI3YmUyNzIxLTg1ODItNDNiMS1iY2FiLTA0NDk1MmQzOGMzOSJ9.eyJyb2xlcyI6W3sibGV2ZWwiOjEsIm5hbWUiOiJhZG1pbiJ9XSwic3ViIjoiMDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAxIiwianRpIjoiNzcyMzVlNDUtNmViNi00OTA0LThiN2EtYWU4ZWI5ZDFkZTdiIiwiZXhwIjoxNzk2MTk1Mzk1LCJpYXQiOjE3NjQ2NTkzOTV9.RArGi1Ub6lipC-dwYMHaMcY-sYgPsv_yWVIsx4HOfXAj3o6LbI_AXHs6MmCEO5MYiSbSD8evzA5BICSV8u8b24FS5I-665oSCIa9f4PDtRmYwTD4zKzsi-LHtXoI-RJ3KykTwB9kvVOb2vmx_zIJ6CqLscsjqspfoO9ug6SNErNo4dBqQQFdZtXa7CYNzPjLrAVot9Uzgund1BmAfxWSPwFPfH4-C8Vjr-gYLrhu3WnAK4meMzqj_fxWZXMR_-Z-yoeYygZ2XrcNvXlMy5x48Npl_pVQ9d_Gb5fGcyT4RKtvQ0HN2nDGh5ArdA7Zgq8cSLPeu6IzYl-TMxvcxMNiBg",
     "default_passphrase": "asdfasdf"
   }
-
 }

@@ -1,14 +1,22 @@
 use actix_web::{HttpRequest, HttpResponse, web};
+use config::Config;
 use log::error;
 use serde::Deserialize;
 use serde_json::json;
 
 use crate::infrastructures::database::DatabaseConnection;
+use crate::infrastructures::radius::RadiusService;
 use crate::middlewares::include_request_id_middleware;
 use crate::middlewares::log_middleware;
+use crate::services::activate_device_radius_client::{
+    self, ActivateDeviceRadiusClientError, ActivateDeviceRadiusClientInput,
+};
 use crate::services::add_device::{self, AddDeviceError, AddDeviceInput};
 use crate::services::assign_device_openvpn_client::{
     self, AssignDeviceOpenvpnClientError, AssignDeviceOpenvpnClientInput,
+};
+use crate::services::deactivate_device_radius_client::{
+    self, DeactivateDeviceRadiusClientError, DeactivateDeviceRadiusClientInput,
 };
 use crate::services::delete_device::{self, DeleteDeviceError};
 use crate::services::get_all_devices;
@@ -19,7 +27,9 @@ use crate::services::unassign_device_openvpn_client::{
 use crate::services::update_device::{self, UpdateDeviceError, UpdateDeviceInput};
 use crate::utils::http_response_helper;
 use crate::utils::xss_security_helper;
+use crate::validations::device::activate_radius_client_validation;
 use crate::validations::device::assign_openvpn_client_validation;
+use crate::validations::device::deactivate_radius_client_validation;
 use crate::validations::device::store_validation::{self, StoreDevicePayload};
 use crate::validations::device::unassign_openvpn_client_validation;
 use crate::validations::device::update_validation::{self, UpdateDevicePayload};
@@ -39,6 +49,16 @@ pub struct DevicePath {
 pub struct DeviceOpenvpnClientPath {
     device_id: String,
     openvpn_client_id: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct DeviceRadiusClientPath {
+    device_id: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ActivateRadiusClientPayload {
+    device_vendor_id: i32,
 }
 
 pub async fn index(
@@ -267,6 +287,126 @@ pub async fn unassign_openvpn_client(
         }
         Err(UnassignDeviceOpenvpnClientError::Database(err)) => {
             internal_error_response(&req, request_id, "failed to unassign openvpn client", err)
+        }
+    }
+}
+
+pub async fn activate_radius_client(
+    req: HttpRequest,
+    path: web::Path<DeviceRadiusClientPath>,
+    db: web::Data<DatabaseConnection>,
+    config: web::Data<Config>,
+    radius_service: web::Data<RadiusService>,
+    payload: web::Json<ActivateRadiusClientPayload>,
+) -> HttpResponse {
+    let request_id = include_request_id_middleware::extract_request_id(&req);
+
+    let validated = match activate_radius_client_validation::validate(
+        path.device_id.clone(),
+        payload.device_vendor_id,
+    ) {
+        Ok(validated) => validated,
+        Err(errors) => return bad_request_response(errors, request_id),
+    };
+
+    let input = ActivateDeviceRadiusClientInput {
+        device_id: validated.device_id,
+        device_vendor_id: validated.device_vendor_id,
+    };
+
+    match activate_device_radius_client::execute(
+        db.get_ref(),
+        config.get_ref(),
+        radius_service.get_ref(),
+        input,
+    )
+    .await
+    {
+        Ok(entity) => {
+            log_middleware::set_extra(&req, "device_id", path.device_id.clone());
+            log_middleware::set_extra(&req, "radius_client_id", entity.radius_client_id.to_string());
+            ok_response(entity, request_id)
+        }
+        Err(ActivateDeviceRadiusClientError::DeviceNotFound) => {
+            not_found_response_custom("device not found", request_id)
+        }
+        Err(ActivateDeviceRadiusClientError::NoOpenvpnClientAssigned) => {
+            bad_request_response(
+                vec!["device has no OpenVPN client assigned".to_string()],
+                request_id,
+            )
+        }
+        Err(ActivateDeviceRadiusClientError::OpenvpnClientNotFound) => {
+            bad_request_response(
+                vec!["OpenVPN client not found".to_string()],
+                request_id,
+            )
+        }
+        Err(ActivateDeviceRadiusClientError::NoReservedIpAddress) => {
+            bad_request_response(
+                vec!["OpenVPN client has no reserved IP address".to_string()],
+                request_id,
+            )
+        }
+        Err(ActivateDeviceRadiusClientError::AlreadyActivated) => {
+            bad_request_response(
+                vec!["radius client already activated for this device".to_string()],
+                request_id,
+            )
+        }
+        Err(ActivateDeviceRadiusClientError::Config(msg)) => {
+            internal_error_response(&req, request_id, "configuration error", msg)
+        }
+        Err(ActivateDeviceRadiusClientError::RadiusApi(msg)) => {
+            internal_error_response(&req, request_id, "radius API error", msg)
+        }
+        Err(ActivateDeviceRadiusClientError::Encryption(msg)) => {
+            internal_error_response(&req, request_id, "encryption error", msg)
+        }
+        Err(ActivateDeviceRadiusClientError::Database(err)) => {
+            internal_error_response(&req, request_id, "failed to activate radius client", err)
+        }
+    }
+}
+
+pub async fn deactivate_radius_client(
+    req: HttpRequest,
+    path: web::Path<DeviceRadiusClientPath>,
+    db: web::Data<DatabaseConnection>,
+    radius_service: web::Data<RadiusService>,
+) -> HttpResponse {
+    let request_id = include_request_id_middleware::extract_request_id(&req);
+
+    let validated = match deactivate_radius_client_validation::validate(path.device_id.clone()) {
+        Ok(validated) => validated,
+        Err(errors) => return bad_request_response(errors, request_id),
+    };
+
+    let input = DeactivateDeviceRadiusClientInput {
+        device_id: validated.device_id,
+    };
+
+    match deactivate_device_radius_client::execute(db.get_ref(), radius_service.get_ref(), input)
+        .await
+    {
+        Ok(()) => ok_response(json!({ "message": "deactivated" }), request_id),
+        Err(DeactivateDeviceRadiusClientError::NoOpenvpnClientAssigned) => {
+            bad_request_response(
+                vec!["device has no OpenVPN client assigned".to_string()],
+                request_id,
+            )
+        }
+        Err(DeactivateDeviceRadiusClientError::NotActivated) => {
+            bad_request_response(
+                vec!["radius client not activated for this device".to_string()],
+                request_id,
+            )
+        }
+        Err(DeactivateDeviceRadiusClientError::RadiusApi(msg)) => {
+            internal_error_response(&req, request_id, "radius API error", msg)
+        }
+        Err(DeactivateDeviceRadiusClientError::Database(err)) => {
+            internal_error_response(&req, request_id, "failed to deactivate radius client", err)
         }
     }
 }

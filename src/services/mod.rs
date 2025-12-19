@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 
+pub mod activate_device_radius_client;
 pub mod add_device;
 pub mod add_device_connection;
 pub mod add_device_port;
@@ -9,6 +10,7 @@ pub mod add_device_type;
 pub mod add_openvpn_client;
 pub mod add_openvpn_server;
 pub mod assign_device_openvpn_client;
+pub mod deactivate_device_radius_client;
 pub mod delete_device;
 pub mod delete_device_connection;
 pub mod delete_device_port;
