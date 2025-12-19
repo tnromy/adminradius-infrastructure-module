@@ -1,5 +1,6 @@
 use actix_web::web::{self, ServiceConfig};
 
+use crate::controllers::openvpn_client_controller as client_controller;
 use crate::controllers::openvpn_server_controller as controller;
 
 pub fn configure(cfg: &mut ServiceConfig) {
@@ -12,6 +13,9 @@ pub fn configure(cfg: &mut ServiceConfig) {
             .route("", web::post().to(controller::store))
             .route("/{id}", web::get().to(controller::show))
             .route("/{id}", web::put().to(controller::update))
-            .route("/{id}", web::delete().to(controller::destroy)),
+            .route("/{id}", web::delete().to(controller::destroy))
+            // Client routes scoped under server
+            .route("/{openvpn_server_id}/client", web::post().to(client_controller::store))
+            .route("/{openvpn_server_id}/clients", web::get().to(client_controller::index)),
     );
 }

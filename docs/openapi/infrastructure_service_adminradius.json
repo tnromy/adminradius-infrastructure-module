@@ -67,6 +67,10 @@
     {
       "name": "OpenVPN Server",
       "description": "OpenVPN server management - Configure and manage OpenVPN servers with certificates and authentication"
+    },
+    {
+      "name": "OpenVPN Client",
+      "description": "OpenVPN client management - Create and manage OpenVPN client certificates for VPN connections"
     }
   ],
   "paths": {
@@ -135,6 +139,15 @@
     },
     "/openvpn-server/{id}": {
       "$ref": "./group_openvpn_server.json#/paths/~1api-infra~1openvpn-server~1{id}"
+    },
+    "/openvpn-server/{openvpn_server_id}/clients": {
+      "$ref": "./group_openvpn_client.json#/paths/~1api-infra~1openvpn-server~1{openvpn_server_id}~1clients"
+    },
+    "/openvpn-server/{openvpn_server_id}/client": {
+      "$ref": "./group_openvpn_client.json#/paths/~1api-infra~1openvpn-server~1{openvpn_server_id}~1client"
+    },
+    "/openvpn-client/{id}": {
+      "$ref": "./group_openvpn_client.json#/paths/~1api-infra~1openvpn-client~1{id}"
     }
   },
   "components": {

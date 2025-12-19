@@ -1,70 +1,28 @@
-untuk openvpn client ->
-	lakukan pemanggilan api untuk request cert baru
-		-> niali rserved ip address disimpan
-			-> langsung approve
-				hasil response dari approve langusng get PKCS12
-					langusng update ualgn niali kolom di client
+bagus. itu telah berfungsi dengan sangat baik. sekarang kita telah memiliki mekanisme penambahan dan penyimpanan sertifikat openvpn server yang lebih benar. mari kita lanjutkan ke openvpn client.
+perhatikan instruksi saya di bawah ini:
 
-jangan gabugnkan reqeust, aprove dan get pkcs12 agar function bisa reuseable masing-masing
+1. perhatikan bagaimana file route untuk openvpn  server ditulis, lalu tambahkan route baru ke file openvpn server route itu
+src/routes/openvpn_server_route.rs
 
-buat repostory api untuk openvpn CA
-	
+tambahkan route dengan path:
+openvpn-server/{openvpn_server_id}/client, method POST. untuk menambahkan openvpn client baru berdasarkan server tertentu.
 
+openvpn-server/{openvpn_server_id}/clients, method GET, untuk mendapatkan list openvpn client di server tertentu.
 
-	---
-	response req cert vpn:
+perhatikan penulisannya dengan baik. ada yang singular dan ada yang plural. ada 'client' ada 'clients'
+itu sesuai dengan konvensi penulisan path api.
 
-	{
-    "status": {
-        "code": 200,
-        "message": "Ok"
-    },
-    "request_id": "d88dfef9-2b3c-47c3-bbb2-1de484595233",
-    "data": {
-        "certificate_request_id": "5da002e2-4dbc-41f7-aea9-7734e9bdfd9e",
-        "message": "Certificate request generated successfully",
-        "requested_at": "2025-12-01T07:50:46.369087+00:00",
-        "reserved_ip_address": "10.8.9.5"
-    }
-}
+lalu setelah itu buat juga file route baru yaitu openvpn_client_route.rs
+di dalamnya akan ada path yaitu:
+openvpn-client/{openvpn_client_id}, method GET dan DELETE.
+ada 2 route.
 
-### prompt:
-bagus. mari kita lanjutkan.
+keduanya terpisah dari route openvpn-server sebelumnya karena telah memiliki id sendiri. ini adalah untuk show atau mendapatkan detail informasi dari 1 openvpn client berdasarkan id nya dan juga untuk menghapus sertifikat openvpn client tersebut.
 
-selanjutnya kita akan memperbaiki table migration aaa agar menambahkan kolom 'encrypted_private_key_pem'
-pahami konteks bahwa project saat ini masih di tahap development sehingga tidak dibutuhkan alter table untuk menambahkan kolom itu. langsung saja lakukan perubahan pada file tersebut.
-
-akibat menambah kolom itu, maka kita perlu menyesuaikan ulang file entity, repository, service, validation dan documentation.
-
-namun agar pekerjaan lebih efisien, saya ingin sekali  memperbaiki mekanisme kerja dari service add openvpn server.
-perhatikan service add openvpn service bbb saat ini. pahami konteksnya, telusuri secara vertikal slicing mulai dari route hingga repositorynya.
-karena ada hal yang akan saya ubah pada route endpoint add openvpn server yaitu:
-1. endpoint untuk add openvpn server yang saat ini sudah ada yaitu path: '/openvpn-server', method post
-kondisi saat ini, endpoint ini menerima body request seperti ini:
-{
-    "name": "vpn-server-01.example.com",
-    "host": "10.0.1.100",
-    "ca_chain_pem": "-----BEGIN CERTIFICATE-----\\nMIIG8jCCBNqgAwIBAgICA...\\n-----END CERTIFICATE-----",
-    "dh_pem": "-----BEGIN DH PARAMETERS-----\\nMIIBCAKCAQEA...\\n-----END DH PARAMETERS-----",
-    "port": 1194,
-    "proto": "tcp",
-    "cipher": "AES-256-GCM",
-    "auth_algorithm": "SHA256",
-    "tls_key_pem": "-----BEGIN OpenVPN Static key V1-----\\n...\\n-----END OpenVPN Static key V1-----",
-    "tls_key_mode": "1",
-    "remote_cert_tls_name": "server",
-    "crl_distribution_point": "http://ca.example.com/crl.pem"
-}
-
-hal inilah yang akan kita perbaiki.
-
-1. dh_pem sudah tidak diperlukan lagi. sepertinya ini sudah kita hapus di tahap sebelumnya. tapi bisa dipastikan kembali.
-2. nilai "ca_chain_pem" tidak ditulis hard code dari body reqeust lagi. tapi akan didapatkan dari proses otomatis nantinya.
-
-pada file src/services/add_openvpn_server.rs,  sebelum menyimpan nilai-nilai itu ke database maka kita panggil dulu repository api CA openvpn yang telah kita buat di tahap sebelumnya.
-yaitu:
-1. buatlah nilai baru di config/default.json dengan nama default_passphrase di bagian ca_openvpn. nilai ini akan digunakan untuk banyak proses kedepannya.
-2. persiapkan infrastructure untuk ca openvpn yang ada di file src/infrastructures/ca_openvpn.rs karena ini akan dibutuhkan di tahap selanjutnya sebagai params.
-3. di file service src/services/add_openvpn_server.rs, di awal proses, sebelum menyimpan nilai ke database, lakukan pemanggilan repository api ca openvpn pada function create_csr_server() dengan meneruskan params pertama adalh infrasturctures ca openvpn yang disiapkan di tahap kedua di atas. lalu params kedua adalah passphrase yagn diambil dari config default.json pada nilai ca_openvpn -> default_passphrase, lalu params ketiga adalah nilai 'name' dari body request. function ini akan return entity sesuai yang tadi kita kerjakan. simpan hasil return itu pada variable csr_server_data. buka dan pahami terlebih dahulu file repository api ca openvpn dan hubungannya dengan file src/infrastructures/ca_openvpn.rs agar anda memiliki informasi yang cukup.
-4. selanjutnya setelah selesai memanggil function create_csr_server() dan telah mendapatkan response, maka lakukan pemanggilan repository api ca openvpn pada function approve_csr() dengan meneruskan params pertama adalh infrasturcture ca openvpn di tahap 2 di atas, lalu params kedua adalah csr_server_data.certificate_reqeust_id. function itu akan return data dalam format entity yang telah ditentukan pada tahap sebelumnya. simpan response itu ke variabel certificate_data
-5. langkah selanjutnay adalah, memanggil repository api ca openvpn pada function 
+2. services
+buatlah services untuk add_openvpn_client.rs, get_openvpn_clients.rs, show_openvpn_client.rs, dan delete_openvpn_client.rs
+perhatikan penulisan file service sebelumnya agar penulisan menjadi seragam dan konsisten. detail utnuk file services tersebut adalh seperti di bawah ini:
+a. add openvpn client:
+secara umum, mekanisme kerja add openvpn client ini hampir mirip dengan service add openvpn server. hanya ada perbedaan di beberapa hal. sehingga sebagain penulisannya bisa ditiru dari penulisan service add openvpn server.
+service add openvpn client ini hanya menerima 2 parameters dari reqeust api. yaitu id openvpn server (wajib) dan 'name' string yang opsional. 'name' boleh saja tidak diisi.
+selanjtunya hal pertama yagn akan dilakukan adalh memanggil service src/services/show_openvpn_server.rs
