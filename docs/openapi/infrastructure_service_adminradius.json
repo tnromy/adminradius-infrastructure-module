@@ -79,6 +79,10 @@
     {
       "name": "Device Radius Client",
       "description": "Device RADIUS client management - Activate and deactivate RADIUS clients for devices with assigned OpenVPN clients"
+    },
+    {
+      "name": "Radius Client",
+      "description": "RADIUS client operations - Retrieve RADIUS vendors and manage RADIUS client configurations"
     }
   ],
   "paths": {
@@ -162,6 +166,9 @@
     },
     "/device/{device_id}/radius-client": {
       "$ref": "./group_device_radius_client.json#/paths/~1api-infra~1device~1{device_id}~1radius-client"
+    },
+    "/radius-client/vendors": {
+      "$ref": "./group_radius_client.json#/paths/~1api-infra~1radius-client~1vendors"
     }
   },
   "components": {

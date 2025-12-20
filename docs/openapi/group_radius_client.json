@@ -1,0 +1,133 @@
+{
+  "paths": {
+    "/api-infra/radius-client/vendors": {
+      "get": {
+        "tags": [
+          "Radius Client"
+        ],
+        "summary": "Get all RADIUS vendors",
+        "description": "Retrieve a list of all available RADIUS vendors. The data is cached in Redis for performance. If not in cache, it will be fetched from the external RADIUS API.",
+        "operationId": "getAllRadiusVendors",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/RadiusVendor"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "RadiusVendor": {
+        "type": "object",
+        "description": "RADIUS vendor entity representing a network equipment vendor",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Unique identifier for the vendor",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the vendor",
+            "example": "Mikrotik"
+          },
+          "version": {
+            "type": "string",
+            "description": "Version or additional information about the vendor",
+            "example": "RouterOS v7"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "version"
+        ]
+      }
+    },
+    "responses": {
+      "InternalServerError": {
+        "description": "Internal server error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 500
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Internal Server Error"
+                    }
+                  }
+                },
+                "request_id": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "errors": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "example": [
+                    "failed to fetch radius vendors"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

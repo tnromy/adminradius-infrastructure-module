@@ -9,3 +9,4 @@ pub mod device_port_specification_controller;
 pub mod device_type_controller;
 pub mod openvpn_client_controller;
 pub mod openvpn_server_controller;
+pub mod radius_client_controller;
