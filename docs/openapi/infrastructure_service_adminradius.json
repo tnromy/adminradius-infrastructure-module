@@ -75,6 +75,10 @@
     {
       "name": "Device OpenVPN Client",
       "description": "Device OpenVPN client assignment - Associate devices with OpenVPN clients (only Router type devices)"
+    },
+    {
+      "name": "Device Radius Client",
+      "description": "Device RADIUS client management - Activate and deactivate RADIUS clients for devices with assigned OpenVPN clients"
     }
   ],
   "paths": {
@@ -155,6 +159,9 @@
     },
     "/device/{device_id}/openvpn-client/{openvpn_client_id}": {
       "$ref": "./group_device_openvpn_client.json#/paths/~1api-infra~1device~1{device_id}~1openvpn-client~1{openvpn_client_id}"
+    },
+    "/device/{device_id}/radius-client": {
+      "$ref": "./group_device_radius_client.json#/paths/~1api-infra~1device~1{device_id}~1radius-client"
     }
   },
   "components": {

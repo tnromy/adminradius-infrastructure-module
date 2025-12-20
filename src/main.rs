@@ -11,6 +11,7 @@ mod validations;
 
 use infrastructures::database::initialize_database;
 use infrastructures::http_server::{HttpService, load_config};
+use infrastructures::radius::RadiusService;
 use infrastructures::redis::initialize_redis;
 use infrastructures::s3::initialize_s3;
 
@@ -44,7 +45,11 @@ async fn main() -> std::io::Result<()> {
         .expect("Failed to initialize S3 connection");
     log::info!("s3 initialized");
 
-    let http = HttpService::new(config.clone(), db, redis, s3);
+    let radius = RadiusService::new(config.as_ref())
+        .expect("Failed to initialize Radius service");
+    log::info!("radius service initialized");
+
+    let http = HttpService::new(config.clone(), db, redis, s3, radius);
     log::info!("starting http server");
     http.start().await
 }

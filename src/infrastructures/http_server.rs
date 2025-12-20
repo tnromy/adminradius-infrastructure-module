@@ -5,6 +5,7 @@ use config::{Config, File};
 
 use crate::infrastructures::database::DatabaseConnection;
 use crate::infrastructures::elastic_search::ElasticSearchService;
+use crate::infrastructures::radius::RadiusService;
 use crate::infrastructures::redis::RedisConnection;
 use crate::infrastructures::s3::S3Service;
 use crate::middlewares::{
@@ -16,6 +17,7 @@ pub struct HttpService {
     db_connection: DatabaseConnection,
     redis_connection: RedisConnection,
     s3_service: S3Service,
+    radius_service: RadiusService,
 }
 
 impl HttpService {
@@ -24,12 +26,14 @@ impl HttpService {
         db_connection: DatabaseConnection,
         redis_connection: RedisConnection,
         s3_service: S3Service,
+        radius_service: RadiusService,
     ) -> Self {
         Self {
             config,
             db_connection,
             redis_connection,
             s3_service,
+            radius_service,
         }
     }
 
@@ -44,6 +48,7 @@ impl HttpService {
         let db_connection = self.db_connection.clone();
         let redis_connection = self.redis_connection.clone();
         let s3_service = self.s3_service.clone();
+        let radius_service = self.radius_service.clone();
         let config_arc = self.config.clone();
         let es_service = ElasticSearchService::new(config_arc.as_ref()).ok();
 
@@ -68,6 +73,7 @@ impl HttpService {
                 .app_data(web::Data::new(db_connection.clone()))
                 .app_data(web::Data::new(redis_connection.clone()))
                 .app_data(web::Data::new(s3_service.clone()))
+                .app_data(web::Data::new(radius_service.clone()))
                 .app_data(web::Data::from(config_arc.clone()))
                 .app_data(web::Data::new(es_service.clone()))
                 .wrap(LogMiddleware)

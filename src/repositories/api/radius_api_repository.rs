@@ -26,7 +26,8 @@ pub struct AddRadiusClientResponse {
 /// Response from deleting a RADIUS client
 #[derive(Debug, Deserialize)]
 pub struct DeleteRadiusClientResponse {
-    pub deleted: bool,
+    pub message: String,
+    pub status: String,
 }
 
 /// Get all RADIUS vendors from the Radius API
@@ -177,13 +178,14 @@ pub async fn delete_client(
     log::debug!("radius_api:delete_client:prepare client_id={}", client_id);
     let start = Instant::now();
 
-    let endpoint = format!("/radius-client/{}", client_id);
+    let endpoint = format!("/client/{}", client_id);
     match radius_service.delete::<DeleteRadiusClientResponse>(&endpoint).await {
         Ok(response) => {
             log::debug!(
-                "radius_api:delete_client:ok client_id={} deleted={} elapsed_ms={}",
+                "radius_api:delete_client:ok client_id={} status={} message={} elapsed_ms={}",
                 client_id,
-                response.deleted,
+                response.status,
+                response.message,
                 start.elapsed().as_millis()
             );
             Ok(response)
