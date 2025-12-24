@@ -1,7 +1,7 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "AdminRadius Infrastructure Service API",
+    "title": "infra.adminradius.com",
     "description": "API for managing network infrastructure including devices, ports, connections, and topologies. This service provides comprehensive endpoints for CRUD operations on network components and their relationships.",
     "version": "1.0.0",
     "contact": {
