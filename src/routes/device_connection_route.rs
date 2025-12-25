@@ -1,22 +1,24 @@
 use actix_web::web::{self, ServiceConfig};
 
 use crate::controllers::device_connection_controller as controller;
+use crate::middlewares::allowed_branches_middleware::AllowedBranchesMiddleware;
+use crate::middlewares::authentication_middleware::AuthenticationMiddleware;
 
 pub fn configure(cfg: &mut ServiceConfig) {
     cfg.service(
-        web::resource("/device/{device_id}/connections")
-            .route(web::get().to(controller::index)),
+        web::scope("/device/{device_id}/connections")
+            .wrap(AllowedBranchesMiddleware)
+            .wrap(AuthenticationMiddleware)
+            .route("", web::get().to(controller::index)),
     );
 
     cfg.service(
-        web::resource("/device/{device_id}/connection")
-            .route(web::post().to(controller::store)),
-    );
-
-    cfg.service(
-        web::resource("/device/{device_id}/connection/{connection_id}")
-            .route(web::get().to(controller::show))
-            .route(web::put().to(controller::update))
-            .route(web::delete().to(controller::destroy)),
+        web::scope("/device/{device_id}/connection")
+            .wrap(AllowedBranchesMiddleware)
+            .wrap(AuthenticationMiddleware)
+            .route("", web::post().to(controller::store))
+            .route("/{connection_id}", web::get().to(controller::show))
+            .route("/{connection_id}", web::put().to(controller::update))
+            .route("/{connection_id}", web::delete().to(controller::destroy)),
     );
 }

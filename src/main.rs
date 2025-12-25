@@ -11,6 +11,7 @@ mod validations;
 
 use infrastructures::database::initialize_database;
 use infrastructures::http_server::{HttpService, load_config};
+use infrastructures::oauth2_issuer::initialize_oauth2_issuer;
 use infrastructures::radius::RadiusService;
 use infrastructures::redis::initialize_redis;
 use infrastructures::s3::initialize_s3;
@@ -49,7 +50,11 @@ async fn main() -> std::io::Result<()> {
         .expect("Failed to initialize Radius service");
     log::info!("radius service initialized");
 
-    let http = HttpService::new(config.clone(), db, redis, s3, radius);
+    let oauth2_issuer = initialize_oauth2_issuer(config.as_ref())
+        .expect("Failed to initialize OAuth2 issuer service");
+    log::info!("oauth2 issuer initialized");
+
+    let http = HttpService::new(config.clone(), db, redis, s3, radius, oauth2_issuer);
     log::info!("starting http server");
     http.start().await
 }

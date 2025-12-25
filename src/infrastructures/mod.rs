@@ -3,6 +3,7 @@ pub mod database;
 pub mod elastic_search;
 pub mod http_server;
 pub mod load_ca;
+pub mod oauth2_issuer;
 pub mod radius;
 pub mod redis;
 pub mod s3;

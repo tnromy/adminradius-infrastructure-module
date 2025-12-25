@@ -109,7 +109,9 @@
                       "items": {
                         "type": "string"
                       },
-                      "example": ["device must be of type 'Router' to assign OpenVPN client"]
+                      "example": [
+                        "device must be of type 'Router' to assign OpenVPN client"
+                      ]
                     }
                   }
                 }
@@ -121,6 +123,12 @@
           },
           "500": {
             "$ref": "#/components/responses/InternalServerError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
           }
         }
       },
@@ -209,6 +217,12 @@
           },
           "500": {
             "$ref": "#/components/responses/InternalServerError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
           }
         }
       }
@@ -251,7 +265,13 @@
             "description": "Record last update timestamp"
           }
         },
-        "required": ["id", "device_id", "openvpn_client_id", "created_at", "updated_at"]
+        "required": [
+          "id",
+          "device_id",
+          "openvpn_client_id",
+          "created_at",
+          "updated_at"
+        ]
       }
     },
     "responses": {
@@ -292,7 +312,9 @@
                   "items": {
                     "type": "string"
                   },
-                  "example": ["device_id must be a valid UUID"]
+                  "example": [
+                    "device_id must be a valid UUID"
+                  ]
                 }
               }
             }
@@ -336,7 +358,9 @@
                   "items": {
                     "type": "string"
                   },
-                  "example": ["device not found"]
+                  "example": [
+                    "device not found"
+                  ]
                 }
               }
             }
@@ -380,7 +404,113 @@
                   "items": {
                     "type": "string"
                   },
-                  "example": ["failed to assign openvpn client"]
+                  "example": [
+                    "failed to assign openvpn client"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Unauthorized - Authentication required or invalid credentials",
+        "headers": {
+          "x-request-id": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Request identifier for tracing"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 401
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                },
+                "request_id": {
+                  "type": "string",
+                  "nullable": true,
+                  "example": "req_abc123xyz"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": [
+                        "Authentication required"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Forbidden - Insufficient permissions",
+        "headers": {
+          "x-request-id": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Request identifier for tracing"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 403
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Forbidden"
+                    }
+                  }
+                },
+                "request_id": {
+                  "type": "string",
+                  "nullable": true,
+                  "example": "req_abc123xyz"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": [
+                        "Insufficient permissions"
+                      ]
+                    }
+                  }
                 }
               }
             }
