@@ -1,7 +1,9 @@
+use chrono::{DateTime, Utc};
 use serde_json::Value;
 use sqlx::{Executor, Postgres, Row, postgres::PgRow};
 
 use crate::entities::device_entity::DeviceEntity;
+use crate::entities::device_type_entity::DeviceTypeEntity;
 
 #[derive(Debug, Clone)]
 pub struct DeviceTopologyNode {
@@ -14,6 +16,17 @@ pub struct DeviceTopologyNode {
 }
 
 fn row_to_device(row: &PgRow) -> DeviceEntity {
+    // Parse device_type from joined columns (if available)
+    let device_type = match row.try_get::<String, _>("dt_id") {
+        Ok(id) => Some(DeviceTypeEntity {
+            id,
+            name: row.get("dt_name"),
+            created_at: row.get::<DateTime<Utc>, _>("dt_created_at"),
+            updated_at: row.get("dt_updated_at"),
+        }),
+        Err(_) => None,
+    };
+
     DeviceEntity {
         id: row.get("device_id"),
         branch_id: row.get("d_branch_id"),
@@ -25,7 +38,7 @@ fn row_to_device(row: &PgRow) -> DeviceEntity {
         specifications: row.get("d_specifications"),
         created_at: row.get("d_created_at"),
         updated_at: row.get("d_updated_at"),
-        device_type: None,
+        device_type,
     }
 }
 
@@ -106,9 +119,14 @@ where
                 d.location_details AS d_location_details,
                 d.specifications AS d_specifications,
                 d.created_at AS d_created_at,
-                d.updated_at AS d_updated_at
+                d.updated_at AS d_updated_at,
+                dt.id AS dt_id,
+                dt.name AS dt_name,
+                dt.created_at AS dt_created_at,
+                dt.updated_at AS dt_updated_at
             FROM topology t
             JOIN devices d ON d.id = t.device_id
+            LEFT JOIN device_types dt ON dt.id = d.device_type_id
             ORDER BY t.path
         "#,
     )
