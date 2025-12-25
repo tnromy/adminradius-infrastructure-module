@@ -96,8 +96,13 @@ where
             // Check required dependencies
             let (redis, oauth2_issuer, config) = match (redis_opt, oauth2_issuer_opt, config_opt) {
                 (Some(r), Some(o), Some(c)) => (r, o, c),
-                _ => {
-                    log::error!("authentication_middleware: missing required dependencies");
+                (r, o, c) => {
+                    log::error!(
+                        "authentication_middleware: missing required dependencies redis={} oauth2={} config={}",
+                        r.is_some(),
+                        o.is_some(),
+                        c.is_some()
+                    );
                     return Ok(req.into_response(
                         actix_web::HttpResponse::InternalServerError()
                             .json(serde_json::json!({
@@ -111,7 +116,7 @@ where
             match validate_jwt::execute(
                 &redis.pool(),
                 oauth2_issuer.get_ref(),
-                &config,
+                config.get_ref(),
                 &token,
             )
             .await

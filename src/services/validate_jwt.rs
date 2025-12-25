@@ -84,18 +84,10 @@ pub async fn execute(
 
     log::debug!("service:validate_jwt:execute:kid={}", kid);
 
-    // 2. Get JWKS (from cache or API)
-    let jwks = get_jwks::execute(redis_pool, oauth2_issuer, config)
-        .await
-        .map_err(JwtValidationError::JwksFetchError)?;
+    // 2. Get JWKS (from cache or API) and find the key
+    let decoding_key = get_decoding_key_for_kid(redis_pool, oauth2_issuer, config, &kid).await?;
 
-    // 3. Find the key with matching kid
-    let jwk = find_key_by_kid(&jwks, &kid)?;
-
-    // 4. Create decoding key from JWK
-    let decoding_key = create_decoding_key(jwk)?;
-
-    // 5. Get expected values from config
+    // 3. Get expected values from config
     let expected_issuer = config
         .get_string("oauth2.issuer")
         .map_err(|e| {
@@ -107,14 +99,14 @@ pub async fn execute(
             JwtValidationError::InternalError(format!("config error: {}", e))
         })?;
 
-    // 6. Setup validation
+    // 4. Setup validation
     let mut validation = Validation::new(Algorithm::RS256);
     validation.validate_exp = true;
     validation.set_issuer(&[&expected_issuer]);
     // Disable aud validation, we validate azp instead
     validation.validate_aud = false;
 
-    // 7. Decode and validate JWT
+    // 5. Decode and validate JWT
     let token_data = decode::<AccessTokenPayloadEntity>(
         token,
         &decoding_key,
@@ -141,7 +133,7 @@ pub async fn execute(
 
     let payload = token_data.claims;
 
-    // 8. Validate azp (authorized party) matches client_id
+    // 6. Validate azp (authorized party) matches client_id
     if payload.azp != expected_client_id {
         log::error!(
             "service:validate_jwt:execute:invalid_azp expected={} actual={}",
@@ -154,7 +146,7 @@ pub async fn execute(
         });
     }
 
-    // 9. Validate iss matches expected issuer
+    // 7. Validate iss matches expected issuer
     if payload.iss != expected_issuer {
         log::error!(
             "service:validate_jwt:execute:invalid_iss expected={} actual={}",
@@ -182,10 +174,58 @@ fn find_key_by_kid<'a>(
     jwks: &'a JwksEntity,
     kid: &str,
 ) -> Result<&'a crate::entities::jwks_entity::JwkKeyEntity, JwtValidationError> {
+    // Log available kids for debugging
+    let available_kids: Vec<&str> = jwks.keys.iter().map(|k| k.kid.as_str()).collect();
+    log::debug!(
+        "service:validate_jwt:find_key_by_kid looking_for={} available={:?}",
+        kid,
+        available_kids
+    );
+
     jwks.keys
         .iter()
         .find(|key| key.kid == kid)
-        .ok_or_else(|| JwtValidationError::KeyNotFound(kid.to_string()))
+        .ok_or_else(|| {
+            log::error!(
+                "service:validate_jwt:find_key_by_kid:not_found kid={} available_kids={:?}",
+                kid,
+                available_kids
+            );
+            JwtValidationError::KeyNotFound(kid.to_string())
+        })
+}
+
+/// Get decoding key for a specific kid, with automatic refresh if not found
+async fn get_decoding_key_for_kid(
+    redis_pool: &Arc<Pool>,
+    oauth2_issuer: &OAuth2IssuerService,
+    config: &Arc<Config>,
+    kid: &str,
+) -> Result<DecodingKey, JwtValidationError> {
+    // First, try to get JWKS from cache
+    let jwks = get_jwks::execute(redis_pool, oauth2_issuer, config)
+        .await
+        .map_err(JwtValidationError::JwksFetchError)?;
+
+    // Try to find the key
+    if let Some(jwk) = jwks.keys.iter().find(|key| key.kid == kid) {
+        log::debug!("service:validate_jwt:get_decoding_key:found_in_cache kid={}", kid);
+        return create_decoding_key(jwk);
+    }
+
+    // Key not found in cache, try force refresh from OAuth2 issuer
+    log::info!(
+        "service:validate_jwt:get_decoding_key:kid_not_in_cache_refreshing kid={}",
+        kid
+    );
+
+    let jwks_refreshed = get_jwks::execute_force_refresh(redis_pool, oauth2_issuer, config)
+        .await
+        .map_err(JwtValidationError::JwksFetchError)?;
+
+    // Try to find the key after refresh
+    let jwk = find_key_by_kid(&jwks_refreshed, kid)?;
+    create_decoding_key(jwk)
 }
 
 /// Create DecodingKey from JWK (RSA)

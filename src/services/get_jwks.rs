@@ -26,7 +26,10 @@ pub async fn execute(
     // 1. Try to get JWKS from Redis cache
     match jwks_redis_repository::get(&mut conn).await {
         Ok(Some(jwks)) => {
-            log::debug!("service:get_jwks:execute:cache_hit");
+            log::debug!(
+                "service:get_jwks:execute:cache_hit keys_count={}",
+                jwks.keys.len()
+            );
             return Ok(jwks);
         }
         Ok(None) => {
@@ -58,6 +61,44 @@ pub async fn execute(
         // Continue even if cache store fails
     } else {
         log::debug!("service:get_jwks:execute:cached ttl={}", cache_expires);
+    }
+
+    Ok(jwks)
+}
+
+/// Force refresh JWKS from OAuth2 issuer (bypass cache)
+/// Used when kid is not found in cached JWKS
+pub async fn execute_force_refresh(
+    redis_pool: &Arc<Pool>,
+    oauth2_issuer: &OAuth2IssuerService,
+    config: &Arc<Config>,
+) -> Result<JwksEntity, String> {
+    log::debug!("service:get_jwks:execute_force_refresh:start");
+
+    // 1. Fetch JWKS from OAuth2 issuer API directly (bypass cache)
+    let jwks = oauth2_issuer_api_repository::get_jwks(oauth2_issuer)
+        .await
+        .map_err(|e| format!("get_jwks failed: {}", e))?;
+
+    log::debug!(
+        "service:get_jwks:execute_force_refresh:fetched keys_count={}",
+        jwks.keys.len()
+    );
+
+    // 2. Update Redis cache with fresh JWKS
+    let cache_expires = config
+        .get_int("oauth2.jwks_cache_expires")
+        .unwrap_or(DEFAULT_JWKS_CACHE_EXPIRES);
+
+    let mut conn = redis_pool
+        .get()
+        .await
+        .map_err(|e| format!("redis pool get error: {}", e))?;
+
+    if let Err(e) = jwks_redis_repository::set(&mut conn, &jwks, cache_expires).await {
+        log::warn!("service:get_jwks:execute_force_refresh:cache_store_error err={}", e);
+    } else {
+        log::debug!("service:get_jwks:execute_force_refresh:cached ttl={}", cache_expires);
     }
 
     Ok(jwks)

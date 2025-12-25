@@ -21,8 +21,8 @@
     }
   },
   "oauth2": {
-    "issuer": "https://your-oauth2-issuer.domain.com",
-    "client_id": "your-client-uuid",
+    "issuer": "https://racenet.accounts.id",
+    "client_id": "0199048b-bc06-716f-bd68-a9ca2f099276",
     "jwks_path": "/jwks",
     "jwks_cache_expires": 86400
   },
