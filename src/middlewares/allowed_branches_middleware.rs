@@ -18,7 +18,7 @@ use crate::middlewares::authentication_middleware::AuthPayload;
 /// This middleware extracts allowed branch IDs from JWT roles and stores them
 /// in request extensions. It must be used AFTER AuthenticationMiddleware.
 /// 
-/// Role name format: "<role_type>:<branch_id>"
+/// Role name format: "<role_type>@<branch_id>"
 /// - If branch_id is "any", user has access to ALL branches
 /// - Otherwise, branch_id is a specific UUID
 pub struct AllowedBranchesMiddleware;
@@ -111,7 +111,7 @@ where
 /// Extract allowed branch IDs from JWT roles
 /// 
 /// Parses the client roles and extracts branch_id from each role's name.
-/// Role name format: "<role_type>:<branch_id>"
+/// Role name format: "<role_type>@<branch_id>"
 /// 
 /// If any role has branch_id "any", returns AllowedBranches with has_any_access=true
 fn extract_allowed_branch_ids(payload: &AccessTokenPayloadEntity) -> AllowedBranches {
@@ -120,8 +120,8 @@ fn extract_allowed_branch_ids(payload: &AccessTokenPayloadEntity) -> AllowedBran
 
     // Process client roles
     for role in &payload.roles.client {
-        // Split role name by ":" to get branch_id
-        let parts: Vec<&str> = role.name.split(':').collect();
+        // Split role name by "@" to get branch_id
+        let parts: Vec<&str> = role.name.split('@').collect();
         
         if parts.len() >= 2 {
             let branch_id = parts[1];
