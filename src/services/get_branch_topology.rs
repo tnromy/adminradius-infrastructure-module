@@ -55,6 +55,7 @@ impl BranchTopologyDevice {
 pub struct BranchTopologyNode {
     pub device: BranchTopologyDevice,
     pub parent_device_port_id: Option<String>,
+    pub uplink_port_id: Option<String>,
     pub connection_id: Option<String>,
     pub connection_details: Option<serde_json::Value>,
     pub level: i32,
@@ -91,6 +92,7 @@ pub async fn execute(
             BranchTopologyNode {
                 device: BranchTopologyDevice::new(node.device, device_ports),
                 parent_device_port_id: node.parent_device_port_id,
+                uplink_port_id: node.uplink_port_id,
                 connection_id: node.connection_id,
                 connection_details: node.connection_details,
                 level: node.level,

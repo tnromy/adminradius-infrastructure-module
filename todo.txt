@@ -1,28 +1,3 @@
-bagus. itu telah berfungsi dengan sangat baik. sekarang kita telah memiliki mekanisme penambahan dan penyimpanan sertifikat openvpn server yang lebih benar. mari kita lanjutkan ke openvpn client.
-perhatikan instruksi saya di bawah ini:
-
-1. perhatikan bagaimana file route untuk openvpn  server ditulis, lalu tambahkan route baru ke file openvpn server route itu
-src/routes/openvpn_server_route.rs
-
-tambahkan route dengan path:
-openvpn-server/{openvpn_server_id}/client, method POST. untuk menambahkan openvpn client baru berdasarkan server tertentu.
-
-openvpn-server/{openvpn_server_id}/clients, method GET, untuk mendapatkan list openvpn client di server tertentu.
-
-perhatikan penulisannya dengan baik. ada yang singular dan ada yang plural. ada 'client' ada 'clients'
-itu sesuai dengan konvensi penulisan path api.
-
-lalu setelah itu buat juga file route baru yaitu openvpn_client_route.rs
-di dalamnya akan ada path yaitu:
-openvpn-client/{openvpn_client_id}, method GET dan DELETE.
-ada 2 route.
-
-keduanya terpisah dari route openvpn-server sebelumnya karena telah memiliki id sendiri. ini adalah untuk show atau mendapatkan detail informasi dari 1 openvpn client berdasarkan id nya dan juga untuk menghapus sertifikat openvpn client tersebut.
-
-2. services
-buatlah services untuk add_openvpn_client.rs, get_openvpn_clients.rs, show_openvpn_client.rs, dan delete_openvpn_client.rs
-perhatikan penulisan file service sebelumnya agar penulisan menjadi seragam dan konsisten. detail utnuk file services tersebut adalh seperti di bawah ini:
-a. add openvpn client:
-secara umum, mekanisme kerja add openvpn client ini hampir mirip dengan service add openvpn server. hanya ada perbedaan di beberapa hal. sehingga sebagain penulisannya bisa ditiru dari penulisan service add openvpn server.
-service add openvpn client ini hanya menerima 2 parameters dari reqeust api. yaitu id openvpn server (wajib) dan 'name' string yang opsional. 'name' boleh saja tidak diisi.
-selanjtunya hal pertama yagn akan dilakukan adalh memanggil service src/services/show_openvpn_server.rs
+buat mekanisme mirip cara kerja petir untuk identifiaksi node active -> daptkan sturktur ke atas, ke samping dan ke bawah
+tanp detail keseluruhan
+untuk get list topology

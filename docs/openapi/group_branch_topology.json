@@ -86,32 +86,46 @@
     "schemas": {
       "TopologyNode": {
         "type": "object",
-        "description": "Represents a node in the network topology structure, which could be a device with its ports and connections",
+        "description": "Represents a node in the network topology structure, including device details, ports, and connection information to parent",
         "properties": {
           "device": {
-            "$ref": "#/components/schemas/Device"
+            "$ref": "#/components/schemas/TopologyDevice"
           },
-          "ports": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/DevicePort"
-            },
-            "description": "All ports belonging to this device"
+          "parent_device_port_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "The port ID on the parent device that connects to this device (from_port_id in device_connections)"
           },
-          "connections": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/DeviceConnection"
-            },
-            "description": "All connections involving this device's ports"
+          "uplink_port_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "The port ID on this device that connects to the parent device (to_port_id in device_connections)"
+          },
+          "connection_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "The ID of the connection between this device and its parent"
+          },
+          "connection_details": {
+            "type": "object",
+            "nullable": true,
+            "description": "Additional connection details (cable type, length, etc.)"
+          },
+          "level": {
+            "type": "integer",
+            "description": "The depth level in the topology tree (0 = root device)"
           }
         },
         "example": {
           "device": {
             "id": "660e8400-e29b-41d4-a716-446655440001",
             "branch_id": "550e8400-e29b-41d4-a716-446655440000",
-            "name": "Router Core-01",
+            "name": "Switch-01",
             "device_type_id": "770e8400-e29b-41d4-a716-446655440002",
+            "device_type": "Switch",
             "latitude": -6.2088,
             "longitude": 106.8456,
             "location_details": {
@@ -123,36 +137,90 @@
               "serial_number": "SN123456789"
             },
             "created_at": "2025-01-15T10:30:00Z",
-            "updated_at": "2025-01-15T14:45:00Z"
+            "updated_at": "2025-01-15T14:45:00Z",
+            "ports": [
+              {
+                "id": "880e8400-e29b-41d4-a716-446655440003",
+                "device_id": "660e8400-e29b-41d4-a716-446655440001",
+                "port_interface_id": "990e8400-e29b-41d4-a716-446655440004",
+                "name": "GigabitEthernet0/1",
+                "position": 1,
+                "enabled": true,
+                "properties": {
+                  "speed": "1000Mbps"
+                },
+                "created_at": "2025-01-15T10:35:00Z",
+                "updated_at": "2025-01-15T10:35:00Z"
+              }
+            ]
           },
-          "ports": [
-            {
-              "id": "880e8400-e29b-41d4-a716-446655440003",
-              "device_id": "660e8400-e29b-41d4-a716-446655440001",
-              "port_interface_id": "990e8400-e29b-41d4-a716-446655440004",
-              "name": "GigabitEthernet0/1",
-              "position": 1,
-              "enabled": true,
-              "properties": {
-                "speed": "1000Mbps"
-              },
-              "created_at": "2025-01-15T10:35:00Z",
-              "updated_at": "2025-01-15T10:35:00Z"
-            }
-          ],
-          "connections": [
-            {
-              "id": "bb0e8400-e29b-41d4-a716-446655440006",
-              "from_port_id": "880e8400-e29b-41d4-a716-446655440003",
-              "to_port_id": "880e8400-e29b-41d4-a716-446655440007",
-              "details": {
-                "cable_type": "fiber",
-                "cable_length": "10m"
-              },
-              "created_at": "2025-01-15T11:00:00Z",
-              "updated_at": "2025-01-15T11:00:00Z"
-            }
-          ]
+          "parent_device_port_id": "aa0e8400-e29b-41d4-a716-446655440005",
+          "uplink_port_id": "880e8400-e29b-41d4-a716-446655440003",
+          "connection_id": "bb0e8400-e29b-41d4-a716-446655440006",
+          "connection_details": {
+            "cable_type": "fiber",
+            "cable_length": "10m"
+          },
+          "level": 1
+        }
+      },
+      "TopologyDevice": {
+        "type": "object",
+        "description": "Device entity with ports embedded",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "branch_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "device_type_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "device_type": {
+            "type": "string",
+            "nullable": true,
+            "description": "Name of the device type"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "location_details": {
+            "type": "object",
+            "nullable": true
+          },
+          "specifications": {
+            "type": "object",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ports": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DevicePort"
+            },
+            "description": "All ports belonging to this device"
+          }
         }
       },
       "Device": {

@@ -1,0 +1,6228 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "infra.adminradius.com",
+    "description": "API for managing network infrastructure including devices, ports, connections, and topologies. This service provides comprehensive endpoints for CRUD operations on network components and their relationships.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "AdminRadius Team",
+      "email": "support@adminradius.com"
+    },
+    "license": {
+      "name": "Proprietary",
+      "url": "https://adminradius.com/license"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8014",
+      "description": "Local development server"
+    },
+    {
+      "url": "{protocol}://{host}:{port}",
+      "description": "Configurable server",
+      "variables": {
+        "protocol": {
+          "default": "http",
+          "enum": [
+            "http",
+            "https"
+          ]
+        },
+        "host": {
+          "default": "localhost"
+        },
+        "port": {
+          "default": "8014"
+        }
+      }
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    },
+    {
+      "cookieAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Device",
+      "description": "Device management operations - Create, read, update, and delete network devices"
+    },
+    {
+      "name": "Device Type",
+      "description": "Device type management - Define and manage types of network devices (e.g., Router, Switch, Firewall)"
+    },
+    {
+      "name": "Device Port",
+      "description": "Device port management - Manage physical and logical ports on network devices"
+    },
+    {
+      "name": "Device Port Specification",
+      "description": "Port specification management - Define technical specifications for different port types"
+    },
+    {
+      "name": "Device Port Interface",
+      "description": "Port interface management - Define interface types (e.g., GigabitEthernet, 10GigabitEthernet)"
+    },
+    {
+      "name": "Device Connection",
+      "description": "Connection management - Manage connections between device ports"
+    },
+    {
+      "name": "Branch Topology",
+      "description": "Network topology operations - Retrieve complete network topology information for branches"
+    },
+    {
+      "name": "OpenVPN Server",
+      "description": "OpenVPN server management - Configure and manage OpenVPN servers with certificates and authentication"
+    },
+    {
+      "name": "OpenVPN Client",
+      "description": "OpenVPN client management - Create and manage OpenVPN client certificates for VPN connections"
+    },
+    {
+      "name": "Device OpenVPN Client",
+      "description": "Device OpenVPN client assignment - Associate devices with OpenVPN clients (only Router type devices)"
+    },
+    {
+      "name": "Device Radius Client",
+      "description": "Device RADIUS client management - Activate and deactivate RADIUS clients for devices with assigned OpenVPN clients"
+    },
+    {
+      "name": "Radius Client",
+      "description": "RADIUS client operations - Retrieve RADIUS vendors and manage RADIUS client configurations"
+    }
+  ],
+  "externalDocs": {
+    "description": "Find more information about AdminRadius Infrastructure Service",
+    "url": "https://docs.adminradius.com/infrastructure"
+  },
+  "paths": {
+    "/branch/{branch_id}/devices": {
+      "get": {
+        "tags": [
+          "Device"
+        ],
+        "summary": "Get all devices in a branch",
+        "description": "Retrieve a list of all devices within a specific branch",
+        "operationId": "getAllDevices",
+        "parameters": [
+          {
+            "name": "branch_id",
+            "in": "path",
+            "description": "Branch UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Device"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/branch/{branch_id}/device": {
+      "post": {
+        "tags": [
+          "Device"
+        ],
+        "summary": "Create a new device",
+        "description": "Create a new device in a specific branch",
+        "operationId": "createDevice",
+        "parameters": [
+          {
+            "name": "branch_id",
+            "in": "path",
+            "description": "Branch UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Device created successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Device"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/branch/{branch_id}/device/{device_id}": {
+      "get": {
+        "tags": [
+          "Device"
+        ],
+        "summary": "Get device by ID",
+        "description": "Retrieve detailed information about a specific device",
+        "operationId": "getDeviceById",
+        "parameters": [
+          {
+            "name": "branch_id",
+            "in": "path",
+            "description": "Branch UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            }
+          },
+          {
+            "name": "device_id",
+            "in": "path",
+            "description": "Device UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "660e8400-e29b-41d4-a716-446655440001"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Device"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Device"
+        ],
+        "summary": "Update device",
+        "description": "Update an existing device's information",
+        "operationId": "updateDevice",
+        "parameters": [
+          {
+            "name": "branch_id",
+            "in": "path",
+            "description": "Branch UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            }
+          },
+          {
+            "name": "device_id",
+            "in": "path",
+            "description": "Device UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "660e8400-e29b-41d4-a716-446655440001"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Device updated successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Device"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Device"
+        ],
+        "summary": "Delete device",
+        "description": "Remove a device from the system",
+        "operationId": "deleteDevice",
+        "parameters": [
+          {
+            "name": "branch_id",
+            "in": "path",
+            "description": "Branch UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            }
+          },
+          {
+            "name": "device_id",
+            "in": "path",
+            "description": "Device UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "660e8400-e29b-41d4-a716-446655440001"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Device deleted successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "deleted"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/device-types": {
+      "get": {
+        "tags": [
+          "Device Type"
+        ],
+        "summary": "Get all device types",
+        "description": "Retrieve a list of all available device types",
+        "operationId": "getAllDeviceTypes",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/schemas-DeviceType"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/device-type": {
+      "post": {
+        "tags": [
+          "Device Type"
+        ],
+        "summary": "Create a new device type",
+        "description": "Create a new device type in the system",
+        "operationId": "createDeviceType",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceTypeCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Device type created successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/schemas-DeviceType"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/device-type/{id}": {
+      "get": {
+        "tags": [
+          "Device Type"
+        ],
+        "summary": "Get device type by ID",
+        "description": "Retrieve detailed information about a specific device type",
+        "operationId": "getDeviceTypeById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Device Type UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "770e8400-e29b-41d4-a716-446655440002"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/schemas-DeviceType"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Device Type"
+        ],
+        "summary": "Update device type",
+        "description": "Update an existing device type",
+        "operationId": "updateDeviceType",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Device Type UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "770e8400-e29b-41d4-a716-446655440002"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceTypeUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Device type updated successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "properties": {
+                        "item": {
+                          "$ref": "#/components/schemas/schemas-DeviceType"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Device Type"
+        ],
+        "summary": "Delete device type",
+        "description": "Remove a device type from the system",
+        "operationId": "deleteDeviceType",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Device Type UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "770e8400-e29b-41d4-a716-446655440002"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Device type deleted successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "deleted"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/device/{device_id}/ports": {
+      "get": {
+        "tags": [
+          "Device Port"
+        ],
+        "summary": "Get all ports of a device",
+        "description": "Retrieve a list of all ports belonging to a specific device",
+        "operationId": "getAllDevicePorts",
+        "parameters": [
+          {
+            "name": "device_id",
+            "in": "path",
+            "description": "Device UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "660e8400-e29b-41d4-a716-446655440001"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/DevicePort"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/device/{device_id}/port": {
+      "post": {
+        "tags": [
+          "Device Port"
+        ],
+        "summary": "Create a new device port",
+        "description": "Create a new port for a specific device",
+        "operationId": "createDevicePort",
+        "parameters": [
+          {
+            "name": "device_id",
+            "in": "path",
+            "description": "Device UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "660e8400-e29b-41d4-a716-446655440001"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DevicePortCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Device port created successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DevicePort"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/device/{device_id}/port/{port_id}": {
+      "get": {
+        "tags": [
+          "Device Port"
+        ],
+        "summary": "Get device port by ID",
+        "description": "Retrieve detailed information about a specific device port",
+        "operationId": "getDevicePortById",
+        "parameters": [
+          {
+            "name": "device_id",
+            "in": "path",
+            "description": "Device UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "660e8400-e29b-41d4-a716-446655440001"
+            }
+          },
+          {
+            "name": "port_id",
+            "in": "path",
+            "description": "Device Port UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "880e8400-e29b-41d4-a716-446655440003"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DevicePort"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Device Port"
+        ],
+        "summary": "Update device port",
+        "description": "Update an existing device port's information",
+        "operationId": "updateDevicePort",
+        "parameters": [
+          {
+            "name": "device_id",
+            "in": "path",
+            "description": "Device UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "660e8400-e29b-41d4-a716-446655440001"
+            }
+          },
+          {
+            "name": "port_id",
+            "in": "path",
+            "description": "Device Port UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "880e8400-e29b-41d4-a716-446655440003"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DevicePortUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Device port updated successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DevicePort"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Device Port"
+        ],
+        "summary": "Delete device port",
+        "description": "Remove a device port from the system",
+        "operationId": "deleteDevicePort",
+        "parameters": [
+          {
+            "name": "device_id",
+            "in": "path",
+            "description": "Device UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "660e8400-e29b-41d4-a716-446655440001"
+            }
+          },
+          {
+            "name": "port_id",
+            "in": "path",
+            "description": "Device Port UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "880e8400-e29b-41d4-a716-446655440003"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Device port deleted successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "deleted"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/device-port-specifications": {
+      "get": {
+        "tags": [
+          "Device Port Specification"
+        ],
+        "summary": "Get all device port specifications",
+        "description": "Retrieve a list of all available device port specifications",
+        "operationId": "getAllDevicePortSpecifications",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/DevicePortSpecification"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/device-port-specification": {
+      "post": {
+        "tags": [
+          "Device Port Specification"
+        ],
+        "summary": "Create a new device port specification",
+        "description": "Create a new device port specification in the system",
+        "operationId": "createDevicePortSpecification",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DevicePortSpecificationCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Device port specification created successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DevicePortSpecification"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/device-port-specification/{id}": {
+      "get": {
+        "tags": [
+          "Device Port Specification"
+        ],
+        "summary": "Get device port specification by ID",
+        "description": "Retrieve detailed information about a specific device port specification",
+        "operationId": "getDevicePortSpecificationById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Device Port Specification UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "aa0e8400-e29b-41d4-a716-446655440005"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DevicePortSpecification"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Device Port Specification"
+        ],
+        "summary": "Update device port specification",
+        "description": "Update an existing device port specification",
+        "operationId": "updateDevicePortSpecification",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Device Port Specification UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "aa0e8400-e29b-41d4-a716-446655440005"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DevicePortSpecificationUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Device port specification updated successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DevicePortSpecification"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Device Port Specification"
+        ],
+        "summary": "Delete device port specification",
+        "description": "Remove a device port specification from the system",
+        "operationId": "deleteDevicePortSpecification",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Device Port Specification UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "aa0e8400-e29b-41d4-a716-446655440005"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Device port specification deleted successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "deleted"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/device-port-interfaces": {
+      "get": {
+        "tags": [
+          "Device Port Interface"
+        ],
+        "summary": "Get all device port interfaces",
+        "description": "Retrieve a list of all available device port interface types",
+        "operationId": "getAllDevicePortInterfaces",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/DevicePortInterface"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/device-port-interface": {
+      "post": {
+        "tags": [
+          "Device Port Interface"
+        ],
+        "summary": "Create a new device port interface",
+        "description": "Create a new device port interface type in the system",
+        "operationId": "createDevicePortInterface",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DevicePortInterfaceCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Device port interface created successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DevicePortInterface"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/device-port-interface/{id}": {
+      "get": {
+        "tags": [
+          "Device Port Interface"
+        ],
+        "summary": "Get device port interface by ID",
+        "description": "Retrieve detailed information about a specific device port interface",
+        "operationId": "getDevicePortInterfaceById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Device Port Interface UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "990e8400-e29b-41d4-a716-446655440004"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DevicePortInterface"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Device Port Interface"
+        ],
+        "summary": "Update device port interface",
+        "description": "Update an existing device port interface",
+        "operationId": "updateDevicePortInterface",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Device Port Interface UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "990e8400-e29b-41d4-a716-446655440004"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DevicePortInterfaceUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Device port interface updated successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DevicePortInterface"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Device Port Interface"
+        ],
+        "summary": "Delete device port interface",
+        "description": "Remove a device port interface from the system",
+        "operationId": "deleteDevicePortInterface",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Device Port Interface UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "990e8400-e29b-41d4-a716-446655440004"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Device port interface deleted successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "deleted"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/device/{device_id}/connections": {
+      "get": {
+        "tags": [
+          "Device Connection"
+        ],
+        "summary": "Get all connections of a device",
+        "description": "Retrieve a list of all port connections belonging to a specific device",
+        "operationId": "getAllDeviceConnections",
+        "parameters": [
+          {
+            "name": "device_id",
+            "in": "path",
+            "description": "Device UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "660e8400-e29b-41d4-a716-446655440001"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/DeviceConnection"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/device/{device_id}/connection": {
+      "post": {
+        "tags": [
+          "Device Connection"
+        ],
+        "summary": "Create a new device connection",
+        "description": "Create a new connection between two device ports",
+        "operationId": "createDeviceConnection",
+        "parameters": [
+          {
+            "name": "device_id",
+            "in": "path",
+            "description": "Device UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "660e8400-e29b-41d4-a716-446655440001"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceConnectionCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Device connection created successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DeviceConnection"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/device/{device_id}/connection/{connection_id}": {
+      "get": {
+        "tags": [
+          "Device Connection"
+        ],
+        "summary": "Get device connection by ID",
+        "description": "Retrieve detailed information about a specific device connection",
+        "operationId": "getDeviceConnectionById",
+        "parameters": [
+          {
+            "name": "device_id",
+            "in": "path",
+            "description": "Device UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "660e8400-e29b-41d4-a716-446655440001"
+            }
+          },
+          {
+            "name": "connection_id",
+            "in": "path",
+            "description": "Device Connection UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "bb0e8400-e29b-41d4-a716-446655440006"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DeviceConnection"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Device Connection"
+        ],
+        "summary": "Update device connection",
+        "description": "Update an existing device connection's information",
+        "operationId": "updateDeviceConnection",
+        "parameters": [
+          {
+            "name": "device_id",
+            "in": "path",
+            "description": "Device UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "660e8400-e29b-41d4-a716-446655440001"
+            }
+          },
+          {
+            "name": "connection_id",
+            "in": "path",
+            "description": "Device Connection UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "bb0e8400-e29b-41d4-a716-446655440006"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceConnectionUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Device connection updated successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DeviceConnection"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Device Connection"
+        ],
+        "summary": "Delete device connection",
+        "description": "Remove a device connection from the system",
+        "operationId": "deleteDeviceConnection",
+        "parameters": [
+          {
+            "name": "device_id",
+            "in": "path",
+            "description": "Device UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "660e8400-e29b-41d4-a716-446655440001"
+            }
+          },
+          {
+            "name": "connection_id",
+            "in": "path",
+            "description": "Device Connection UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "bb0e8400-e29b-41d4-a716-446655440006"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Device connection deleted successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "deleted"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/branch/{branch_id}/topologies": {
+      "get": {
+        "tags": [
+          "Branch Topology"
+        ],
+        "summary": "Get branch topology",
+        "description": "Retrieve the complete network topology for a specific branch including devices, ports, and connections",
+        "operationId": "getBranchTopology",
+        "parameters": [
+          {
+            "name": "branch_id",
+            "in": "path",
+            "description": "Branch UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation - Returns the complete network topology",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/TopologyNode"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/openvpn-servers": {
+      "get": {
+        "tags": [
+          "OpenVPN Server"
+        ],
+        "summary": "Get all OpenVPN servers",
+        "description": "Retrieve a list of all configured OpenVPN servers. Results are cached in Redis for performance.",
+        "operationId": "getAllOpenvpnServers",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/OpenvpnServer"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/openvpn-server": {
+      "post": {
+        "tags": [
+          "OpenVPN Server"
+        ],
+        "summary": "Create a new OpenVPN server",
+        "description": "Register a new OpenVPN server in the system. The server certificate (ca_chain_pem) and encrypted private key (encrypted_private_key_pem) are automatically generated by the CA service. Automatically refreshes the Redis cache after creation.",
+        "operationId": "createOpenvpnServer",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OpenvpnServerCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OpenVPN server created successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/OpenvpnServer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/responses-BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/openvpn-server/{id}": {
+      "get": {
+        "tags": [
+          "OpenVPN Server"
+        ],
+        "summary": "Get OpenVPN server by ID",
+        "description": "Retrieve detailed information about a specific OpenVPN server",
+        "operationId": "getOpenvpnServerById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "OpenVPN server UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "019a34a2-cb9e-78ad-a4be-b2e83a1ff440"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/OpenvpnServer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/responses-BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/responses-NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "OpenVPN Server"
+        ],
+        "summary": "Update an OpenVPN server",
+        "description": "Update an existing OpenVPN server configuration. Note: name, ca_chain_pem, and encrypted_private_key_pem are immutable and cannot be modified. Automatically refreshes the Redis cache after update.",
+        "operationId": "updateOpenvpnServer",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "OpenVPN server UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "019a34a2-cb9e-78ad-a4be-b2e83a1ff440"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OpenvpnServerUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OpenVPN server updated successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/OpenvpnServer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/responses-BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/responses-NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "OpenVPN Server"
+        ],
+        "summary": "Delete an OpenVPN server",
+        "description": "Remove an OpenVPN server from the system. Automatically refreshes the Redis cache after deletion.",
+        "operationId": "deleteOpenvpnServer",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "OpenVPN server UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "019a34a2-cb9e-78ad-a4be-b2e83a1ff440"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OpenVPN server deleted successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "deleted"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/responses-BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/responses-NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/openvpn-server/{openvpn_server_id}/clients": {
+      "get": {
+        "tags": [
+          "OpenVPN Client"
+        ],
+        "summary": "Get all OpenVPN clients for a server",
+        "description": "Retrieve a list of all OpenVPN clients associated with a specific OpenVPN server. Results are cached in Redis for performance.",
+        "operationId": "getAllOpenvpnClients",
+        "parameters": [
+          {
+            "name": "openvpn_server_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "The UUID of the OpenVPN server"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/OpenvpnClient"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/components-responses-BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/responses-InternalServerError"
+          }
+        }
+      }
+    },
+    "/openvpn-server/{openvpn_server_id}/client": {
+      "post": {
+        "tags": [
+          "OpenVPN Client"
+        ],
+        "summary": "Create a new OpenVPN client",
+        "description": "Create a new OpenVPN client certificate for the specified server. The client certificate and encrypted private key are automatically generated by the CA service.",
+        "operationId": "createOpenvpnClient",
+        "parameters": [
+          {
+            "name": "openvpn_server_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "The UUID of the OpenVPN server"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OpenvpnClientCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OpenVPN client created successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/OpenvpnClient"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/components-responses-BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/components-responses-NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/responses-InternalServerError"
+          }
+        }
+      }
+    },
+    "/openvpn-client/{id}": {
+      "get": {
+        "tags": [
+          "OpenVPN Client"
+        ],
+        "summary": "Get OpenVPN client by ID",
+        "description": "Retrieve a specific OpenVPN client by its unique identifier.",
+        "operationId": "getOpenvpnClientById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "The UUID of the OpenVPN client"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/OpenvpnClient"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/components-responses-BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/components-responses-NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/responses-InternalServerError"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "OpenVPN Client"
+        ],
+        "summary": "Delete OpenVPN client",
+        "description": "Delete an OpenVPN client by its unique identifier. Automatically refreshes the Redis cache after deletion.",
+        "operationId": "deleteOpenvpnClient",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "The UUID of the OpenVPN client to delete"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OpenVPN client deleted successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "deleted"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/components-responses-BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/components-responses-NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/responses-InternalServerError"
+          }
+        }
+      }
+    },
+    "/device/{device_id}/openvpn-client/{openvpn_client_id}": {
+      "put": {
+        "tags": [
+          "Device OpenVPN Client"
+        ],
+        "summary": "Assign OpenVPN client to device",
+        "description": "Associate an OpenVPN client with a device. Only devices of type 'Router' can be assigned an OpenVPN client. Each device can only have one OpenVPN client, and each OpenVPN client can only be assigned to one device.",
+        "operationId": "assignDeviceOpenvpnClient",
+        "parameters": [
+          {
+            "name": "device_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "The UUID of the device (must be of type 'Router')"
+          },
+          {
+            "name": "openvpn_client_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "The UUID of the OpenVPN client to assign"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OpenVPN client assigned successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DeviceOpenvpnClient"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Validation error or business rule violation",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 400
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Bad Request"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": [
+                        "device must be of type 'Router' to assign OpenVPN client"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/group_device_openvpn_client_components-responses-NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/components-responses-InternalServerError"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Device OpenVPN Client"
+        ],
+        "summary": "Unassign OpenVPN client from device",
+        "description": "Remove the association between a device and an OpenVPN client.",
+        "operationId": "unassignDeviceOpenvpnClient",
+        "parameters": [
+          {
+            "name": "device_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "The UUID of the device"
+          },
+          {
+            "name": "openvpn_client_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "The UUID of the OpenVPN client to unassign"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OpenVPN client unassigned successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "unassigned"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/group_device_openvpn_client_components-responses-BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/group_device_openvpn_client_components-responses-NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/components-responses-InternalServerError"
+          }
+        }
+      }
+    },
+    "/device/{device_id}/radius-client": {
+      "put": {
+        "tags": [
+          "Device Radius Client"
+        ],
+        "summary": "Activate RADIUS client for a device",
+        "description": "Activate a RADIUS client for a device that has an assigned OpenVPN client. The device must have an OpenVPN client with a reserved IP address. A new RADIUS client will be created via the RADIUS API and the secret will be encrypted and stored.",
+        "operationId": "activateDeviceRadiusClient",
+        "parameters": [
+          {
+            "name": "device_id",
+            "in": "path",
+            "description": "Device UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "660e8400-e29b-41d4-a716-446655440001"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActivateRadiusClientRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "RADIUS client activated successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DeviceRadiusClient"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/group_device_radius_client_components-responses-BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/group_device_radius_client_components-responses-NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/group_device_radius_client_components-responses-InternalServerError"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Device Radius Client"
+        ],
+        "summary": "Deactivate RADIUS client for a device",
+        "description": "Deactivate and remove the RADIUS client for a device. This will delete the RADIUS client from the RADIUS API and remove the local database record.",
+        "operationId": "deactivateDeviceRadiusClient",
+        "parameters": [
+          {
+            "name": "device_id",
+            "in": "path",
+            "description": "Device UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "660e8400-e29b-41d4-a716-446655440001"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "RADIUS client deactivated successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "deactivated"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/group_device_radius_client_components-responses-BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/group_device_radius_client_components-responses-NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/group_device_radius_client_components-responses-InternalServerError"
+          }
+        }
+      }
+    },
+    "/radius-client/vendors": {
+      "get": {
+        "tags": [
+          "Radius Client"
+        ],
+        "summary": "Get all RADIUS vendors",
+        "description": "Retrieve a list of all available RADIUS vendors. The data is cached in Redis for performance. If not in cache, it will be fetched from the external RADIUS API.",
+        "operationId": "getAllRadiusVendors",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/RadiusVendor"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/group_radius_client_components-responses-InternalServerError"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "responses": {
+      "BadRequest": {
+        "description": "Bad Request - Invalid input parameters or validation errors",
+        "headers": {
+          "x-request-id": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Request identifier for tracing"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 400
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Bad Request"
+                    }
+                  }
+                },
+                "request_id": {
+                  "type": "string",
+                  "nullable": true,
+                  "example": "req_abc123xyz"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": [
+                        "name is required",
+                        "device_type_id must be a valid UUID"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Unauthorized - Authentication required or invalid credentials",
+        "headers": {
+          "x-request-id": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Request identifier for tracing"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 401
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                },
+                "request_id": {
+                  "type": "string",
+                  "nullable": true,
+                  "example": "req_abc123xyz"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": [
+                        "Authentication required"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Forbidden - Insufficient permissions",
+        "headers": {
+          "x-request-id": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Request identifier for tracing"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 403
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Forbidden"
+                    }
+                  }
+                },
+                "request_id": {
+                  "type": "string",
+                  "nullable": true,
+                  "example": "req_abc123xyz"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": [
+                        "Insufficient permissions"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Not Found - Resource does not exist",
+        "headers": {
+          "x-request-id": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Request identifier for tracing"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 404
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Not Found"
+                    }
+                  }
+                },
+                "request_id": {
+                  "type": "string",
+                  "nullable": true,
+                  "example": "req_abc123xyz"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": [
+                        "Resource not found"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "InternalServerError": {
+        "description": "Internal Server Error - An unexpected error occurred",
+        "headers": {
+          "x-request-id": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Request identifier for tracing"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 500
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Internal Server Error"
+                    }
+                  }
+                },
+                "request_id": {
+                  "type": "string",
+                  "nullable": true,
+                  "example": "req_abc123xyz"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": [
+                        "An internal error occurred"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses-BadRequest": {
+        "description": "Bad Request - Invalid input parameters or validation errors",
+        "headers": {
+          "x-request-id": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Request identifier for tracing"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 400
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Bad Request"
+                    }
+                  }
+                },
+                "request_id": {
+                  "type": "string",
+                  "nullable": true,
+                  "example": "req_abc123xyz"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": [
+                        "name is required",
+                        "host is required",
+                        "name already exists",
+                        "host and port combination already exists"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses-NotFound": {
+        "description": "Not Found - Resource does not exist",
+        "headers": {
+          "x-request-id": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Request identifier for tracing"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 404
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Not Found"
+                    }
+                  }
+                },
+                "request_id": {
+                  "type": "string",
+                  "nullable": true,
+                  "example": "req_abc123xyz"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": [
+                        "openvpn server not found"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "components-responses-BadRequest": {
+        "description": "Bad Request - Invalid input parameters or validation errors",
+        "headers": {
+          "x-request-id": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Request identifier for tracing"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 400
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Bad Request"
+                    }
+                  }
+                },
+                "request_id": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "errors": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "example": [
+                    "openvpn_server_id must be a valid UUID"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses-InternalServerError": {
+        "description": "Internal Server Error - An unexpected error occurred on the server",
+        "headers": {
+          "x-request-id": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Request identifier for tracing"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 500
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Internal Server Error"
+                    }
+                  }
+                },
+                "request_id": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "errors": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "example": [
+                    "failed to create openvpn client"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "components-responses-NotFound": {
+        "description": "Not Found - The requested resource was not found",
+        "headers": {
+          "x-request-id": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Request identifier for tracing"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 404
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Not Found"
+                    }
+                  }
+                },
+                "request_id": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "errors": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "example": [
+                    "openvpn client not found"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "group_device_openvpn_client_components-responses-NotFound": {
+        "description": "Not Found - The requested resource was not found",
+        "headers": {
+          "x-request-id": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Request identifier for tracing"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 404
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Not Found"
+                    }
+                  }
+                },
+                "request_id": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "errors": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "example": [
+                    "device not found"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "components-responses-InternalServerError": {
+        "description": "Internal Server Error - An unexpected error occurred on the server",
+        "headers": {
+          "x-request-id": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Request identifier for tracing"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 500
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Internal Server Error"
+                    }
+                  }
+                },
+                "request_id": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "errors": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "example": [
+                    "failed to assign openvpn client"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "group_device_openvpn_client_components-responses-BadRequest": {
+        "description": "Bad Request - Invalid input parameters or validation errors",
+        "headers": {
+          "x-request-id": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Request identifier for tracing"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 400
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Bad Request"
+                    }
+                  }
+                },
+                "request_id": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "errors": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "example": [
+                    "device_id must be a valid UUID"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "group_device_radius_client_components-responses-BadRequest": {
+        "description": "Bad request - validation error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 400
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Bad Request"
+                    }
+                  }
+                },
+                "request_id": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "errors": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "example": [
+                    "device has no OpenVPN client assigned"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "group_device_radius_client_components-responses-NotFound": {
+        "description": "Resource not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 404
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Not Found"
+                    }
+                  }
+                },
+                "request_id": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "errors": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "example": [
+                    "device not found"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "group_device_radius_client_components-responses-InternalServerError": {
+        "description": "Internal server error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 500
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Internal Server Error"
+                    }
+                  }
+                },
+                "request_id": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "errors": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "example": [
+                    "failed to activate radius client"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "group_radius_client_components-responses-InternalServerError": {
+        "description": "Internal server error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 500
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Internal Server Error"
+                    }
+                  }
+                },
+                "request_id": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "errors": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "example": [
+                    "failed to fetch radius vendors"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Device": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Device unique identifier",
+            "example": "660e8400-e29b-41d4-a716-446655440001"
+          },
+          "branch_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Branch identifier",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "name": {
+            "type": "string",
+            "description": "Device name",
+            "maxLength": 255,
+            "example": "Router Core-01"
+          },
+          "device_type_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Device type identifier",
+            "example": "770e8400-e29b-41d4-a716-446655440002"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true,
+            "minimum": -90,
+            "maximum": 90,
+            "description": "Geographic latitude",
+            "example": -6.2088
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true,
+            "minimum": -180,
+            "maximum": 180,
+            "description": "Geographic longitude",
+            "example": 106.8456
+          },
+          "location_details": {
+            "type": "object",
+            "description": "Additional location information",
+            "example": {
+              "address": "Jl. Sudirman No. 1",
+              "floor": "3rd Floor",
+              "rack": "R-01"
+            }
+          },
+          "specifications": {
+            "type": "object",
+            "description": "Device technical specifications",
+            "example": {
+              "model": "Cisco 2960X",
+              "serial_number": "SN123456789",
+              "firmware_version": "15.2(7)E"
+            }
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation timestamp",
+            "example": "2025-01-15T10:30:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last update timestamp",
+            "example": "2025-01-15T14:45:00Z"
+          },
+          "device_type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DeviceType"
+              }
+            ],
+            "nullable": true,
+            "description": "Associated device type information"
+          }
+        },
+        "required": [
+          "id",
+          "branch_id",
+          "name",
+          "device_type_id",
+          "location_details",
+          "specifications",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "DeviceType": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "770e8400-e29b-41d4-a716-446655440002"
+          },
+          "name": {
+            "type": "string",
+            "example": "Router"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-10T08:00:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-10T08:00:00Z"
+          }
+        }
+      },
+      "DeviceCreateRequest": {
+        "type": "object",
+        "required": [
+          "name",
+          "device_type_id"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Device name (sanitized, max 255 characters)",
+            "maxLength": 255,
+            "example": "Router Core-01"
+          },
+          "device_type_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Valid device type UUID",
+            "example": "770e8400-e29b-41d4-a716-446655440002"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true,
+            "minimum": -90,
+            "maximum": 90,
+            "description": "Geographic latitude (-90 to 90)",
+            "example": -6.2088
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true,
+            "minimum": -180,
+            "maximum": 180,
+            "description": "Geographic longitude (-180 to 180)",
+            "example": 106.8456
+          },
+          "location_details": {
+            "type": "object",
+            "nullable": true,
+            "description": "Additional location information (defaults to {})",
+            "example": {
+              "address": "Jl. Sudirman No. 1",
+              "floor": "3rd Floor"
+            }
+          },
+          "specifications": {
+            "type": "object",
+            "nullable": true,
+            "description": "Device technical specifications (defaults to {})",
+            "example": {
+              "model": "Cisco 2960X",
+              "serial_number": "SN123456789"
+            }
+          }
+        }
+      },
+      "DeviceUpdateRequest": {
+        "type": "object",
+        "required": [
+          "name",
+          "device_type_id"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Device name (sanitized, max 255 characters)",
+            "maxLength": 255,
+            "example": "Router Core-01 Updated"
+          },
+          "device_type_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Valid device type UUID",
+            "example": "770e8400-e29b-41d4-a716-446655440002"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true,
+            "minimum": -90,
+            "maximum": 90,
+            "description": "Geographic latitude (-90 to 90)",
+            "example": -6.2088
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true,
+            "minimum": -180,
+            "maximum": 180,
+            "description": "Geographic longitude (-180 to 180)",
+            "example": 106.8456
+          },
+          "location_details": {
+            "type": "object",
+            "nullable": true,
+            "description": "Additional location information (defaults to {})",
+            "example": {
+              "address": "Jl. Sudirman No. 1",
+              "floor": "3rd Floor"
+            }
+          },
+          "specifications": {
+            "type": "object",
+            "nullable": true,
+            "description": "Device technical specifications (defaults to {})",
+            "example": {
+              "model": "Cisco 2960X",
+              "firmware_version": "15.2(7)E"
+            }
+          }
+        }
+      },
+      "DeviceTypeEntity": {
+        "$ref": "#/components/schemas/schemas-DeviceType"
+      },
+      "DeviceTypeCreateRequest": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Device type name (sanitized, max 255 characters, required)",
+            "maxLength": 255,
+            "minLength": 1,
+            "example": "Router"
+          }
+        }
+      },
+      "DeviceTypeUpdateRequest": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Device type name (sanitized, max 255 characters, required)",
+            "maxLength": 255,
+            "minLength": 1,
+            "example": "Switch"
+          }
+        }
+      },
+      "DevicePort": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Device port unique identifier",
+            "example": "880e8400-e29b-41d4-a716-446655440003"
+          },
+          "device_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Parent device identifier",
+            "example": "660e8400-e29b-41d4-a716-446655440001"
+          },
+          "port_interface_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Port interface type identifier",
+            "example": "990e8400-e29b-41d4-a716-446655440004"
+          },
+          "port_specification_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "Port specification identifier",
+            "example": "aa0e8400-e29b-41d4-a716-446655440005"
+          },
+          "name": {
+            "type": "string",
+            "description": "Port name",
+            "maxLength": 255,
+            "example": "GigabitEthernet0/1"
+          },
+          "position": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Physical position of the port",
+            "minimum": 0,
+            "example": 1
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether the port is enabled",
+            "example": true
+          },
+          "properties": {
+            "type": "object",
+            "description": "Additional port properties",
+            "example": {
+              "speed": "1000Mbps",
+              "duplex": "full",
+              "vlan": "100"
+            }
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation timestamp",
+            "example": "2025-01-15T10:30:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last update timestamp",
+            "example": "2025-01-15T14:45:00Z"
+          },
+          "device": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/schemas-Device"
+              }
+            ],
+            "nullable": true,
+            "description": "Associated device information"
+          },
+          "port_interface": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/schemas-DevicePortInterface"
+              }
+            ],
+            "nullable": true,
+            "description": "Associated port interface information"
+          },
+          "port_specification": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/schemas-DevicePortSpecification"
+              }
+            ],
+            "nullable": true,
+            "description": "Associated port specification information"
+          }
+        },
+        "required": [
+          "id",
+          "device_id",
+          "port_interface_id",
+          "name",
+          "enabled",
+          "properties",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "DevicePortCreateRequest": {
+        "type": "object",
+        "required": [
+          "name",
+          "port_interface_id"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Port name (sanitized, max 255 characters, required)",
+            "maxLength": 255,
+            "minLength": 1,
+            "example": "GigabitEthernet0/1"
+          },
+          "port_interface_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Valid port interface UUID (required)",
+            "example": "990e8400-e29b-41d4-a716-446655440004"
+          },
+          "port_specification_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "Optional port specification UUID",
+            "example": "aa0e8400-e29b-41d4-a716-446655440005"
+          },
+          "position": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Physical position (must be >= 0)",
+            "minimum": 0,
+            "example": 1
+          },
+          "enabled": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Port enabled status (defaults to true)",
+            "example": true
+          },
+          "properties": {
+            "type": "object",
+            "nullable": true,
+            "description": "Additional port properties (defaults to {})",
+            "example": {
+              "speed": "1000Mbps",
+              "duplex": "full"
+            }
+          }
+        }
+      },
+      "DevicePortUpdateRequest": {
+        "type": "object",
+        "required": [
+          "name",
+          "port_interface_id",
+          "enabled"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Port name (sanitized, max 255 characters, required)",
+            "maxLength": 255,
+            "minLength": 1,
+            "example": "GigabitEthernet0/1"
+          },
+          "port_interface_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Valid port interface UUID (required)",
+            "example": "990e8400-e29b-41d4-a716-446655440004"
+          },
+          "port_specification_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "Optional port specification UUID",
+            "example": "aa0e8400-e29b-41d4-a716-446655440005"
+          },
+          "position": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Physical position (must be >= 0)",
+            "minimum": 0,
+            "example": 1
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Port enabled status (required)",
+            "example": true
+          },
+          "properties": {
+            "type": "object",
+            "nullable": true,
+            "description": "Additional port properties (defaults to {})",
+            "example": {
+              "speed": "1000Mbps",
+              "duplex": "full",
+              "vlan": "100"
+            }
+          }
+        }
+      },
+      "DevicePortSpecification": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Device port specification unique identifier",
+            "example": "aa0e8400-e29b-41d4-a716-446655440005"
+          },
+          "name": {
+            "type": "string",
+            "description": "Port specification name",
+            "maxLength": 255,
+            "example": "SFP+ 10GbE"
+          },
+          "data": {
+            "type": "object",
+            "description": "Specification data and attributes",
+            "example": {
+              "speed": "10Gbps",
+              "type": "SFP+",
+              "wavelength": "850nm",
+              "connector": "LC"
+            }
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation timestamp",
+            "example": "2025-01-10T08:00:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last update timestamp",
+            "example": "2025-01-10T08:00:00Z"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "data",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "DevicePortSpecificationCreateRequest": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Port specification name (sanitized, max 255 characters, required)",
+            "maxLength": 255,
+            "minLength": 1,
+            "example": "SFP+ 10GbE"
+          },
+          "data": {
+            "type": "object",
+            "description": "Specification data (defaults to empty object if not provided)",
+            "example": {
+              "speed": "10Gbps",
+              "type": "SFP+",
+              "wavelength": "850nm"
+            }
+          }
+        }
+      },
+      "DevicePortSpecificationUpdateRequest": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Port specification name (sanitized, max 255 characters, required)",
+            "maxLength": 255,
+            "minLength": 1,
+            "example": "SFP+ 10GbE Updated"
+          },
+          "data": {
+            "type": "object",
+            "description": "Specification data (defaults to empty object if not provided)",
+            "example": {
+              "speed": "10Gbps",
+              "type": "SFP+",
+              "wavelength": "850nm",
+              "connector": "LC"
+            }
+          }
+        }
+      },
+      "DevicePortInterface": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Device port interface unique identifier",
+            "example": "990e8400-e29b-41d4-a716-446655440004"
+          },
+          "name": {
+            "type": "string",
+            "description": "Port interface name",
+            "maxLength": 255,
+            "example": "GigabitEthernet"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation timestamp",
+            "example": "2025-01-10T08:00:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last update timestamp",
+            "example": "2025-01-10T08:00:00Z"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "DevicePortInterfaceCreateRequest": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Port interface name (sanitized, max 255 characters, required)",
+            "maxLength": 255,
+            "minLength": 1,
+            "example": "GigabitEthernet"
+          }
+        }
+      },
+      "DevicePortInterfaceUpdateRequest": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Port interface name (sanitized, max 255 characters, required)",
+            "maxLength": 255,
+            "minLength": 1,
+            "example": "10GigabitEthernet"
+          }
+        }
+      },
+      "DeviceConnection": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Device connection unique identifier",
+            "example": "bb0e8400-e29b-41d4-a716-446655440006"
+          },
+          "from_port_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Source port identifier",
+            "example": "880e8400-e29b-41d4-a716-446655440003"
+          },
+          "to_port_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Destination port identifier",
+            "example": "880e8400-e29b-41d4-a716-446655440007"
+          },
+          "details": {
+            "type": "object",
+            "description": "Additional connection details",
+            "example": {
+              "cable_type": "fiber",
+              "cable_length": "10m",
+              "installation_date": "2025-01-10"
+            }
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation timestamp",
+            "example": "2025-01-15T10:30:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last update timestamp",
+            "example": "2025-01-15T14:45:00Z"
+          },
+          "from_port": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/schemas-DevicePort"
+              }
+            ],
+            "nullable": true,
+            "description": "Source port information"
+          },
+          "to_port": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/schemas-DevicePort"
+              }
+            ],
+            "nullable": true,
+            "description": "Destination port information"
+          }
+        },
+        "required": [
+          "id",
+          "from_port_id",
+          "to_port_id",
+          "details",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "DeviceConnectionCreateRequest": {
+        "type": "object",
+        "required": [
+          "from_port_id",
+          "to_port_id"
+        ],
+        "properties": {
+          "from_port_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Source port UUID (required, must be valid UUID)",
+            "example": "880e8400-e29b-41d4-a716-446655440003"
+          },
+          "to_port_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Destination port UUID (required, must be valid UUID, must be different from from_port_id)",
+            "example": "880e8400-e29b-41d4-a716-446655440007"
+          },
+          "details": {
+            "type": "object",
+            "nullable": true,
+            "description": "Additional connection details (defaults to {})",
+            "example": {
+              "cable_type": "fiber",
+              "cable_length": "10m"
+            }
+          }
+        }
+      },
+      "DeviceConnectionUpdateRequest": {
+        "type": "object",
+        "required": [
+          "from_port_id",
+          "to_port_id"
+        ],
+        "properties": {
+          "from_port_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Source port UUID (required, must be valid UUID)",
+            "example": "880e8400-e29b-41d4-a716-446655440003"
+          },
+          "to_port_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Destination port UUID (required, must be valid UUID, must be different from from_port_id)",
+            "example": "880e8400-e29b-41d4-a716-446655440007"
+          },
+          "details": {
+            "type": "object",
+            "nullable": true,
+            "description": "Additional connection details (defaults to {})",
+            "example": {
+              "cable_type": "fiber",
+              "cable_length": "10m",
+              "installation_date": "2025-01-10"
+            }
+          }
+        }
+      },
+      "OpenvpnServer": {
+        "type": "object",
+        "description": "OpenVPN server configuration entity",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique identifier (UUIDv7)",
+            "example": "019a34a2-cb9e-78ad-a4be-b2e83a1ff440"
+          },
+          "name": {
+            "type": "string",
+            "description": "OpenVPN server name (unique)",
+            "maxLength": 255,
+            "example": "server.racenet.openvpn.adminradius.com"
+          },
+          "host": {
+            "type": "string",
+            "description": "Server hostname or IP address",
+            "maxLength": 45,
+            "example": "192.168.23.2"
+          },
+          "port": {
+            "type": "integer",
+            "description": "OpenVPN server port",
+            "minimum": 1,
+            "maximum": 65535,
+            "example": 1194
+          },
+          "proto": {
+            "type": "string",
+            "description": "Protocol (tcp or udp)",
+            "enum": [
+              "tcp",
+              "udp"
+            ],
+            "example": "tcp"
+          },
+          "cipher": {
+            "type": "string",
+            "nullable": true,
+            "description": "Encryption cipher algorithm",
+            "maxLength": 50,
+            "example": "AES-256-CBC"
+          },
+          "auth_algorithm": {
+            "type": "string",
+            "description": "Authentication algorithm",
+            "maxLength": 50,
+            "example": "SHA256"
+          },
+          "tls_key_pem": {
+            "type": "string",
+            "nullable": true,
+            "description": "TLS authentication key in PEM format",
+            "example": "-----BEGIN OpenVPN Static key V1-----\\n...\\n-----END OpenVPN Static key V1-----"
+          },
+          "tls_key_mode": {
+            "type": "string",
+            "nullable": true,
+            "description": "TLS key mode (0, 1, or null)",
+            "maxLength": 10,
+            "example": "1"
+          },
+          "ca_chain_pem": {
+            "type": "string",
+            "description": "CA certificate chain in PEM format (auto-generated, contains Root CA + Intermediate CA)",
+            "example": "-----BEGIN CERTIFICATE-----\\n...\\n-----END CERTIFICATE-----"
+          },
+          "certificate_pem": {
+            "type": "string",
+            "description": "Server certificate in PEM format (auto-generated, the server's own certificate)",
+            "example": "-----BEGIN CERTIFICATE-----\\n...\\n-----END CERTIFICATE-----"
+          },
+          "serial_number": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Certificate serial number from CA (unique)",
+            "example": 1234567890
+          },
+          "expired_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Certificate expiration timestamp",
+            "example": "2026-10-30T09:00:00Z"
+          },
+          "remote_cert_tls_name": {
+            "type": "string",
+            "description": "Remote certificate TLS name verification",
+            "maxLength": 100,
+            "example": "server"
+          },
+          "crl_distribution_point": {
+            "type": "string",
+            "nullable": true,
+            "description": "Certificate Revocation List distribution URL",
+            "maxLength": 1000,
+            "example": "http://ca.certy.id/racenet-openvpn/crl.pem"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation timestamp",
+            "example": "2025-10-30T09:00:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last update timestamp",
+            "example": "2025-10-30T09:00:00Z"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "host",
+          "port",
+          "proto",
+          "auth_algorithm",
+          "ca_chain_pem",
+          "certificate_pem",
+          "serial_number",
+          "expired_at",
+          "remote_cert_tls_name",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "OpenvpnServerCreateRequest": {
+        "type": "object",
+        "description": "Request body for creating a new OpenVPN server. Certificate-related fields (ca_chain_pem, certificate_pem, encrypted_private_key_pem) are auto-generated by the CA service.",
+        "required": [
+          "name",
+          "host"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "OpenVPN server name (sanitized, max 255 characters, required, must be unique)",
+            "maxLength": 255,
+            "minLength": 1,
+            "example": "vpn-server-01.example.com"
+          },
+          "host": {
+            "type": "string",
+            "description": "Server hostname or IP address (sanitized, max 45 characters, required)",
+            "maxLength": 45,
+            "minLength": 1,
+            "example": "10.0.1.100"
+          },
+          "port": {
+            "type": "integer",
+            "description": "OpenVPN server port (default: 1194)",
+            "minimum": 1,
+            "maximum": 65535,
+            "default": 1194,
+            "example": 1194
+          },
+          "proto": {
+            "type": "string",
+            "description": "Protocol - tcp or udp (default: udp)",
+            "enum": [
+              "tcp",
+              "udp"
+            ],
+            "default": "udp",
+            "example": "tcp"
+          },
+          "cipher": {
+            "type": "string",
+            "nullable": true,
+            "description": "Encryption cipher algorithm (optional, max 50 characters)",
+            "maxLength": 50,
+            "example": "AES-256-GCM"
+          },
+          "auth_algorithm": {
+            "type": "string",
+            "description": "Authentication algorithm (default: SHA256, max 50 characters)",
+            "maxLength": 50,
+            "default": "SHA256",
+            "example": "SHA256"
+          },
+          "tls_key_pem": {
+            "type": "string",
+            "nullable": true,
+            "description": "TLS authentication key in PEM format (optional)",
+            "example": "-----BEGIN OpenVPN Static key V1-----\\n...\\n-----END OpenVPN Static key V1-----"
+          },
+          "tls_key_mode": {
+            "type": "string",
+            "nullable": true,
+            "description": "TLS key mode (optional)",
+            "maxLength": 10,
+            "example": "1"
+          },
+          "remote_cert_tls_name": {
+            "type": "string",
+            "description": "Remote certificate TLS name verification (default: server, max 100 characters)",
+            "maxLength": 100,
+            "default": "server",
+            "example": "server"
+          },
+          "crl_distribution_point": {
+            "type": "string",
+            "nullable": true,
+            "description": "Certificate Revocation List distribution URL (optional, max 1000 characters)",
+            "maxLength": 1000,
+            "example": "http://ca.example.com/crl.pem"
+          }
+        }
+      },
+      "OpenvpnServerUpdateRequest": {
+        "type": "object",
+        "description": "Request body for updating an OpenVPN server. Note: name, ca_chain_pem, and encrypted_private_key_pem are immutable and cannot be modified.",
+        "required": [
+          "host",
+          "port",
+          "proto",
+          "auth_algorithm",
+          "remote_cert_tls_name"
+        ],
+        "properties": {
+          "host": {
+            "type": "string",
+            "description": "Server hostname or IP address (sanitized, max 45 characters, required)",
+            "maxLength": 45,
+            "minLength": 1,
+            "example": "10.0.1.101"
+          },
+          "port": {
+            "type": "integer",
+            "description": "OpenVPN server port (required)",
+            "minimum": 1,
+            "maximum": 65535,
+            "example": 1194
+          },
+          "proto": {
+            "type": "string",
+            "description": "Protocol - tcp or udp (required)",
+            "enum": [
+              "tcp",
+              "udp"
+            ],
+            "example": "udp"
+          },
+          "cipher": {
+            "type": "string",
+            "nullable": true,
+            "description": "Encryption cipher algorithm (optional, max 50 characters)",
+            "maxLength": 50,
+            "example": "AES-256-GCM"
+          },
+          "auth_algorithm": {
+            "type": "string",
+            "description": "Authentication algorithm (required, max 50 characters)",
+            "maxLength": 50,
+            "example": "SHA256"
+          },
+          "tls_key_pem": {
+            "type": "string",
+            "nullable": true,
+            "description": "TLS authentication key in PEM format (optional)",
+            "example": "-----BEGIN OpenVPN Static key V1-----\\n...\\n-----END OpenVPN Static key V1-----"
+          },
+          "tls_key_mode": {
+            "type": "string",
+            "nullable": true,
+            "description": "TLS key mode (optional)",
+            "maxLength": 10,
+            "example": "1"
+          },
+          "remote_cert_tls_name": {
+            "type": "string",
+            "description": "Remote certificate TLS name verification (required, max 100 characters)",
+            "maxLength": 100,
+            "example": "server"
+          },
+          "crl_distribution_point": {
+            "type": "string",
+            "nullable": true,
+            "description": "Certificate Revocation List distribution URL (optional, max 1000 characters)",
+            "maxLength": 1000,
+            "example": "http://ca.example.com/crl.pem"
+          }
+        }
+      },
+      "schemas-DeviceType": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Device type unique identifier",
+            "example": "770e8400-e29b-41d4-a716-446655440002"
+          },
+          "name": {
+            "type": "string",
+            "description": "Device type name",
+            "maxLength": 255,
+            "example": "Router"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation timestamp",
+            "example": "2025-01-10T08:00:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last update timestamp",
+            "example": "2025-01-10T08:00:00Z"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "schemas-Device": {
+        "type": "object",
+        "description": "Device entity reference"
+      },
+      "schemas-DevicePortInterface": {
+        "type": "object",
+        "description": "Device port interface entity reference"
+      },
+      "schemas-DevicePortSpecification": {
+        "type": "object",
+        "description": "Device port specification entity reference"
+      },
+      "schemas-DevicePort": {
+        "type": "object",
+        "description": "Device port entity reference"
+      },
+      "components-schemas-DevicePort": {
+        "type": "object",
+        "description": "Device port entity with complete information"
+      },
+      "TopologyDevice": {
+        "type": "object",
+        "description": "Device entity with ports embedded",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "branch_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "device_type_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "device_type": {
+            "type": "string",
+            "nullable": true,
+            "description": "Name of the device type"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "location_details": {
+            "type": "object",
+            "nullable": true
+          },
+          "specifications": {
+            "type": "object",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ports": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/components-schemas-DevicePort"
+            },
+            "description": "All ports belonging to this device"
+          }
+        }
+      },
+      "TopologyNode": {
+        "type": "object",
+        "description": "Represents a node in the network topology structure, including device details, ports, and connection information to parent",
+        "properties": {
+          "device": {
+            "$ref": "#/components/schemas/TopologyDevice"
+          },
+          "parent_device_port_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "The port ID on the parent device that connects to this device (from_port_id in device_connections)"
+          },
+          "uplink_port_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "The port ID on this device that connects to the parent device (to_port_id in device_connections)"
+          },
+          "connection_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "The ID of the connection between this device and its parent"
+          },
+          "connection_details": {
+            "type": "object",
+            "nullable": true,
+            "description": "Additional connection details (cable type, length, etc.)"
+          },
+          "level": {
+            "type": "integer",
+            "description": "The depth level in the topology tree (0 = root device)"
+          }
+        },
+        "example": {
+          "device": {
+            "id": "660e8400-e29b-41d4-a716-446655440001",
+            "branch_id": "550e8400-e29b-41d4-a716-446655440000",
+            "name": "Switch-01",
+            "device_type_id": "770e8400-e29b-41d4-a716-446655440002",
+            "device_type": "Switch",
+            "latitude": -6.2088,
+            "longitude": 106.8456,
+            "location_details": {
+              "address": "Jl. Sudirman No. 1",
+              "floor": "3rd Floor"
+            },
+            "specifications": {
+              "model": "Cisco 2960X",
+              "serial_number": "SN123456789"
+            },
+            "created_at": "2025-01-15T10:30:00Z",
+            "updated_at": "2025-01-15T14:45:00Z",
+            "ports": [
+              {
+                "id": "880e8400-e29b-41d4-a716-446655440003",
+                "device_id": "660e8400-e29b-41d4-a716-446655440001",
+                "port_interface_id": "990e8400-e29b-41d4-a716-446655440004",
+                "name": "GigabitEthernet0/1",
+                "position": 1,
+                "enabled": true,
+                "properties": {
+                  "speed": "1000Mbps"
+                },
+                "created_at": "2025-01-15T10:35:00Z",
+                "updated_at": "2025-01-15T10:35:00Z"
+              }
+            ]
+          },
+          "parent_device_port_id": "aa0e8400-e29b-41d4-a716-446655440005",
+          "uplink_port_id": "880e8400-e29b-41d4-a716-446655440003",
+          "connection_id": "bb0e8400-e29b-41d4-a716-446655440006",
+          "connection_details": {
+            "cable_type": "fiber",
+            "cable_length": "10m"
+          },
+          "level": 1
+        }
+      },
+      "OpenvpnClient": {
+        "type": "object",
+        "description": "OpenVPN client entity with certificate information",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "550e8400-e29b-41d4-a716-446655440000",
+            "description": "Unique identifier for the OpenVPN client"
+          },
+          "server_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "Reference to the OpenVPN server this client belongs to"
+          },
+          "cn": {
+            "type": "string",
+            "example": "client-office-1",
+            "description": "Common Name (CN) for the client certificate"
+          },
+          "reserved_ip_address": {
+            "type": "string",
+            "nullable": true,
+            "example": "10.8.0.10",
+            "description": "Reserved IP address assigned by the CA for this client"
+          },
+          "certificate_pem": {
+            "type": "string",
+            "description": "The client's certificate in PEM format",
+            "example": "-----BEGIN CERTIFICATE-----\\nMIIE...\\n-----END CERTIFICATE-----"
+          },
+          "revoked_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "example": null,
+            "description": "Timestamp when the certificate was revoked, null if not revoked"
+          },
+          "expired_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-01-15T00:00:00Z",
+            "description": "Certificate expiration timestamp"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-15T10:30:00Z",
+            "description": "Record creation timestamp"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-15T10:30:00Z",
+            "description": "Record last update timestamp"
+          }
+        },
+        "required": [
+          "id",
+          "server_id",
+          "cn",
+          "certificate_pem",
+          "expired_at",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "OpenvpnClientCreateRequest": {
+        "type": "object",
+        "description": "Request body for creating a new OpenVPN client",
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 255,
+            "example": "client-office-1",
+            "description": "Optional name/CN for the client certificate. If not provided, a random CN will be generated."
+          }
+        }
+      },
+      "DeviceOpenvpnClient": {
+        "type": "object",
+        "description": "Association between a device and an OpenVPN client",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "550e8400-e29b-41d4-a716-446655440000",
+            "description": "Unique identifier for the assignment"
+          },
+          "device_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "The device ID"
+          },
+          "openvpn_client_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "987fcdeb-51a2-3c4d-5e6f-789012345678",
+            "description": "The OpenVPN client ID"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-15T10:30:00Z",
+            "description": "Record creation timestamp"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-15T10:30:00Z",
+            "description": "Record last update timestamp"
+          }
+        },
+        "required": [
+          "id",
+          "device_id",
+          "openvpn_client_id",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "ActivateRadiusClientRequest": {
+        "type": "object",
+        "description": "Request body for activating a RADIUS client for a device",
+        "properties": {
+          "device_vendor_id": {
+            "type": "integer",
+            "description": "RADIUS vendor ID to associate with the client",
+            "example": 1
+          }
+        },
+        "required": [
+          "device_vendor_id"
+        ]
+      },
+      "DeviceRadiusClient": {
+        "type": "object",
+        "description": "Device Radius Client entity representing the association between a device (via OpenVPN client) and a RADIUS client",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique identifier for the device radius client record",
+            "example": "aa0e8400-e29b-41d4-a716-446655440010"
+          },
+          "device_openvpn_client_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Reference to the device_openvpn_client assignment",
+            "example": "bb0e8400-e29b-41d4-a716-446655440005"
+          },
+          "radius_client_id": {
+            "type": "integer",
+            "description": "RADIUS client ID from the external RADIUS API",
+            "example": 123
+          },
+          "encrypted_secret": {
+            "type": "string",
+            "description": "Encrypted RADIUS client secret (AES-256-CBC encrypted, base64 encoded)",
+            "example": "U2FsdGVkX1..."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the record was created",
+            "example": "2024-01-15T10:30:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the record was last updated",
+            "example": "2024-01-15T10:30:00Z"
+          }
+        },
+        "required": [
+          "id",
+          "device_openvpn_client_id",
+          "radius_client_id",
+          "encrypted_secret",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "RadiusVendor": {
+        "type": "object",
+        "description": "RADIUS vendor entity representing a network equipment vendor",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Unique identifier for the vendor",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the vendor",
+            "example": "Mikrotik"
+          },
+          "version": {
+            "type": "string",
+            "description": "Version or additional information about the vendor",
+            "example": "RouterOS v7"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "version"
+        ]
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT authentication token"
+      },
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "session_token",
+        "description": "Session cookie authentication"
+      }
+    }
+  },
+  "x-readme": {
+    "description": "This API follows RESTful principles and returns responses in a consistent JSON format. All endpoints support the x-request-id header for request tracing. The API uses UUID v4 for all resource identifiers. Input sanitization and XSS protection are automatically applied to all string inputs.",
+    "notes": [
+      "All timestamps are in UTC and follow ISO 8601 format",
+      "UUID format validation is enforced on all identifier fields",
+      "Numeric coordinates (latitude/longitude) are validated within valid ranges",
+      "All endpoints include optional request_id in responses for debugging",
+      "Error responses include detailed validation messages in the errors array"
+    ]
+  }
+}
