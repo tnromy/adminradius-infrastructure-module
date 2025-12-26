@@ -4,6 +4,7 @@ use crate::entities::device_entity::DeviceEntity;
 use crate::entities::device_port_entity::DevicePortEntity;
 use crate::infrastructures::database::DatabaseConnection;
 use crate::repositories::postgresql::device_topology_postgres_repository::get_branch_topology as fetch_branch_topology;
+use crate::repositories::postgresql::device_topology_postgres_repository::get_first_root_device_id;
 use crate::repositories::postgresql::device_port_postgres_repository;
 use serde::Serialize;
 
@@ -68,7 +69,19 @@ pub async fn execute(
     active_device_id: Option<&str>,
 ) -> Result<Vec<BranchTopologyNode>, sqlx::Error> {
     let pool = db.get_pool();
-    let nodes = fetch_branch_topology(pool.as_ref(), branch_id, limit_level, active_device_id).await?;
+    
+    // If active_device_id is not provided, default to the first root device of the branch
+    let effective_active_device_id: Option<String> = match active_device_id {
+        Some(id) => Some(id.to_string()),
+        None => get_first_root_device_id(pool.as_ref(), branch_id).await?,
+    };
+    
+    let nodes = fetch_branch_topology(
+        pool.as_ref(),
+        branch_id,
+        limit_level,
+        effective_active_device_id.as_deref(),
+    ).await?;
 
     let mut device_ids: HashSet<String> = HashSet::new();
     for node in &nodes {

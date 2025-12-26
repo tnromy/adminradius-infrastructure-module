@@ -36,7 +36,7 @@ SELECT ... FROM topology
 - **Name**: `active_device_id`
 - **Type**: `Option<String>` (UUID)
 - **Required**: No
-- **Default behavior** (when not provided): Return full topology (current behavior)
+- **Default behavior** (when not provided): Defaults to the first root device of the branch, returning the root and its direct children
 
 ### Filter Logic When `active_device_id` is Provided
 

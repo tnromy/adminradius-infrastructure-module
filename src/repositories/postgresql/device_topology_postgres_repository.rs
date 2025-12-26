@@ -43,6 +43,40 @@ fn row_to_device(row: &PgRow) -> DeviceEntity {
     }
 }
 
+/// Get the first root device ID for a branch.
+/// A root device is a device that has no incoming connections (not a child of any other device).
+/// This query is optimized to find the root efficiently without computing the full topology.
+pub async fn get_first_root_device_id<'a, E>(
+    executor: E,
+    branch_id: &str,
+) -> Result<Option<String>, sqlx::Error>
+where
+    E: Executor<'a, Database = Postgres>,
+{
+    // Efficient query: Find devices in branch that are NOT the target of any connection
+    // Uses NOT EXISTS which can short-circuit early, and leverages indexes on device_ports
+    let row: Option<(String,)> = sqlx::query_as(
+        r#"
+            SELECT d.id
+            FROM devices d
+            WHERE d.branch_id = $1
+              AND NOT EXISTS (
+                  SELECT 1
+                  FROM device_connections dc
+                  JOIN device_ports tp ON tp.id = dc.to_port_id
+                  WHERE tp.device_id = d.id
+              )
+            ORDER BY d.created_at ASC
+            LIMIT 1
+        "#,
+    )
+    .bind(branch_id)
+    .fetch_optional(executor)
+    .await?;
+
+    Ok(row.map(|(id,)| id))
+}
+
 pub async fn get_branch_topology<'a, E>(
     executor: E,
     branch_id: &str,

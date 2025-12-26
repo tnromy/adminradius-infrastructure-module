@@ -34,7 +34,7 @@
           {
             "name": "active_device_id",
             "in": "query",
-            "description": "UUID of the active/focused device. When provided, returns: (1) the ancestor chain from this device to the root, (2) siblings at each ancestor level, and (3) direct children of the active device (1 level below). This is useful for focused UI navigation where you want to show the path to the active device, sibling options at each level, and immediate children for expansion. When omitted, returns the complete topology.",
+            "description": "UUID of the active/focused device. When provided, returns: (1) the ancestor chain from this device to the root, (2) siblings at each ancestor level, and (3) direct children of the active device (1 level below). When omitted, defaults to the first root device of the branch, returning the root device and its direct children. This provides a sensible default view for initial page load.",
             "required": false,
             "schema": {
               "type": "string",
