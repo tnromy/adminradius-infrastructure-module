@@ -80,6 +80,7 @@ root (level 0)           ← ancestor
 - **Ancestor chain**: All devices from active device up to root
 - **Siblings of each ancestor**: Devices sharing the same parent as each ancestor
 - **Siblings of active device**: Devices sharing the same parent as active device
+- **Direct children of active device**: Devices one level below active device (immediate children)
 
 ### Devices to Exclude
 - Descendants of siblings (e.g., children of OLT1, OLT3, ODC5, ODC6)

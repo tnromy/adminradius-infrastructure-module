@@ -150,6 +150,14 @@ where
                 FROM full_topology ft
                 WHERE $3::TEXT IS NOT NULL
                   AND ft.parent_device_id IN (SELECT parent_device_id FROM ancestor_chain)
+                
+                UNION
+                
+                -- Include direct children of active_device_id (1 level below)
+                SELECT ft.device_id
+                FROM full_topology ft
+                WHERE $3::TEXT IS NOT NULL
+                  AND ft.parent_device_id = $3::TEXT
             ),
             -- Final filtered topology
             topology AS (
