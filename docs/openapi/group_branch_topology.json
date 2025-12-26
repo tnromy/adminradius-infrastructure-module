@@ -6,7 +6,7 @@
           "Branch Topology"
         ],
         "summary": "Get branch topology",
-        "description": "Retrieve the complete network topology for a specific branch including devices, ports, and connections",
+        "description": "Retrieve the complete network topology for a specific branch including devices, ports, and connections. When active_device_id is provided, returns only the ancestor chain of that device plus siblings at each level, useful for focused navigation in the UI.",
         "operationId": "getBranchTopology",
         "parameters": [
           {
@@ -18,6 +18,28 @@
               "type": "string",
               "format": "uuid",
               "example": "550e8400-e29b-41d4-a716-446655440000"
+            }
+          },
+          {
+            "name": "limit_level",
+            "in": "query",
+            "description": "Maximum depth level to traverse in the topology tree. When omitted, returns all levels.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "example": 5
+            }
+          },
+          {
+            "name": "active_device_id",
+            "in": "query",
+            "description": "UUID of the active/focused device. When provided, returns only the ancestor chain from this device to the root, plus siblings at each ancestor level. This is useful for focused UI navigation where you want to show the path to the active device while still showing sibling options at each level. When omitted, returns the complete topology.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "660e8400-e29b-41d4-a716-446655440001"
             }
           }
         ],

@@ -47,6 +47,7 @@ pub async fn get_branch_topology<'a, E>(
     executor: E,
     branch_id: &str,
     limit_level: Option<i32>,
+    active_device_id: Option<&str>,
 ) -> Result<Vec<DeviceTopologyNode>, sqlx::Error>
 where
     E: Executor<'a, Database = Postgres>,
@@ -80,11 +81,11 @@ where
                       WHERE e.to_device_id = d.id
                   )
             ),
-            topology AS (
+            full_topology AS (
                 SELECT
                     r.device_id,
                     NULL::TEXT AS parent_device_id,
-                                        NULL::TEXT AS parent_device_port_id,
+                    NULL::TEXT AS parent_device_port_id,
                     NULL::TEXT AS uplink_port_id,
                     NULL::TEXT AS connection_id,
                     NULL::JSONB AS connection_details,
@@ -97,21 +98,77 @@ where
                 SELECT
                     e.to_device_id,
                     e.from_device_id AS parent_device_id,
-                                        e.from_port_id AS parent_device_port_id,
+                    e.from_port_id AS parent_device_port_id,
                     e.to_port_id AS uplink_port_id,
                     e.connection_id,
                     e.details AS connection_details,
                     t.level + 1 AS level,
-                                        path || e.to_device_id
-                FROM topology t
+                    path || e.to_device_id
+                FROM full_topology t
                 JOIN device_edges e ON e.from_device_id = t.device_id
                 WHERE ($2::INTEGER IS NULL OR t.level < $2)
-                                    AND NOT e.to_device_id = ANY(path)
+                    AND NOT e.to_device_id = ANY(path)
+            ),
+            -- Find ancestors of active device (path from active device to root)
+            ancestor_chain AS (
+                SELECT 
+                    ft.device_id,
+                    ft.parent_device_id,
+                    ft.level
+                FROM full_topology ft
+                WHERE ft.device_id = $3::TEXT
+                
+                UNION ALL
+                
+                SELECT 
+                    ft.device_id,
+                    ft.parent_device_id,
+                    ft.level
+                FROM ancestor_chain ac
+                JOIN full_topology ft ON ft.device_id = ac.parent_device_id
+            ),
+            -- Collect all parent device IDs from the ancestor chain
+            ancestor_parent_ids AS (
+                SELECT DISTINCT parent_device_id 
+                FROM ancestor_chain 
+                WHERE parent_device_id IS NOT NULL
+            ),
+            -- Determine which devices to include
+            included_devices AS (
+                -- When no active_device_id ($3 IS NULL), include everything
+                SELECT device_id FROM full_topology WHERE $3::TEXT IS NULL
+                
+                UNION
+                
+                -- Include all ancestors
+                SELECT device_id FROM ancestor_chain WHERE $3::TEXT IS NOT NULL
+                
+                UNION
+                
+                -- Include siblings of each ancestor (same parent as any ancestor)
+                SELECT ft.device_id 
+                FROM full_topology ft
+                WHERE $3::TEXT IS NOT NULL
+                  AND ft.parent_device_id IN (SELECT parent_device_id FROM ancestor_chain)
+            ),
+            -- Final filtered topology
+            topology AS (
+                SELECT 
+                    ft.device_id,
+                    ft.parent_device_id,
+                    ft.parent_device_port_id,
+                    ft.uplink_port_id,
+                    ft.connection_id,
+                    ft.connection_details,
+                    ft.level,
+                    ft.path
+                FROM full_topology ft
+                WHERE ft.device_id IN (SELECT device_id FROM included_devices)
             )
             SELECT
                 t.device_id,
                 t.parent_device_id,
-                                t.parent_device_port_id,
+                t.parent_device_port_id,
                 t.uplink_port_id,
                 t.connection_id,
                 t.connection_details,
@@ -137,6 +194,7 @@ where
     )
     .bind(branch_id)
     .bind(limit_level)
+    .bind(active_device_id)
     .fetch_all(executor)
     .await?;
 

@@ -65,9 +65,10 @@ pub async fn execute(
     db: &DatabaseConnection,
     branch_id: &str,
     limit_level: Option<i32>,
+    active_device_id: Option<&str>,
 ) -> Result<Vec<BranchTopologyNode>, sqlx::Error> {
     let pool = db.get_pool();
-    let nodes = fetch_branch_topology(pool.as_ref(), branch_id, limit_level).await?;
+    let nodes = fetch_branch_topology(pool.as_ref(), branch_id, limit_level, active_device_id).await?;
 
     let mut device_ids: HashSet<String> = HashSet::new();
     for node in &nodes {

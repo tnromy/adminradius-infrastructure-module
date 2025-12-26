@@ -18,6 +18,8 @@ pub struct BranchPath {
 pub struct BranchTopologyQuery {
     #[serde(default)]
     limit_level: Option<i32>,
+    #[serde(default)]
+    active_device_id: Option<String>,
 }
 
 pub async fn index(
@@ -31,12 +33,19 @@ pub async fn index(
         return bad_request_response(vec!["invalid branch_id".to_string()], request_id);
     };
 
-    let limit_level = match sanitize_limit_level(query.into_inner().limit_level) {
+    let query_params = query.into_inner();
+    
+    let limit_level = match sanitize_limit_level(query_params.limit_level) {
         Ok(limit) => limit,
         Err(errors) => return bad_request_response(errors, request_id),
     };
 
-    match get_branch_topology::execute(db.get_ref(), &branch_id, limit_level).await {
+    let active_device_id = match sanitize_optional_id(query_params.active_device_id.as_deref()) {
+        Ok(id) => id,
+        Err(errors) => return bad_request_response(errors, request_id),
+    };
+
+    match get_branch_topology::execute(db.get_ref(), &branch_id, limit_level, active_device_id.as_deref()).await {
         Ok(nodes) => ok_response(nodes, request_id),
         Err(err) => internal_error_response(&req, request_id, "failed to fetch branch topology", err),
     }
@@ -46,6 +55,21 @@ fn sanitize_id(raw: &str) -> Option<String> {
     let sanitized = xss_security_helper::sanitize_input(raw, 64);
     let safe = xss_security_helper::strip_dangerous_tags(&sanitized);
     if safe.len() == 36 { Some(safe) } else { None }
+}
+
+fn sanitize_optional_id(raw: Option<&str>) -> Result<Option<String>, Vec<String>> {
+    match raw {
+        None => Ok(None),
+        Some(id) => {
+            let sanitized = xss_security_helper::sanitize_input(id, 64);
+            let safe = xss_security_helper::strip_dangerous_tags(&sanitized);
+            if safe.len() == 36 {
+                Ok(Some(safe))
+            } else {
+                Err(vec!["active_device_id must be a valid UUID".to_string()])
+            }
+        }
+    }
 }
 
 fn sanitize_limit_level(value: Option<i32>) -> Result<Option<i32>, Vec<String>> {
