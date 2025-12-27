@@ -6,7 +6,7 @@
           "Device"
         ],
         "summary": "Get all devices in a branch",
-        "description": "Retrieve a list of all devices within a specific branch",
+        "description": "Retrieve a list of all devices within a specific branch. Supports optional search filtering by device name.",
         "operationId": "getAllDevices",
         "parameters": [
           {
@@ -18,6 +18,17 @@
               "type": "string",
               "format": "uuid",
               "example": "550e8400-e29b-41d4-a716-446655440000"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Search keyword to filter devices by name. Performs case-insensitive partial matching. Maximum 120 characters. Special characters (%, _) are automatically sanitized for security.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 120,
+              "example": "router"
             }
           }
         ],

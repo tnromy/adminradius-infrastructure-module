@@ -194,6 +194,7 @@ where
 pub async fn get_all_by_branch<'a, E>(
     executor: E,
     branch_id: &str,
+    search: Option<&str>,
 ) -> Result<Vec<DeviceEntity>, sqlx::Error>
 where
     E: Executor<'a, Database = Postgres>,
@@ -218,10 +219,12 @@ where
             FROM devices d
             LEFT JOIN device_types dt ON dt.id = d.device_type_id
             WHERE d.branch_id = $1
+              AND ($2::TEXT IS NULL OR LOWER(d.name) LIKE '%' || $2 || '%')
             ORDER BY LOWER(d.name)
         "#,
     )
     .bind(branch_id)
+    .bind(search)
     .fetch_all(executor)
     .await?;
 

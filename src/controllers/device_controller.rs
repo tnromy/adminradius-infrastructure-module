@@ -26,6 +26,7 @@ use crate::services::unassign_device_openvpn_client::{
 };
 use crate::services::update_device::{self, UpdateDeviceError, UpdateDeviceInput};
 use crate::utils::http_response_helper;
+use crate::utils::sql_security_helper;
 use crate::utils::xss_security_helper;
 use crate::validations::device::activate_radius_client_validation;
 use crate::validations::device::assign_openvpn_client_validation;
@@ -61,9 +62,16 @@ pub struct ActivateRadiusClientPayload {
     device_vendor_id: i32,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct DeviceIndexQuery {
+    #[serde(default)]
+    search: Option<String>,
+}
+
 pub async fn index(
     req: HttpRequest,
     path: web::Path<BranchPath>,
+    query: web::Query<DeviceIndexQuery>,
     db: web::Data<DatabaseConnection>,
 ) -> HttpResponse {
     let request_id = include_request_id_middleware::extract_request_id(&req);
@@ -71,7 +79,13 @@ pub async fn index(
         return bad_request_response(vec!["invalid branch_id".to_string()], request_id);
     };
 
-    match get_all_devices::execute(db.get_ref(), &branch_id).await {
+    // Sanitize search input to prevent SQL injection
+    let search = query.search.as_ref().map(|s| {
+        let sanitized = sql_security_helper::sanitize_search_keyword(s);
+        if sanitized.is_empty() { None } else { Some(sanitized) }
+    }).flatten();
+
+    match get_all_devices::execute(db.get_ref(), &branch_id, search.as_deref()).await {
         Ok(items) => ok_response(items, request_id),
         Err(err) => internal_error_response(&req, request_id, "failed to fetch devices", err),
     }
