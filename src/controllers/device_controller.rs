@@ -3,6 +3,7 @@ use config::Config;
 use log::error;
 use serde::Deserialize;
 use serde_json::json;
+use std::sync::Arc;
 
 use crate::infrastructures::database::DatabaseConnection;
 use crate::infrastructures::radius::RadiusService;
@@ -309,7 +310,7 @@ pub async fn activate_radius_client(
     req: HttpRequest,
     path: web::Path<DeviceRadiusClientPath>,
     db: web::Data<DatabaseConnection>,
-    config: web::Data<Config>,
+    config: web::Data<Arc<Config>>,
     radius_service: web::Data<RadiusService>,
     payload: web::Json<ActivateRadiusClientPayload>,
 ) -> HttpResponse {
@@ -330,7 +331,7 @@ pub async fn activate_radius_client(
 
     match activate_device_radius_client::execute(
         db.get_ref(),
-        config.get_ref(),
+        config.as_ref().as_ref(),
         radius_service.get_ref(),
         input,
     )

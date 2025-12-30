@@ -3,6 +3,7 @@ use config::Config;
 use log::error;
 use serde::Deserialize;
 use serde_json::json;
+use std::sync::Arc;
 
 use crate::entities::openvpn_server_entity::OpenvpnServerResponse;
 use crate::infrastructures::database::DatabaseConnection;
@@ -50,7 +51,7 @@ pub async fn store(
     req: HttpRequest,
     db: web::Data<DatabaseConnection>,
     redis: web::Data<RedisConnection>,
-    config: web::Data<Config>,
+    config: web::Data<Arc<Config>>,
     payload: web::Json<StoreOpenvpnServerPayload>,
 ) -> HttpResponse {
     let request_id = include_request_id_middleware::extract_request_id(&req);
@@ -73,7 +74,7 @@ pub async fn store(
         crl_distribution_point: validated.crl_distribution_point,
     };
 
-    match add_openvpn_server(db.get_ref(), redis.get_ref(), config.get_ref(), input).await {
+    match add_openvpn_server(db.get_ref(), redis.get_ref(), config.as_ref().as_ref(), input).await {
         Ok(entity) => {
             log_middleware::set_extra(&req, "openvpn_server_id", entity.id.clone());
             let response: OpenvpnServerResponse = entity.into();

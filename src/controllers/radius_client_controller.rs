@@ -1,6 +1,7 @@
 use actix_web::{HttpRequest, HttpResponse, web};
 use config::Config;
 use log::error;
+use std::sync::Arc;
 
 use crate::infrastructures::radius::RadiusService;
 use crate::infrastructures::redis::RedisConnection;
@@ -15,12 +16,12 @@ pub async fn index_vendors(
     req: HttpRequest,
     radius_service: web::Data<RadiusService>,
     redis: web::Data<RedisConnection>,
-    config: web::Data<Config>,
+    config: web::Data<Arc<Config>>,
 ) -> HttpResponse {
     let request_id = include_request_id_middleware::extract_request_id(&req);
 
     // Get cache key prefix from config, default to "radius_vendors"
-    let key_prefix = config
+    let key_prefix = config.as_ref()
         .get_string("radius.cache_key_prefix")
         .unwrap_or_else(|_| "radius_vendors".to_string());
 
