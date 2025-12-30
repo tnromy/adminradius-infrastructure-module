@@ -45,6 +45,14 @@
       "description": "Device type management - Define and manage types of network devices (e.g., Router, Switch, Firewall)"
     },
     {
+      "name": "Device Firmware",
+      "description": "Device firmware management - Define and manage firmware versions for network devices"
+    },
+    {
+      "name": "Device Firmware Script",
+      "description": "Device firmware script management - Manage configuration scripts for device firmwares"
+    },
+    {
       "name": "Device Port",
       "description": "Device port management - Manage physical and logical ports on network devices"
     },
@@ -103,6 +111,24 @@
     },
     "/device-type/{id}": {
       "$ref": "./group_device_type.json#/paths/~1api-infra~1device-type~1{id}"
+    },
+    "/device-firmwares": {
+      "$ref": "./group_device_firmware.json#/paths/~1api-infra~1device-firmwares"
+    },
+    "/device-firmware": {
+      "$ref": "./group_device_firmware.json#/paths/~1api-infra~1device-firmware"
+    },
+    "/device-firmware/{id}": {
+      "$ref": "./group_device_firmware.json#/paths/~1api-infra~1device-firmware~1{id}"
+    },
+    "/device-firmware/{device_firmware_id}/scripts": {
+      "$ref": "./group_device_firmware.json#/paths/~1api-infra~1device-firmware~1{device_firmware_id}~1scripts"
+    },
+    "/device-firmware/{device_firmware_id}/script": {
+      "$ref": "./group_device_firmware.json#/paths/~1api-infra~1device-firmware~1{device_firmware_id}~1script"
+    },
+    "/device-firmware/{device_firmware_id}/script/{id}": {
+      "$ref": "./group_device_firmware.json#/paths/~1api-infra~1device-firmware~1{device_firmware_id}~1script~1{id}"
     },
     "/device/{device_id}/ports": {
       "$ref": "./group_device_port.json#/paths/~1api-infra~1device~1{device_id}~1ports"

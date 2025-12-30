@@ -2,6 +2,7 @@
 
 pub mod branch_topology_route;
 pub mod device_connection_route;
+pub mod device_firmware_route;
 pub mod device_port_interface_route;
 pub mod device_port_route;
 pub mod device_port_specification_route;
@@ -17,6 +18,7 @@ pub fn configure(cfg: &mut ServiceConfig) {
     device_port_specification_route::configure(cfg);
     device_port_interface_route::configure(cfg);
     device_type_route::configure(cfg);
+    device_firmware_route::configure(cfg);
     device_route::configure(cfg);
     device_port_route::configure(cfg);
     device_connection_route::configure(cfg);
@@ -25,3 +27,4 @@ pub fn configure(cfg: &mut ServiceConfig) {
     openvpn_client_route::configure(cfg);
     radius_client_route::configure(cfg);
 }
+

@@ -56,6 +56,14 @@
       "description": "Device type management - Define and manage types of network devices (e.g., Router, Switch, Firewall)"
     },
     {
+      "name": "Device Firmware",
+      "description": "Device firmware management - Define and manage firmware versions for network devices"
+    },
+    {
+      "name": "Device Firmware Script",
+      "description": "Device firmware script management - Manage configuration scripts for device firmwares"
+    },
+    {
       "name": "Device Port",
       "description": "Device port management - Manage physical and logical ports on network devices"
     },
@@ -107,7 +115,7 @@
           "Device"
         ],
         "summary": "Get all devices in a branch",
-        "description": "Retrieve a list of all devices within a specific branch",
+        "description": "Retrieve a list of all devices within a specific branch. Supports optional search filtering by device name.",
         "operationId": "getAllDevices",
         "parameters": [
           {
@@ -119,6 +127,17 @@
               "type": "string",
               "format": "uuid",
               "example": "550e8400-e29b-41d4-a716-446655440000"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Search keyword to filter devices by name. Performs case-insensitive partial matching. Maximum 120 characters. Special characters (%, _) are automatically sanitized for security.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 120,
+              "example": "router"
             }
           }
         ],
@@ -953,6 +972,849 @@
           },
           "500": {
             "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/device-firmwares": {
+      "get": {
+        "tags": [
+          "Device Firmware"
+        ],
+        "summary": "Get all device firmwares",
+        "description": "Retrieve a list of all available device firmwares",
+        "operationId": "getAllDeviceFirmwares",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/DeviceFirmware"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/responses-InternalServerError"
+          }
+        }
+      }
+    },
+    "/device-firmware": {
+      "post": {
+        "tags": [
+          "Device Firmware"
+        ],
+        "summary": "Create a new device firmware",
+        "description": "Create a new device firmware in the system",
+        "operationId": "createDeviceFirmware",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceFirmwareCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Device firmware created successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DeviceFirmware"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/responses-BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/responses-InternalServerError"
+          }
+        }
+      }
+    },
+    "/device-firmware/{id}": {
+      "get": {
+        "tags": [
+          "Device Firmware"
+        ],
+        "summary": "Get device firmware by ID",
+        "description": "Retrieve detailed information about a specific device firmware",
+        "operationId": "getDeviceFirmwareById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Device Firmware UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440001"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DeviceFirmware"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/responses-NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/responses-InternalServerError"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Device Firmware"
+        ],
+        "summary": "Update device firmware",
+        "description": "Update an existing device firmware",
+        "operationId": "updateDeviceFirmware",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Device Firmware UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440001"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceFirmwareUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Device firmware updated successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DeviceFirmware"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/responses-BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/responses-NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/responses-InternalServerError"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Device Firmware"
+        ],
+        "summary": "Delete device firmware",
+        "description": "Delete a device firmware and all its associated scripts",
+        "operationId": "deleteDeviceFirmware",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Device Firmware UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440001"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Device firmware deleted successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "deleted"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/responses-NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/responses-InternalServerError"
+          }
+        }
+      }
+    },
+    "/device-firmware/{device_firmware_id}/scripts": {
+      "get": {
+        "tags": [
+          "Device Firmware Script"
+        ],
+        "summary": "Get all scripts for a device firmware",
+        "description": "Retrieve a list of all scripts associated with a specific device firmware",
+        "operationId": "getAllDeviceFirmwareScripts",
+        "parameters": [
+          {
+            "name": "device_firmware_id",
+            "in": "path",
+            "description": "Device Firmware UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440001"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/DeviceFirmwareScript"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/responses-NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/responses-InternalServerError"
+          }
+        }
+      }
+    },
+    "/device-firmware/{device_firmware_id}/script": {
+      "post": {
+        "tags": [
+          "Device Firmware Script"
+        ],
+        "summary": "Create a new script for a device firmware",
+        "description": "Create a new script associated with a specific device firmware",
+        "operationId": "createDeviceFirmwareScript",
+        "parameters": [
+          {
+            "name": "device_firmware_id",
+            "in": "path",
+            "description": "Device Firmware UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440001"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceFirmwareScriptCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Device firmware script created successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DeviceFirmwareScript"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/responses-BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/responses-NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/responses-InternalServerError"
+          }
+        }
+      }
+    },
+    "/device-firmware/{device_firmware_id}/script/{id}": {
+      "get": {
+        "tags": [
+          "Device Firmware Script"
+        ],
+        "summary": "Get device firmware script by ID",
+        "description": "Retrieve detailed information about a specific device firmware script",
+        "operationId": "getDeviceFirmwareScriptById",
+        "parameters": [
+          {
+            "name": "device_firmware_id",
+            "in": "path",
+            "description": "Device Firmware UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440001"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Device Firmware Script UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "660e8400-e29b-41d4-a716-446655440002"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DeviceFirmwareScript"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/responses-NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/responses-InternalServerError"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Device Firmware Script"
+        ],
+        "summary": "Update device firmware script",
+        "description": "Update an existing device firmware script",
+        "operationId": "updateDeviceFirmwareScript",
+        "parameters": [
+          {
+            "name": "device_firmware_id",
+            "in": "path",
+            "description": "Device Firmware UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440001"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Device Firmware Script UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "660e8400-e29b-41d4-a716-446655440002"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceFirmwareScriptUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Device firmware script updated successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DeviceFirmwareScript"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/responses-BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/responses-NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/responses-InternalServerError"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Device Firmware Script"
+        ],
+        "summary": "Delete device firmware script",
+        "description": "Delete a device firmware script",
+        "operationId": "deleteDeviceFirmwareScript",
+        "parameters": [
+          {
+            "name": "device_firmware_id",
+            "in": "path",
+            "description": "Device Firmware UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440001"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Device Firmware Script UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "660e8400-e29b-41d4-a716-446655440002"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Device firmware script deleted successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "deleted"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/responses-NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/responses-InternalServerError"
           }
         }
       }
@@ -2667,7 +3529,7 @@
           "Branch Topology"
         ],
         "summary": "Get branch topology",
-        "description": "Retrieve the complete network topology for a specific branch including devices, ports, and connections",
+        "description": "Retrieve the complete network topology for a specific branch including devices, ports, and connections. When active_device_id is provided, returns only the ancestor chain of that device plus siblings at each level, useful for focused navigation in the UI.",
         "operationId": "getBranchTopology",
         "parameters": [
           {
@@ -2679,6 +3541,28 @@
               "type": "string",
               "format": "uuid",
               "example": "550e8400-e29b-41d4-a716-446655440000"
+            }
+          },
+          {
+            "name": "limit_level",
+            "in": "query",
+            "description": "Maximum depth level to traverse in the topology tree. When omitted, returns all levels.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "example": 5
+            }
+          },
+          {
+            "name": "active_device_id",
+            "in": "query",
+            "description": "UUID of the active/focused device. When provided, returns: (1) the ancestor chain from this device to the root, (2) siblings at each ancestor level, and (3) direct children of the active device (1 level below). When omitted, defaults to the first root device of the branch, returning the root device and its direct children. This provides a sensible default view for initial page load.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "660e8400-e29b-41d4-a716-446655440001"
             }
           }
         ],
@@ -2868,7 +3752,7 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/responses-BadRequest"
+            "$ref": "#/components/responses/components-responses-BadRequest"
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
@@ -2946,7 +3830,7 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/responses-BadRequest"
+            "$ref": "#/components/responses/components-responses-BadRequest"
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
@@ -2955,7 +3839,7 @@
             "$ref": "#/components/responses/Forbidden"
           },
           "404": {
-            "$ref": "#/components/responses/responses-NotFound"
+            "$ref": "#/components/responses/components-responses-NotFound"
           },
           "500": {
             "$ref": "#/components/responses/InternalServerError"
@@ -3035,7 +3919,7 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/responses-BadRequest"
+            "$ref": "#/components/responses/components-responses-BadRequest"
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
@@ -3044,7 +3928,7 @@
             "$ref": "#/components/responses/Forbidden"
           },
           "404": {
-            "$ref": "#/components/responses/responses-NotFound"
+            "$ref": "#/components/responses/components-responses-NotFound"
           },
           "500": {
             "$ref": "#/components/responses/InternalServerError"
@@ -3120,7 +4004,7 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/responses-BadRequest"
+            "$ref": "#/components/responses/components-responses-BadRequest"
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
@@ -3129,7 +4013,7 @@
             "$ref": "#/components/responses/Forbidden"
           },
           "404": {
-            "$ref": "#/components/responses/responses-NotFound"
+            "$ref": "#/components/responses/components-responses-NotFound"
           },
           "500": {
             "$ref": "#/components/responses/InternalServerError"
@@ -3203,7 +4087,7 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/components-responses-BadRequest"
+            "$ref": "#/components/responses/group_openvpn_client_components-responses-BadRequest"
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
@@ -3212,7 +4096,7 @@
             "$ref": "#/components/responses/Forbidden"
           },
           "500": {
-            "$ref": "#/components/responses/responses-InternalServerError"
+            "$ref": "#/components/responses/components-responses-InternalServerError"
           }
         }
       }
@@ -3290,7 +4174,7 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/components-responses-BadRequest"
+            "$ref": "#/components/responses/group_openvpn_client_components-responses-BadRequest"
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
@@ -3299,10 +4183,10 @@
             "$ref": "#/components/responses/Forbidden"
           },
           "404": {
-            "$ref": "#/components/responses/components-responses-NotFound"
+            "$ref": "#/components/responses/group_openvpn_client_components-responses-NotFound"
           },
           "500": {
-            "$ref": "#/components/responses/responses-InternalServerError"
+            "$ref": "#/components/responses/components-responses-InternalServerError"
           }
         }
       }
@@ -3370,7 +4254,7 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/components-responses-BadRequest"
+            "$ref": "#/components/responses/group_openvpn_client_components-responses-BadRequest"
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
@@ -3379,10 +4263,10 @@
             "$ref": "#/components/responses/Forbidden"
           },
           "404": {
-            "$ref": "#/components/responses/components-responses-NotFound"
+            "$ref": "#/components/responses/group_openvpn_client_components-responses-NotFound"
           },
           "500": {
-            "$ref": "#/components/responses/responses-InternalServerError"
+            "$ref": "#/components/responses/components-responses-InternalServerError"
           }
         }
       },
@@ -3454,7 +4338,7 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/components-responses-BadRequest"
+            "$ref": "#/components/responses/group_openvpn_client_components-responses-BadRequest"
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
@@ -3463,10 +4347,10 @@
             "$ref": "#/components/responses/Forbidden"
           },
           "404": {
-            "$ref": "#/components/responses/components-responses-NotFound"
+            "$ref": "#/components/responses/group_openvpn_client_components-responses-NotFound"
           },
           "500": {
-            "$ref": "#/components/responses/responses-InternalServerError"
+            "$ref": "#/components/responses/components-responses-InternalServerError"
           }
         }
       }
@@ -3599,7 +4483,7 @@
             "$ref": "#/components/responses/group_device_openvpn_client_components-responses-NotFound"
           },
           "500": {
-            "$ref": "#/components/responses/components-responses-InternalServerError"
+            "$ref": "#/components/responses/group_device_openvpn_client_components-responses-InternalServerError"
           }
         }
       },
@@ -3693,7 +4577,7 @@
             "$ref": "#/components/responses/group_device_openvpn_client_components-responses-NotFound"
           },
           "500": {
-            "$ref": "#/components/responses/components-responses-InternalServerError"
+            "$ref": "#/components/responses/group_device_openvpn_client_components-responses-InternalServerError"
           }
         }
       }
@@ -4203,7 +5087,164 @@
           }
         }
       },
+      "responses-InternalServerError": {
+        "description": "Internal Server Error",
+        "headers": {
+          "x-request-id": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Request identifier for tracing"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 500
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Internal Server Error"
+                    }
+                  }
+                },
+                "request_id": {
+                  "type": "string",
+                  "nullable": true,
+                  "example": "req_abc123xyz"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": [
+                        "An internal error occurred"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
       "responses-BadRequest": {
+        "description": "Bad Request - Invalid input parameters or validation errors",
+        "headers": {
+          "x-request-id": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Request identifier for tracing"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 400
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Bad Request"
+                    }
+                  }
+                },
+                "request_id": {
+                  "type": "string",
+                  "nullable": true,
+                  "example": "req_abc123xyz"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": [
+                        "name is required",
+                        "script_text is required"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses-NotFound": {
+        "description": "Not Found - Resource does not exist",
+        "headers": {
+          "x-request-id": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Request identifier for tracing"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 404
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Not Found"
+                    }
+                  }
+                },
+                "request_id": {
+                  "type": "string",
+                  "nullable": true,
+                  "example": "req_abc123xyz"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": [
+                        "device firmware not found"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "components-responses-BadRequest": {
         "description": "Bad Request - Invalid input parameters or validation errors",
         "headers": {
           "x-request-id": {
@@ -4258,7 +5299,7 @@
           }
         }
       },
-      "responses-NotFound": {
+      "components-responses-NotFound": {
         "description": "Not Found - Resource does not exist",
         "headers": {
           "x-request-id": {
@@ -4310,7 +5351,7 @@
           }
         }
       },
-      "components-responses-BadRequest": {
+      "group_openvpn_client_components-responses-BadRequest": {
         "description": "Bad Request - Invalid input parameters or validation errors",
         "headers": {
           "x-request-id": {
@@ -4356,7 +5397,7 @@
           }
         }
       },
-      "responses-InternalServerError": {
+      "components-responses-InternalServerError": {
         "description": "Internal Server Error - An unexpected error occurred on the server",
         "headers": {
           "x-request-id": {
@@ -4402,7 +5443,7 @@
           }
         }
       },
-      "components-responses-NotFound": {
+      "group_openvpn_client_components-responses-NotFound": {
         "description": "Not Found - The requested resource was not found",
         "headers": {
           "x-request-id": {
@@ -4494,7 +5535,7 @@
           }
         }
       },
-      "components-responses-InternalServerError": {
+      "group_device_openvpn_client_components-responses-InternalServerError": {
         "description": "Internal Server Error - An unexpected error occurred on the server",
         "headers": {
           "x-request-id": {
@@ -5828,6 +6869,245 @@
           "updated_at"
         ]
       },
+      "DeviceFirmware": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Device firmware unique identifier",
+            "example": "550e8400-e29b-41d4-a716-446655440001"
+          },
+          "name": {
+            "type": "string",
+            "description": "Device firmware name",
+            "maxLength": 255,
+            "example": "MikroTik RouterOS"
+          },
+          "version": {
+            "type": "string",
+            "description": "Firmware version",
+            "maxLength": 100,
+            "example": "7.12"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation timestamp",
+            "example": "2025-01-10T08:00:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last update timestamp",
+            "example": "2025-01-10T08:00:00Z"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "version",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "DeviceFirmwareCreateRequest": {
+        "type": "object",
+        "required": [
+          "name",
+          "version"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Device firmware name (sanitized, max 255 characters, required)",
+            "maxLength": 255,
+            "minLength": 1,
+            "example": "MikroTik RouterOS"
+          },
+          "version": {
+            "type": "string",
+            "description": "Firmware version (sanitized, max 100 characters, required)",
+            "maxLength": 100,
+            "minLength": 1,
+            "example": "7.12"
+          }
+        }
+      },
+      "DeviceFirmwareUpdateRequest": {
+        "type": "object",
+        "required": [
+          "name",
+          "version"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Device firmware name (sanitized, max 255 characters, required)",
+            "maxLength": 255,
+            "minLength": 1,
+            "example": "MikroTik RouterOS"
+          },
+          "version": {
+            "type": "string",
+            "description": "Firmware version (sanitized, max 100 characters, required)",
+            "maxLength": 100,
+            "minLength": 1,
+            "example": "7.13"
+          }
+        }
+      },
+      "DeviceFirmwareScript": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Device firmware script unique identifier",
+            "example": "660e8400-e29b-41d4-a716-446655440002"
+          },
+          "device_firmware_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Parent device firmware identifier",
+            "example": "550e8400-e29b-41d4-a716-446655440001"
+          },
+          "name": {
+            "type": "string",
+            "description": "Script name",
+            "maxLength": 255,
+            "example": "configure_pppoe"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "description": "Script description",
+            "example": "Configure PPPoE client on router"
+          },
+          "script_text": {
+            "type": "string",
+            "description": "The actual script content",
+            "example": "/interface pppoe-client add name={{interface_name}} user={{username}} password={{password}}"
+          },
+          "script_params": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Array of parameter keys required by the script",
+            "example": [
+              "interface_name",
+              "username",
+              "password"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation timestamp",
+            "example": "2025-01-10T08:00:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last update timestamp",
+            "example": "2025-01-10T08:00:00Z"
+          }
+        },
+        "required": [
+          "id",
+          "device_firmware_id",
+          "name",
+          "script_text",
+          "script_params",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "DeviceFirmwareScriptCreateRequest": {
+        "type": "object",
+        "required": [
+          "name",
+          "script_text"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Script name (sanitized, max 255 characters, required)",
+            "maxLength": 255,
+            "minLength": 1,
+            "example": "configure_pppoe"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "description": "Script description (sanitized, max 1000 characters, optional)",
+            "maxLength": 1000,
+            "example": "Configure PPPoE client on router"
+          },
+          "script_text": {
+            "type": "string",
+            "description": "The actual script content (required, not sanitized to preserve script content)",
+            "minLength": 1,
+            "example": "/interface pppoe-client add name={{interface_name}} user={{username}} password={{password}}"
+          },
+          "script_params": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true,
+            "description": "Array of parameter keys required by the script (optional, defaults to empty array)",
+            "example": [
+              "interface_name",
+              "username",
+              "password"
+            ]
+          }
+        }
+      },
+      "DeviceFirmwareScriptUpdateRequest": {
+        "type": "object",
+        "required": [
+          "name",
+          "script_text"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Script name (sanitized, max 255 characters, required)",
+            "maxLength": 255,
+            "minLength": 1,
+            "example": "configure_pppoe_v2"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "description": "Script description (sanitized, max 1000 characters, optional)",
+            "maxLength": 1000,
+            "example": "Configure PPPoE client on router - updated version"
+          },
+          "script_text": {
+            "type": "string",
+            "description": "The actual script content (required, not sanitized to preserve script content)",
+            "minLength": 1,
+            "example": "/interface pppoe-client add name={{interface_name}} user={{username}} password={{password}} disabled=no"
+          },
+          "script_params": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true,
+            "description": "Array of parameter keys required by the script (optional, defaults to empty array)",
+            "example": [
+              "interface_name",
+              "username",
+              "password"
+            ]
+          }
+        }
+      },
       "schemas-Device": {
         "type": "object",
         "description": "Device entity reference"
@@ -5844,24 +7124,59 @@
         "type": "object",
         "description": "Device port entity reference"
       },
-      "components-schemas-Device": {
-        "type": "object",
-        "description": "Device entity with complete information"
-      },
       "components-schemas-DevicePort": {
         "type": "object",
         "description": "Device port entity with complete information"
       },
-      "schemas-DeviceConnection": {
+      "TopologyDevice": {
         "type": "object",
-        "description": "Device connection entity with complete information"
-      },
-      "TopologyNode": {
-        "type": "object",
-        "description": "Represents a node in the network topology structure, which could be a device with its ports and connections",
+        "description": "Device entity with ports embedded",
         "properties": {
-          "device": {
-            "$ref": "#/components/schemas/components-schemas-Device"
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "branch_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "device_type_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "device_type": {
+            "type": "string",
+            "nullable": true,
+            "description": "Name of the device type"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "location_details": {
+            "type": "object",
+            "nullable": true
+          },
+          "specifications": {
+            "type": "object",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
           },
           "ports": {
             "type": "array",
@@ -5869,21 +7184,51 @@
               "$ref": "#/components/schemas/components-schemas-DevicePort"
             },
             "description": "All ports belonging to this device"
+          }
+        }
+      },
+      "TopologyNode": {
+        "type": "object",
+        "description": "Represents a node in the network topology structure, including device details, ports, and connection information to parent",
+        "properties": {
+          "device": {
+            "$ref": "#/components/schemas/TopologyDevice"
           },
-          "connections": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/schemas-DeviceConnection"
-            },
-            "description": "All connections involving this device's ports"
+          "parent_device_port_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "The port ID on the parent device that connects to this device (from_port_id in device_connections)"
+          },
+          "uplink_port_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "The port ID on this device that connects to the parent device (to_port_id in device_connections)"
+          },
+          "connection_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "The ID of the connection between this device and its parent"
+          },
+          "connection_details": {
+            "type": "object",
+            "nullable": true,
+            "description": "Additional connection details (cable type, length, etc.)"
+          },
+          "level": {
+            "type": "integer",
+            "description": "The depth level in the topology tree (0 = root device)"
           }
         },
         "example": {
           "device": {
             "id": "660e8400-e29b-41d4-a716-446655440001",
             "branch_id": "550e8400-e29b-41d4-a716-446655440000",
-            "name": "Router Core-01",
+            "name": "Switch-01",
             "device_type_id": "770e8400-e29b-41d4-a716-446655440002",
+            "device_type": "Switch",
             "latitude": -6.2088,
             "longitude": 106.8456,
             "location_details": {
@@ -5895,36 +7240,31 @@
               "serial_number": "SN123456789"
             },
             "created_at": "2025-01-15T10:30:00Z",
-            "updated_at": "2025-01-15T14:45:00Z"
+            "updated_at": "2025-01-15T14:45:00Z",
+            "ports": [
+              {
+                "id": "880e8400-e29b-41d4-a716-446655440003",
+                "device_id": "660e8400-e29b-41d4-a716-446655440001",
+                "port_interface_id": "990e8400-e29b-41d4-a716-446655440004",
+                "name": "GigabitEthernet0/1",
+                "position": 1,
+                "enabled": true,
+                "properties": {
+                  "speed": "1000Mbps"
+                },
+                "created_at": "2025-01-15T10:35:00Z",
+                "updated_at": "2025-01-15T10:35:00Z"
+              }
+            ]
           },
-          "ports": [
-            {
-              "id": "880e8400-e29b-41d4-a716-446655440003",
-              "device_id": "660e8400-e29b-41d4-a716-446655440001",
-              "port_interface_id": "990e8400-e29b-41d4-a716-446655440004",
-              "name": "GigabitEthernet0/1",
-              "position": 1,
-              "enabled": true,
-              "properties": {
-                "speed": "1000Mbps"
-              },
-              "created_at": "2025-01-15T10:35:00Z",
-              "updated_at": "2025-01-15T10:35:00Z"
-            }
-          ],
-          "connections": [
-            {
-              "id": "bb0e8400-e29b-41d4-a716-446655440006",
-              "from_port_id": "880e8400-e29b-41d4-a716-446655440003",
-              "to_port_id": "880e8400-e29b-41d4-a716-446655440007",
-              "details": {
-                "cable_type": "fiber",
-                "cable_length": "10m"
-              },
-              "created_at": "2025-01-15T11:00:00Z",
-              "updated_at": "2025-01-15T11:00:00Z"
-            }
-          ]
+          "parent_device_port_id": "aa0e8400-e29b-41d4-a716-446655440005",
+          "uplink_port_id": "880e8400-e29b-41d4-a716-446655440003",
+          "connection_id": "bb0e8400-e29b-41d4-a716-446655440006",
+          "connection_details": {
+            "cable_type": "fiber",
+            "cable_length": "10m"
+          },
+          "level": 1
         }
       },
       "OpenvpnClient": {
