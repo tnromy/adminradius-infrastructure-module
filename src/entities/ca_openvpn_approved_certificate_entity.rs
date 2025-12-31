@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CaOpenvpnApprovedCertificateEntity {
     pub certificate_pem: String,
+    pub cn: String,
     pub expired_at: String,
     pub issued_at: String,
     pub message: String,

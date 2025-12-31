@@ -133,10 +133,10 @@ pub async fn execute(
         .map(|dt| dt.with_timezone(&Utc))
         .map_err(|e| AddOpenvpnClientError::CertificateGeneration(format!("Failed to parse expired_at: {}", e)))?;
 
-    // Step 10: Determine CN from certificate or use generated one
-    let final_cn = cn
-        .map(|s| s.to_string())
-        .unwrap_or_else(|| format!("client-{}", uuid_helper::generate().split('-').next().unwrap_or("unknown")));
+    // Step 10: Use CN from certificate approval response
+    let final_cn = certificate_data.cn.clone();
+
+    log::debug!("add_openvpn_client:cn_determined cn={}", final_cn);
 
     // Step 11: Create entity
     let now = Utc::now();

@@ -132,7 +132,7 @@ pub async fn create_csr_server(
 /// * `certificate_request_id` - The ID of the certificate request to approve
 ///
 /// # Returns
-/// * `CaOpenvpnApprovedCertificateEntity` containing certificate_pem, expired_at, issued_at, message, and serial_number
+/// * `CaOpenvpnApprovedCertificateEntity` containing certificate_pem, cn, expired_at, issued_at, message, and serial_number
 pub async fn approve_csr(
     ca_openvpn_service: &CaOpenvpnService,
     certificate_request_id: &str,
