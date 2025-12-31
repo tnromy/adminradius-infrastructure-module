@@ -23,6 +23,7 @@ pub struct AddOpenvpnServerInput {
     pub host: String,
     pub port: i32,
     pub proto: String,
+    pub subnet: String,
     pub cipher: Option<String>,
     pub auth_algorithm: String,
     pub tls_key_pem: Option<String>,
@@ -174,6 +175,7 @@ pub async fn execute(
         expired_at,
         remote_cert_tls_name: input.remote_cert_tls_name,
         crl_distribution_point: input.crl_distribution_point,
+        subnet: input.subnet,
         created_at: now,
         updated_at: now,
     };

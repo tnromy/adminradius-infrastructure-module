@@ -8,6 +8,7 @@ pub struct StoreOpenvpnServerPayload {
     pub host: String,
     pub port: Option<i32>,
     pub proto: Option<String>,
+    pub subnet: Option<String>,
     pub cipher: Option<String>,
     pub auth_algorithm: Option<String>,
     pub tls_key_pem: Option<String>,
@@ -22,6 +23,7 @@ pub struct StoreOpenvpnServerValidated {
     pub host: String,
     pub port: i32,
     pub proto: String,
+    pub subnet: String,
     pub cipher: Option<String>,
     pub auth_algorithm: String,
     pub tls_key_pem: Option<String>,
@@ -64,6 +66,19 @@ pub fn validate(payload: StoreOpenvpnServerPayload) -> Result<StoreOpenvpnServer
         }
     } else {
         "udp".to_string()
+    };
+
+    // Validate subnet (default "10.8.0.0/24" if not provided)
+    let subnet = if let Some(s) = payload.subnet {
+        let sanitized_subnet = xss_security_helper::sanitize_input(&s, 18);
+        let safe_subnet = xss_security_helper::strip_dangerous_tags(&sanitized_subnet);
+        if safe_subnet.is_empty() {
+            "10.8.0.0/24".to_string()
+        } else {
+            safe_subnet
+        }
+    } else {
+        "10.8.0.0/24".to_string()
     };
 
     // Validate cipher (optional, but sanitize if provided)
@@ -122,6 +137,7 @@ pub fn validate(payload: StoreOpenvpnServerPayload) -> Result<StoreOpenvpnServer
             host: safe_host,
             port,
             proto,
+            subnet,
             cipher,
             auth_algorithm,
             tls_key_pem,

@@ -8,6 +8,7 @@ fn row_to_entity(row: &PgRow) -> OpenvpnServerEntity {
         host: row.get("host"),
         port: row.get("port"),
         proto: row.get("proto"),
+        subnet: row.get("subnet"),
         cipher: row.get("cipher"),
         auth_algorithm: row.get("auth_algorithm"),
         tls_key_pem: row.get("tls_key_pem"),
@@ -31,13 +32,13 @@ where
     let row: PgRow = sqlx::query(
         r#"
             INSERT INTO openvpn_servers (
-                id, name, host, port, proto, cipher, auth_algorithm,
+                id, name, host, port, proto, subnet, cipher, auth_algorithm,
                 tls_key_pem, tls_key_mode, ca_chain_pem, certificate_pem,
                 encrypted_private_key_pem, serial_number, expired_at,
                 remote_cert_tls_name, crl_distribution_point,
                 created_at, updated_at
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
             RETURNING id
         "#,
     )
@@ -46,6 +47,7 @@ where
     .bind(&entity.host)
     .bind(entity.port)
     .bind(&entity.proto)
+    .bind(&entity.subnet)
     .bind(&entity.cipher)
     .bind(&entity.auth_algorithm)
     .bind(&entity.tls_key_pem)
@@ -71,6 +73,7 @@ pub async fn update<'a, E>(
     host: &str,
     port: i32,
     proto: &str,
+    subnet: &str,
     cipher: Option<&str>,
     auth_algorithm: &str,
     tls_key_pem: Option<&str>,
@@ -87,12 +90,13 @@ where
             SET host = $2,
                 port = $3,
                 proto = $4,
-                cipher = $5,
-                auth_algorithm = $6,
-                tls_key_pem = $7,
-                tls_key_mode = $8,
-                remote_cert_tls_name = $9,
-                crl_distribution_point = $10
+                subnet = $5,
+                cipher = $6,
+                auth_algorithm = $7,
+                tls_key_pem = $8,
+                tls_key_mode = $9,
+                remote_cert_tls_name = $10,
+                crl_distribution_point = $11
             WHERE id = $1
         "#,
     )
@@ -100,6 +104,7 @@ where
     .bind(host)
     .bind(port)
     .bind(proto)
+    .bind(subnet)
     .bind(cipher)
     .bind(auth_algorithm)
     .bind(tls_key_pem)
@@ -121,7 +126,7 @@ where
 {
     let row = sqlx::query(
         r#"
-            SELECT id, name, host, port, proto, cipher, auth_algorithm,
+            SELECT id, name, host, port, proto, subnet, cipher, auth_algorithm,
                    tls_key_pem, tls_key_mode, ca_chain_pem, certificate_pem,
                    encrypted_private_key_pem, serial_number, expired_at,
                    remote_cert_tls_name, crl_distribution_point,
@@ -143,7 +148,7 @@ where
 {
     let rows = sqlx::query(
         r#"
-            SELECT id, name, host, port, proto, cipher, auth_algorithm,
+            SELECT id, name, host, port, proto, subnet, cipher, auth_algorithm,
                    tls_key_pem, tls_key_mode, ca_chain_pem, certificate_pem,
                    encrypted_private_key_pem, serial_number, expired_at,
                    remote_cert_tls_name, crl_distribution_point,

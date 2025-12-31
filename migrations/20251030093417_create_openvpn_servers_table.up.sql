@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS openvpn_servers (
 	host               VARCHAR(45) NOT NULL,
 	port                     INTEGER NOT NULL DEFAULT 1194,
 	proto                    VARCHAR(10) NOT NULL DEFAULT 'udp',
+	subnet                   VARCHAR(18) NOT NULL DEFAULT '10.8.0.0/24',
 	cipher                   VARCHAR(50) DEFAULT 'AES-256-CBC',
 	auth_algorithm           VARCHAR(50) NOT NULL DEFAULT 'SHA256',
 	tls_key_pem              TEXT,

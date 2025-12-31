@@ -7,6 +7,7 @@ pub struct UpdateOpenvpnServerPayload {
     pub host: String,
     pub port: i32,
     pub proto: String,
+    pub subnet: String,
     pub cipher: Option<String>,
     pub auth_algorithm: String,
     pub tls_key_pem: Option<String>,
@@ -20,6 +21,7 @@ pub struct UpdateOpenvpnServerValidated {
     pub host: String,
     pub port: i32,
     pub proto: String,
+    pub subnet: String,
     pub cipher: Option<String>,
     pub auth_algorithm: String,
     pub tls_key_pem: Option<String>,
@@ -48,6 +50,13 @@ pub fn validate(payload: UpdateOpenvpnServerPayload) -> Result<UpdateOpenvpnServ
     let safe_proto = xss_security_helper::strip_dangerous_tags(&sanitized_proto);
     if safe_proto.is_empty() {
         errors.push("proto is required".to_string());
+    }
+
+    // Validate subnet
+    let sanitized_subnet = xss_security_helper::sanitize_input(&payload.subnet, 18);
+    let safe_subnet = xss_security_helper::strip_dangerous_tags(&sanitized_subnet);
+    if safe_subnet.is_empty() {
+        errors.push("subnet is required".to_string());
     }
 
     // Validate cipher (optional, but sanitize if provided)
@@ -93,6 +102,7 @@ pub fn validate(payload: UpdateOpenvpnServerPayload) -> Result<UpdateOpenvpnServ
             host: safe_host,
             port: payload.port,
             proto: safe_proto,
+            subnet: safe_subnet,
             cipher,
             auth_algorithm: safe_auth,
             tls_key_pem,
