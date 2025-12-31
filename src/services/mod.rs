@@ -12,6 +12,7 @@ pub mod add_device_type;
 pub mod add_openvpn_client;
 pub mod add_openvpn_server;
 pub mod assign_device_openvpn_client;
+pub mod build_device_firmware_script;
 pub mod deactivate_device_radius_client;
 pub mod delete_device;
 pub mod delete_device_connection;
@@ -59,4 +60,5 @@ pub mod update_device_port_specification;
 pub mod update_device_type;
 pub mod update_openvpn_server;
 pub mod validate_jwt;
+
 

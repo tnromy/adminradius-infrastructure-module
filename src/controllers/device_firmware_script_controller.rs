@@ -9,6 +9,9 @@ use crate::middlewares::log_middleware;
 use crate::services::add_device_firmware_script::{
     AddDeviceFirmwareScriptError, AddDeviceFirmwareScriptInput, execute as add_device_firmware_script,
 };
+use crate::services::build_device_firmware_script::{
+    BuildDeviceFirmwareScriptError, BuildDeviceFirmwareScriptInput, execute as build_device_firmware_script,
+};
 use crate::services::delete_device_firmware_script::{DeleteDeviceFirmwareScriptError, execute as delete_device_firmware_script};
 use crate::services::get_all_device_firmware_scripts::{GetAllDeviceFirmwareScriptsError, execute as get_all_device_firmware_scripts};
 use crate::services::get_device_firmware_script::execute as get_device_firmware_script;
@@ -29,6 +32,19 @@ pub struct DeviceFirmwareScriptPath {
 pub struct DeviceFirmwareScriptItemPath {
     device_firmware_id: String,
     id: String,
+}
+
+/// Path for direct script access without device_firmware_id
+#[derive(Debug, Deserialize)]
+pub struct DeviceFirmwareScriptDirectPath {
+    id: String,
+}
+
+/// Request payload for building a firmware script
+#[derive(Debug, Deserialize)]
+pub struct BuildDeviceFirmwareScriptPayload {
+    pub script_params_data: serde_json::Value,
+    pub filename: String,
 }
 
 pub async fn index(
@@ -171,6 +187,140 @@ pub async fn destroy(
         Err(DeleteDeviceFirmwareScriptError::NotFound) => not_found_response(request_id),
         Err(DeleteDeviceFirmwareScriptError::Database(err)) => {
             internal_error_response(&req, request_id, "failed to delete device firmware script", err)
+        }
+    }
+}
+
+// ============================================================================
+// Direct routes handlers (without device_firmware_id in path)
+// ============================================================================
+
+/// GET /device-firmware-script/{id}
+pub async fn show_direct(
+    req: HttpRequest,
+    path: web::Path<DeviceFirmwareScriptDirectPath>,
+    db: web::Data<DatabaseConnection>,
+) -> HttpResponse {
+    let request_id = include_request_id_middleware::extract_request_id(&req);
+    let Some(id) = sanitize_id(&path.id) else {
+        return bad_request_response(vec!["invalid id".to_string()], request_id);
+    };
+
+    match get_device_firmware_script(db.get_ref(), &id).await {
+        Ok(Some(entity)) => ok_response(entity, request_id),
+        Ok(None) => not_found_response(request_id),
+        Err(err) => internal_error_response(&req, request_id, "failed to fetch device firmware script", err),
+    }
+}
+
+/// PUT /device-firmware-script/{id}
+pub async fn update_direct(
+    req: HttpRequest,
+    path: web::Path<DeviceFirmwareScriptDirectPath>,
+    db: web::Data<DatabaseConnection>,
+    payload: web::Json<UpdateDeviceFirmwareScriptPayload>,
+) -> HttpResponse {
+    let request_id = include_request_id_middleware::extract_request_id(&req);
+    let Some(id) = sanitize_id(&path.id) else {
+        return bad_request_response(vec!["invalid id".to_string()], request_id);
+    };
+
+    let validated = match update_validation::validate(payload.into_inner()) {
+        Ok(validated) => validated,
+        Err(errors) => return bad_request_response(errors, request_id),
+    };
+
+    let input = UpdateDeviceFirmwareScriptInput {
+        id,
+        name: validated.name,
+        description: validated.description,
+        script_text: validated.script_text,
+        script_params: validated.script_params,
+    };
+
+    match update_device_firmware_script(db.get_ref(), input).await {
+        Ok(entity) => {
+            log_middleware::set_extra(&req, "device_firmware_script_id", entity.id.to_string());
+            ok_response(entity, request_id)
+        }
+        Err(UpdateDeviceFirmwareScriptError::NotFound) => not_found_response(request_id),
+        Err(UpdateDeviceFirmwareScriptError::NameAlreadyExists) => {
+            bad_request_response(vec!["script name already exists in this firmware".to_string()], request_id)
+        }
+        Err(UpdateDeviceFirmwareScriptError::Database(err)) => {
+            internal_error_response(&req, request_id, "failed to update device firmware script", err)
+        }
+    }
+}
+
+/// DELETE /device-firmware-script/{id}
+pub async fn destroy_direct(
+    req: HttpRequest,
+    path: web::Path<DeviceFirmwareScriptDirectPath>,
+    db: web::Data<DatabaseConnection>,
+) -> HttpResponse {
+    let request_id = include_request_id_middleware::extract_request_id(&req);
+    let Some(id) = sanitize_id(&path.id) else {
+        return bad_request_response(vec!["invalid id".to_string()], request_id);
+    };
+
+    match delete_device_firmware_script(db.get_ref(), &id).await {
+        Ok(()) => ok_response(json!({ "message": "deleted" }), request_id),
+        Err(DeleteDeviceFirmwareScriptError::NotFound) => not_found_response(request_id),
+        Err(DeleteDeviceFirmwareScriptError::Database(err)) => {
+            internal_error_response(&req, request_id, "failed to delete device firmware script", err)
+        }
+    }
+}
+
+/// GET /device-firmware-script/{id}/build
+pub async fn build(
+    req: HttpRequest,
+    path: web::Path<DeviceFirmwareScriptDirectPath>,
+    db: web::Data<DatabaseConnection>,
+    payload: web::Json<BuildDeviceFirmwareScriptPayload>,
+) -> HttpResponse {
+    let request_id = include_request_id_middleware::extract_request_id(&req);
+    let Some(id) = sanitize_id(&path.id) else {
+        return bad_request_response(vec!["invalid id".to_string()], request_id);
+    };
+
+    // Validate filename
+    let filename = payload.filename.trim();
+    if filename.is_empty() {
+        return bad_request_response(vec!["filename is required".to_string()], request_id);
+    }
+
+    // Ensure filename ends with .scr
+    let final_filename = if filename.ends_with(".scr") {
+        filename.to_string()
+    } else {
+        format!("{}.scr", filename)
+    };
+
+    let input = BuildDeviceFirmwareScriptInput {
+        id,
+        script_params_data: payload.script_params_data.clone(),
+        filename: final_filename,
+    };
+
+    match build_device_firmware_script(db.get_ref(), input).await {
+        Ok(output) => {
+            http_response_helper::response_file_download(&output.rendered_script, &output.filename)
+        }
+        Err(BuildDeviceFirmwareScriptError::NotFound) => not_found_response(request_id),
+        Err(BuildDeviceFirmwareScriptError::InvalidParamsData) => {
+            bad_request_response(vec!["script_params_data must be a JSON object".to_string()], request_id)
+        }
+        Err(BuildDeviceFirmwareScriptError::MissingParameter(key)) => {
+            let msg = format!("missing required script param: {}", key);
+            bad_request_response(vec![msg], request_id)
+        }
+        Err(BuildDeviceFirmwareScriptError::RenderError(err)) => {
+            internal_error_response(&req, request_id, "failed to build script", err)
+        }
+        Err(BuildDeviceFirmwareScriptError::Database(err)) => {
+            internal_error_response(&req, request_id, "failed to fetch device firmware script", err)
         }
     }
 }

@@ -388,3 +388,14 @@ pub fn response_redirect_303_with_set_cookie_opt<T: Serialize>(
     }
     resp.finish()
 }
+
+/// Build a file download response with the given content and filename
+pub fn response_file_download(content: &str, filename: &str) -> HttpResponse {
+    HttpResponse::Ok()
+        .content_type("text/plain; charset=utf-8")
+        .insert_header((
+            actix_web::http::header::CONTENT_DISPOSITION,
+            format!("attachment; filename=\"{}\"", filename),
+        ))
+        .body(content.to_string())
+}

@@ -14,7 +14,7 @@ pub fn configure(cfg: &mut ServiceConfig) {
             .route("", web::get().to(controller::index)),
     );
 
-    // Singular for create/show/update/delete + nested scripts
+    // Singular for create/show/update/delete + nested scripts (list/create only)
     cfg.service(
         web::scope("/device-firmware")
             .wrap(AllowedBranchesMiddleware)
@@ -23,11 +23,19 @@ pub fn configure(cfg: &mut ServiceConfig) {
             .route("/{id}", web::get().to(controller::show))
             .route("/{id}", web::put().to(controller::update))
             .route("/{id}", web::delete().to(controller::destroy))
-            // Nested scripts routes
+            // Nested scripts routes (list and create only)
             .route("/{device_firmware_id}/scripts", web::get().to(script_controller::index))
-            .route("/{device_firmware_id}/script", web::post().to(script_controller::store))
-            .route("/{device_firmware_id}/script/{id}", web::get().to(script_controller::show))
-            .route("/{device_firmware_id}/script/{id}", web::put().to(script_controller::update))
-            .route("/{device_firmware_id}/script/{id}", web::delete().to(script_controller::destroy)),
+            .route("/{device_firmware_id}/script", web::post().to(script_controller::store)),
+    );
+
+    // Direct script routes (show/update/delete/build without device_firmware_id)
+    cfg.service(
+        web::scope("/device-firmware-script")
+            .wrap(AllowedBranchesMiddleware)
+            .wrap(AuthenticationMiddleware)
+            .route("/{id}", web::get().to(script_controller::show_direct))
+            .route("/{id}", web::put().to(script_controller::update_direct))
+            .route("/{id}", web::delete().to(script_controller::destroy_direct))
+            .route("/{id}/build", web::get().to(script_controller::build)),
     );
 }

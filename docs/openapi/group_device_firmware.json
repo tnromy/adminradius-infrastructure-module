@@ -561,7 +561,7 @@
         }
       }
     },
-    "/api-infra/device-firmware/{device_firmware_id}/script/{id}": {
+    "/api-infra/device-firmware-script/{id}": {
       "get": {
         "tags": [
           "Device Firmware Script"
@@ -570,17 +570,6 @@
         "description": "Retrieve detailed information about a specific device firmware script",
         "operationId": "getDeviceFirmwareScriptById",
         "parameters": [
-          {
-            "name": "device_firmware_id",
-            "in": "path",
-            "description": "Device Firmware UUID identifier",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "example": "550e8400-e29b-41d4-a716-446655440001"
-            }
-          },
           {
             "name": "id",
             "in": "path",
@@ -657,17 +646,6 @@
         "description": "Update an existing device firmware script",
         "operationId": "updateDeviceFirmwareScript",
         "parameters": [
-          {
-            "name": "device_firmware_id",
-            "in": "path",
-            "description": "Device Firmware UUID identifier",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "example": "550e8400-e29b-41d4-a716-446655440001"
-            }
-          },
           {
             "name": "id",
             "in": "path",
@@ -758,17 +736,6 @@
         "operationId": "deleteDeviceFirmwareScript",
         "parameters": [
           {
-            "name": "device_firmware_id",
-            "in": "path",
-            "description": "Device Firmware UUID identifier",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "example": "550e8400-e29b-41d4-a716-446655440001"
-            }
-          },
-          {
             "name": "id",
             "in": "path",
             "description": "Device Firmware Script UUID identifier",
@@ -827,6 +794,77 @@
                 }
               }
             }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api-infra/device-firmware-script/{id}/build": {
+      "get": {
+        "tags": [
+          "Device Firmware Script"
+        ],
+        "summary": "Build device firmware script",
+        "description": "Build a device firmware script by replacing template parameters with provided values. Returns a downloadable .scr file.",
+        "operationId": "buildDeviceFirmwareScript",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Device Firmware Script UUID identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "660e8400-e29b-41d4-a716-446655440002"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceFirmwareScriptBuildRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Script built successfully - returns file download",
+            "headers": {
+              "Content-Disposition": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Attachment with filename",
+                "example": "attachment; filename=\"config.scr\""
+              }
+            },
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "description": "The built script content"
+                },
+                "example": "/interface pppoe-client add name=pppoe-out1 user=myuser password=mypass"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
@@ -1070,6 +1108,33 @@
             "nullable": true,
             "description": "Array of parameter keys required by the script (optional, defaults to empty array)",
             "example": ["interface_name", "username", "password"]
+          }
+        }
+      },
+      "DeviceFirmwareScriptBuildRequest": {
+        "type": "object",
+        "required": [
+          "script_params_data",
+          "filename"
+        ],
+        "properties": {
+          "script_params_data": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Key-value pairs for template parameters. All keys defined in script_params must be provided.",
+            "example": {
+              "interface_name": "pppoe-out1",
+              "username": "myuser",
+              "password": "mypass"
+            }
+          },
+          "filename": {
+            "type": "string",
+            "description": "Filename for the downloaded script (will be appended with .scr if not present)",
+            "minLength": 1,
+            "example": "config"
           }
         }
       }

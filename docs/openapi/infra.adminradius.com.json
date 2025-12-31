@@ -127,8 +127,11 @@
     "/device-firmware/{device_firmware_id}/script": {
       "$ref": "./group_device_firmware.json#/paths/~1api-infra~1device-firmware~1{device_firmware_id}~1script"
     },
-    "/device-firmware/{device_firmware_id}/script/{id}": {
-      "$ref": "./group_device_firmware.json#/paths/~1api-infra~1device-firmware~1{device_firmware_id}~1script~1{id}"
+    "/device-firmware-script/{id}": {
+      "$ref": "./group_device_firmware.json#/paths/~1api-infra~1device-firmware-script~1{id}"
+    },
+    "/device-firmware-script/{id}/build": {
+      "$ref": "./group_device_firmware.json#/paths/~1api-infra~1device-firmware-script~1{id}~1build"
     },
     "/device/{device_id}/ports": {
       "$ref": "./group_device_port.json#/paths/~1api-infra~1device~1{device_id}~1ports"
