@@ -18,6 +18,7 @@ pub mod jwks_entity;
 pub mod openvpn_client_entity;
 pub mod openvpn_server_entity;
 pub mod parsed_pkcs12_entity;
+pub mod private_key_passphrase_entity;
 pub mod radius_client_entity;
 pub mod radius_group_profile_entity;
 pub mod radius_vendor_entity;

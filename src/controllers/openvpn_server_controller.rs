@@ -95,6 +95,9 @@ pub async fn store(
         Err(AddOpenvpnServerError::CertificateGeneration(msg)) => {
             internal_error_response(&req, request_id, "certificate generation error", msg)
         }
+        Err(AddOpenvpnServerError::PassphraseEncryption(msg)) => {
+            internal_error_response(&req, request_id, "passphrase encryption error", msg)
+        }
         Err(AddOpenvpnServerError::Database(err)) => {
             internal_error_response(&req, request_id, "failed to create openvpn server", err)
         }

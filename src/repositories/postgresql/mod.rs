@@ -13,4 +13,5 @@ pub mod device_topology_postgres_repository;
 pub mod device_type_postgres_repository;
 pub mod openvpn_client_postgres_repository;
 pub mod openvpn_server_postgres_repository;
+pub mod private_key_passphrase_postgres_repository;
 

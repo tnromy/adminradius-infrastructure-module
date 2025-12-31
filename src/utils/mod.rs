@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 pub mod crypt_helper;
+pub mod hash_helper;
 pub mod http_response_helper;
 pub mod pkcs12_helper;
 pub mod script_builder;

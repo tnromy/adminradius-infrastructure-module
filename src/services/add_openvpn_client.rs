@@ -3,14 +3,18 @@ use config::Config;
 use thiserror::Error;
 
 use crate::entities::openvpn_client_entity::OpenvpnClientEntity;
+use crate::entities::private_key_passphrase_entity::PrivateKeyPassphraseEntity;
 use crate::infrastructures::ca_openvpn::CaOpenvpnService;
 use crate::infrastructures::database::DatabaseConnection;
 use crate::infrastructures::redis::RedisConnection;
 use crate::repositories::api::ca_openvpn_api_repository;
 use crate::repositories::postgresql::openvpn_client_postgres_repository as repository;
 use crate::repositories::postgresql::openvpn_server_postgres_repository as server_repository;
+use crate::repositories::postgresql::private_key_passphrase_postgres_repository as passphrase_repository;
 use crate::services::get_openvpn_clients;
 use crate::services::parse_pkcs12_certificate;
+use crate::utils::crypt_helper;
+use crate::utils::hash_helper;
 use crate::utils::uuid_helper;
 
 #[derive(Debug)]
@@ -29,6 +33,8 @@ pub enum AddOpenvpnClientError {
     CaService(String),
     #[error("certificate generation error: {0}")]
     CertificateGeneration(String),
+    #[error("passphrase encryption error: {0}")]
+    PassphraseEncryption(String),
     #[error("database error: {0}")]
     Database(#[from] sqlx::Error),
 }
@@ -47,16 +53,19 @@ pub async fn execute(
         .await?
         .ok_or(AddOpenvpnClientError::ServerNotFound)?;
 
-    // Step 2: Get default passphrase from config
-    let default_passphrase = config
+    // Step 2: Generate unique passphrase for this private key
+    let unique_passphrase = uuid_helper::generate();
+
+    // Step 3: Get master key from config (used to encrypt the unique passphrase)
+    let master_key = config
         .get_string("ca_openvpn.default_passphrase")
         .map_err(|e| AddOpenvpnClientError::Config(format!("Failed to get default_passphrase: {}", e)))?;
 
-    // Step 3: Initialize CA OpenVPN service
+    // Step 4: Initialize CA OpenVPN service
     let ca_openvpn_service = CaOpenvpnService::new(config)
         .map_err(|e| AddOpenvpnClientError::CaService(format!("Failed to initialize CA service: {}", e)))?;
 
-    // Step 4: Create CSR for client certificate
+    // Step 5: Create CSR for client certificate using unique passphrase
     let cn = input.name.as_deref();
     log::debug!(
         "add_openvpn_client:create_csr_client server_id={} cn={:?}",
@@ -66,7 +75,7 @@ pub async fn execute(
 
     let csr_client_data = ca_openvpn_api_repository::create_csr_client(
         &ca_openvpn_service,
-        &default_passphrase,
+        &unique_passphrase,
         cn,
     )
     .await
@@ -78,7 +87,7 @@ pub async fn execute(
         &csr_client_data.reserved_ip_address
     );
 
-    // Step 5: Approve the CSR
+    // Step 6: Approve the CSR
     let certificate_data = ca_openvpn_api_repository::approve_csr(
         &ca_openvpn_service,
         &csr_client_data.certificate_request_id,
@@ -91,28 +100,45 @@ pub async fn execute(
         certificate_data.serial_number
     );
 
-    // Step 6: Parse PKCS#12 certificate
+    // Step 7: Parse PKCS#12 certificate using unique passphrase
     let client_certificates = parse_pkcs12_certificate::execute(
         &ca_openvpn_service,
         certificate_data.serial_number,
-        &default_passphrase,
+        &unique_passphrase,
     )
     .await
     .map_err(|e| AddOpenvpnClientError::CertificateGeneration(format!("Failed to parse PKCS#12: {}", e)))?;
 
     log::debug!("add_openvpn_client:pkcs12_parsed");
 
-    // Step 7: Parse expired_at from certificate_data
+    // Step 8: Store encrypted passphrase linked to private key hash
+    let private_key_hash = hash_helper::sha256(&client_certificates.encrypted_private_key_pem)
+        .map_err(|e| AddOpenvpnClientError::PassphraseEncryption(format!("Failed to hash private key: {}", e)))?;
+    
+    let encrypted_passphrase = crypt_helper::encrypt_string(&unique_passphrase, &master_key)
+        .map_err(|e| AddOpenvpnClientError::PassphraseEncryption(format!("Failed to encrypt passphrase: {}", e)))?;
+
+    let passphrase_entity = PrivateKeyPassphraseEntity {
+        id: uuid_helper::generate(),
+        private_key_hash,
+        encrypted_passphrase,
+    };
+
+    passphrase_repository::create(conn, &passphrase_entity).await?;
+
+    log::debug!("add_openvpn_client:passphrase_stored id={}", passphrase_entity.id);
+
+    // Step 9: Parse expired_at from certificate_data
     let expired_at = DateTime::parse_from_rfc3339(&certificate_data.expired_at)
         .map(|dt| dt.with_timezone(&Utc))
         .map_err(|e| AddOpenvpnClientError::CertificateGeneration(format!("Failed to parse expired_at: {}", e)))?;
 
-    // Step 8: Determine CN from certificate or use generated one
+    // Step 10: Determine CN from certificate or use generated one
     let final_cn = cn
         .map(|s| s.to_string())
         .unwrap_or_else(|| format!("client-{}", uuid_helper::generate().split('-').next().unwrap_or("unknown")));
 
-    // Step 9: Create entity
+    // Step 11: Create entity
     let now = Utc::now();
     
     // Convert reserved_ip_address to Option - empty string becomes None
@@ -135,12 +161,12 @@ pub async fn execute(
         updated_at: now,
     };
 
-    // Step 10: Save to database
+    // Step 12: Save to database
     repository::create(conn, &entity).await?;
 
     log::debug!("add_openvpn_client:created id={}", entity.id);
 
-    // Step 11: Invalidate cache
+    // Step 13: Invalidate cache
     get_openvpn_clients::invalidate_cache(redis, &input.openvpn_server_id).await;
 
     Ok(entity)
