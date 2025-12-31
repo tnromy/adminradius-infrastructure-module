@@ -23,6 +23,12 @@ pub struct AddOpenvpnClientInput {
     pub name: Option<String>,
 }
 
+#[derive(Debug)]
+pub struct AddOpenvpnClientResult {
+    pub entity: OpenvpnClientEntity,
+    pub passphrase: String,
+}
+
 #[derive(Debug, Error)]
 pub enum AddOpenvpnClientError {
     #[error("openvpn server not found")]
@@ -44,7 +50,7 @@ pub async fn execute(
     redis: &RedisConnection,
     config: &Config,
     input: AddOpenvpnClientInput,
-) -> Result<OpenvpnClientEntity, AddOpenvpnClientError> {
+) -> Result<AddOpenvpnClientResult, AddOpenvpnClientError> {
     let pool = db.get_pool();
     let conn = pool.as_ref();
 
@@ -169,5 +175,9 @@ pub async fn execute(
     // Step 13: Invalidate cache
     get_openvpn_clients::invalidate_cache(redis, &input.openvpn_server_id).await;
 
-    Ok(entity)
+    // Step 14: Return entity with plaintext passphrase
+    Ok(AddOpenvpnClientResult {
+        entity,
+        passphrase: unique_passphrase,
+    })
 }

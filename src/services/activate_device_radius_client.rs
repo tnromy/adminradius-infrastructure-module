@@ -19,6 +19,12 @@ pub struct ActivateDeviceRadiusClientInput {
     pub device_vendor_id: i32,
 }
 
+#[derive(Debug)]
+pub struct ActivateDeviceRadiusClientResult {
+    pub entity: DeviceRadiusClientEntity,
+    pub secret: String,
+}
+
 #[derive(Debug, Error)]
 pub enum ActivateDeviceRadiusClientError {
     #[error("device not found")]
@@ -46,7 +52,7 @@ pub async fn execute(
     config: &Config,
     radius_service: &RadiusService,
     input: ActivateDeviceRadiusClientInput,
-) -> Result<DeviceRadiusClientEntity, ActivateDeviceRadiusClientError> {
+) -> Result<ActivateDeviceRadiusClientResult, ActivateDeviceRadiusClientError> {
     let pool = db.get_pool();
     let conn = pool.as_ref();
 
@@ -142,5 +148,9 @@ pub async fn execute(
         entity.radius_client_id
     );
 
-    Ok(entity)
+    // Step 12: Return entity with plaintext secret
+    Ok(ActivateDeviceRadiusClientResult {
+        entity,
+        secret,
+    })
 }

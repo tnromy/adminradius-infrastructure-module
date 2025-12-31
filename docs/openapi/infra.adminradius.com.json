@@ -190,6 +190,18 @@
     "/openvpn-client/{id}": {
       "$ref": "./group_openvpn_client.json#/paths/~1api-infra~1openvpn-client~1{id}"
     },
+    "/openvpn-client/{id}/cert/ca-chain.pem": {
+      "$ref": "./group_openvpn_client.json#/paths/~1api-infra~1openvpn-client~1{id}~1cert~1ca-chain.pem"
+    },
+    "/openvpn-client/{id}/cert/cert.pem": {
+      "$ref": "./group_openvpn_client.json#/paths/~1api-infra~1openvpn-client~1{id}~1cert~1cert.pem"
+    },
+    "/openvpn-client/{id}/cert/privkey.pem": {
+      "$ref": "./group_openvpn_client.json#/paths/~1api-infra~1openvpn-client~1{id}~1cert~1privkey.pem"
+    },
+    "/openvpn-client/{id}/cert/privkey/passphrase": {
+      "$ref": "./group_openvpn_client.json#/paths/~1api-infra~1openvpn-client~1{id}~1cert~1privkey~1passphrase"
+    },
     "/device/{device_id}/openvpn-client/{openvpn_client_id}": {
       "$ref": "./group_device_openvpn_client.json#/paths/~1api-infra~1device~1{device_id}~1openvpn-client~1{openvpn_client_id}"
     },

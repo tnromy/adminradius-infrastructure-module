@@ -633,6 +633,12 @@
             "description": "The client's certificate in PEM format",
             "example": "-----BEGIN CERTIFICATE-----\\nMIIE...\\n-----END CERTIFICATE-----"
           },
+          "passphrase": {
+            "type": "string",
+            "nullable": true,
+            "description": "Decrypted passphrase for the encrypted private key. Only returned in POST response when creating a new client. Note: This is stored encrypted in the database but returned decrypted in creation response.",
+            "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
           "revoked_at": {
             "type": "string",
             "format": "date-time",

@@ -4393,6 +4393,270 @@
         }
       }
     },
+    "/openvpn-client/{id}/cert/ca-chain.pem": {
+      "get": {
+        "tags": [
+          "OpenVPN Client"
+        ],
+        "summary": "Download CA chain certificate",
+        "description": "Download the CA chain certificate (ca-chain.pem) for an OpenVPN client. This certificate is obtained from the associated OpenVPN server.",
+        "operationId": "getOpenvpnClientCaChain",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "The UUID of the OpenVPN client"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CA chain certificate in PEM format",
+            "content": {
+              "application/x-pem-file": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            },
+            "headers": {
+              "Content-Disposition": {
+                "schema": {
+                  "type": "string",
+                  "example": "attachment; filename=\"ca-chain.pem\""
+                },
+                "description": "File download disposition"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/group_openvpn_client_components-responses-BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/group_openvpn_client_components-responses-NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/components-responses-InternalServerError"
+          }
+        }
+      }
+    },
+    "/openvpn-client/{id}/cert/cert.pem": {
+      "get": {
+        "tags": [
+          "OpenVPN Client"
+        ],
+        "summary": "Download client certificate",
+        "description": "Download the client certificate (cert.pem) for an OpenVPN client.",
+        "operationId": "getOpenvpnClientCert",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "The UUID of the OpenVPN client"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Client certificate in PEM format",
+            "content": {
+              "application/x-pem-file": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            },
+            "headers": {
+              "Content-Disposition": {
+                "schema": {
+                  "type": "string",
+                  "example": "attachment; filename=\"cert.pem\""
+                },
+                "description": "File download disposition"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/group_openvpn_client_components-responses-BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/group_openvpn_client_components-responses-NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/components-responses-InternalServerError"
+          }
+        }
+      }
+    },
+    "/openvpn-client/{id}/cert/privkey.pem": {
+      "get": {
+        "tags": [
+          "OpenVPN Client"
+        ],
+        "summary": "Download encrypted private key",
+        "description": "Download the encrypted private key (privkey.pem) for an OpenVPN client. The private key is encrypted and requires a passphrase to use.",
+        "operationId": "getOpenvpnClientPrivkey",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "The UUID of the OpenVPN client"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Encrypted private key in PEM format",
+            "content": {
+              "application/x-pem-file": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            },
+            "headers": {
+              "Content-Disposition": {
+                "schema": {
+                  "type": "string",
+                  "example": "attachment; filename=\"privkey.pem\""
+                },
+                "description": "File download disposition"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/group_openvpn_client_components-responses-BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/group_openvpn_client_components-responses-NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/components-responses-InternalServerError"
+          }
+        }
+      }
+    },
+    "/openvpn-client/{id}/cert/privkey/passphrase": {
+      "get": {
+        "tags": [
+          "OpenVPN Client"
+        ],
+        "summary": "Get private key passphrase",
+        "description": "Retrieve the decrypted passphrase for the OpenVPN client's encrypted private key. The passphrase is looked up by hashing the encrypted private key and decrypted using the master key from configuration.",
+        "operationId": "getOpenvpnClientPassphrase",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "The UUID of the OpenVPN client"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Passphrase retrieved successfully",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for tracing"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Ok"
+                        }
+                      }
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "req_abc123xyz"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "passphrase": {
+                          "type": "string",
+                          "description": "The decrypted passphrase for the private key",
+                          "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/group_openvpn_client_components-responses-BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/group_openvpn_client_components-responses-NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/components-responses-InternalServerError"
+          }
+        }
+      }
+    },
     "/device/{device_id}/openvpn-client/{openvpn_client_id}": {
       "put": {
         "tags": [
@@ -7364,6 +7628,12 @@
             "description": "The client's certificate in PEM format",
             "example": "-----BEGIN CERTIFICATE-----\\nMIIE...\\n-----END CERTIFICATE-----"
           },
+          "passphrase": {
+            "type": "string",
+            "nullable": true,
+            "description": "Decrypted passphrase for the encrypted private key. Only returned in POST response when creating a new client. Note: This is stored encrypted in the database but returned decrypted in creation response.",
+            "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
           "revoked_at": {
             "type": "string",
             "format": "date-time",
@@ -7491,10 +7761,10 @@
             "description": "RADIUS client ID from the external RADIUS API",
             "example": 123
           },
-          "encrypted_secret": {
+          "secret": {
             "type": "string",
-            "description": "Encrypted RADIUS client secret (AES-256-CBC encrypted, base64 encoded)",
-            "example": "U2FsdGVkX1..."
+            "description": "Decrypted RADIUS client secret (plaintext). Note: This is stored encrypted in the database but returned decrypted in API responses.",
+            "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
           },
           "created_at": {
             "type": "string",
@@ -7513,7 +7783,7 @@
           "id",
           "device_openvpn_client_id",
           "radius_client_id",
-          "encrypted_secret",
+          "secret",
           "created_at",
           "updated_at"
         ]

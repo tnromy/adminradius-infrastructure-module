@@ -88,9 +88,12 @@ pub async fn store(
     };
 
     match add_openvpn_client(db.get_ref(), redis.get_ref(), config.as_ref().as_ref(), input).await {
-        Ok(entity) => {
-            log_middleware::set_extra(&req, "openvpn_client_id", entity.id.clone());
-            let response: OpenvpnClientResponse = entity.into();
+        Ok(result) => {
+            log_middleware::set_extra(&req, "openvpn_client_id", result.entity.id.clone());
+            let response = OpenvpnClientResponse::from_entity_with_passphrase(
+                result.entity,
+                result.passphrase,
+            );
             ok_response(response, request_id)
         }
         Err(AddOpenvpnClientError::ServerNotFound) => {

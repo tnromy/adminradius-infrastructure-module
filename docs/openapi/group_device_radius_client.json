@@ -200,10 +200,10 @@
             "description": "RADIUS client ID from the external RADIUS API",
             "example": 123
           },
-          "encrypted_secret": {
+          "secret": {
             "type": "string",
-            "description": "Encrypted RADIUS client secret (AES-256-CBC encrypted, base64 encoded)",
-            "example": "U2FsdGVkX1..."
+            "description": "Decrypted RADIUS client secret (plaintext). Note: This is stored encrypted in the database but returned decrypted in API responses.",
+            "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
           },
           "created_at": {
             "type": "string",
@@ -222,7 +222,7 @@
           "id",
           "device_openvpn_client_id",
           "radius_client_id",
-          "encrypted_secret",
+          "secret",
           "created_at",
           "updated_at"
         ]

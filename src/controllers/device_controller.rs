@@ -5,6 +5,7 @@ use serde::Deserialize;
 use serde_json::json;
 use std::sync::Arc;
 
+use crate::entities::device_radius_client_entity::DeviceRadiusClientResponse;
 use crate::infrastructures::database::DatabaseConnection;
 use crate::infrastructures::radius::RadiusService;
 use crate::middlewares::include_request_id_middleware;
@@ -337,10 +338,14 @@ pub async fn activate_radius_client(
     )
     .await
     {
-        Ok(entity) => {
+        Ok(result) => {
             log_middleware::set_extra(&req, "device_id", path.device_id.clone());
-            log_middleware::set_extra(&req, "radius_client_id", entity.radius_client_id.to_string());
-            ok_response(entity, request_id)
+            log_middleware::set_extra(&req, "radius_client_id", result.entity.radius_client_id.to_string());
+            let response = DeviceRadiusClientResponse::from_entity_with_secret(
+                result.entity,
+                result.secret,
+            );
+            ok_response(response, request_id)
         }
         Err(ActivateDeviceRadiusClientError::DeviceNotFound) => {
             not_found_response_custom("device not found", request_id)

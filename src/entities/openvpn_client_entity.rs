@@ -36,6 +36,9 @@ pub struct OpenvpnClientResponse {
     pub reserved_ip_address: Option<String>,
     /// The client's certificate in PEM format
     pub certificate_pem: String,
+    /// Decrypted passphrase for the encrypted private key (only in POST response)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub passphrase: Option<String>,
     /// Revocation timestamp (None if not revoked)
     pub revoked_at: Option<DateTime<Utc>>,
     /// Certificate expiration timestamp
@@ -52,6 +55,31 @@ impl From<OpenvpnClientEntity> for OpenvpnClientResponse {
             cn: entity.cn,
             reserved_ip_address: entity.reserved_ip_address,
             certificate_pem: entity.certificate_pem,
+            passphrase: None,  // Default to None when converting from entity
+            revoked_at: entity.revoked_at,
+            expired_at: entity.expired_at,
+            created_at: entity.created_at,
+            updated_at: entity.updated_at,
+        }
+    }
+}
+
+impl OpenvpnClientResponse {
+    /// Create response with passphrase included (for POST/create responses)
+    pub fn with_passphrase(mut self, passphrase: String) -> Self {
+        self.passphrase = Some(passphrase);
+        self
+    }
+
+    /// Create response from entity with passphrase
+    pub fn from_entity_with_passphrase(entity: OpenvpnClientEntity, passphrase: String) -> Self {
+        Self {
+            id: entity.id,
+            server_id: entity.server_id,
+            cn: entity.cn,
+            reserved_ip_address: entity.reserved_ip_address,
+            certificate_pem: entity.certificate_pem,
+            passphrase: Some(passphrase),
             revoked_at: entity.revoked_at,
             expired_at: entity.expired_at,
             created_at: entity.created_at,
