@@ -16,6 +16,18 @@ use crate::services::add_openvpn_client::{
 use crate::services::delete_openvpn_client::{
     DeleteOpenvpnClientError, execute as delete_openvpn_client,
 };
+use crate::services::get_openvpn_client_ca_chain::{
+    GetOpenvpnClientCaChainError, execute as get_openvpn_client_ca_chain,
+};
+use crate::services::get_openvpn_client_cert::{
+    GetOpenvpnClientCertError, execute as get_openvpn_client_cert,
+};
+use crate::services::get_openvpn_client_passphrase::{
+    GetOpenvpnClientPassphraseError, execute as get_openvpn_client_passphrase,
+};
+use crate::services::get_openvpn_client_privkey::{
+    GetOpenvpnClientPrivkeyError, execute as get_openvpn_client_privkey,
+};
 use crate::services::get_openvpn_clients::execute as get_openvpn_clients;
 use crate::services::show_openvpn_client::execute as show_openvpn_client;
 use crate::utils::http_response_helper;
@@ -146,6 +158,110 @@ pub async fn destroy(
     }
 }
 
+/// GET /openvpn-client/{id}/cert/ca-chain.pem
+pub async fn ca_chain_pem(
+    req: HttpRequest,
+    path: web::Path<OpenvpnClientPath>,
+    db: web::Data<DatabaseConnection>,
+) -> HttpResponse {
+    let request_id = include_request_id_middleware::extract_request_id(&req);
+    let Some(id) = sanitize_uuid(&path.id) else {
+        return bad_request_response(vec!["invalid id".to_string()], request_id);
+    };
+
+    match get_openvpn_client_ca_chain(db.get_ref(), &id).await {
+        Ok(pem) => pem_response(pem, "ca-chain.pem"),
+        Err(GetOpenvpnClientCaChainError::ClientNotFound) => {
+            not_found_response("openvpn client not found", request_id)
+        }
+        Err(GetOpenvpnClientCaChainError::ServerNotFound) => {
+            not_found_response("openvpn server not found", request_id)
+        }
+        Err(GetOpenvpnClientCaChainError::Database(err)) => {
+            internal_error_response(&req, request_id, "failed to fetch ca chain", err)
+        }
+    }
+}
+
+/// GET /openvpn-client/{id}/cert/cert.pem
+pub async fn cert_pem(
+    req: HttpRequest,
+    path: web::Path<OpenvpnClientPath>,
+    db: web::Data<DatabaseConnection>,
+) -> HttpResponse {
+    let request_id = include_request_id_middleware::extract_request_id(&req);
+    let Some(id) = sanitize_uuid(&path.id) else {
+        return bad_request_response(vec!["invalid id".to_string()], request_id);
+    };
+
+    match get_openvpn_client_cert(db.get_ref(), &id).await {
+        Ok(pem) => pem_response(pem, "cert.pem"),
+        Err(GetOpenvpnClientCertError::NotFound) => {
+            not_found_response("openvpn client not found", request_id)
+        }
+        Err(GetOpenvpnClientCertError::Database(err)) => {
+            internal_error_response(&req, request_id, "failed to fetch certificate", err)
+        }
+    }
+}
+
+/// GET /openvpn-client/{id}/cert/privkey.pem
+pub async fn privkey_pem(
+    req: HttpRequest,
+    path: web::Path<OpenvpnClientPath>,
+    db: web::Data<DatabaseConnection>,
+) -> HttpResponse {
+    let request_id = include_request_id_middleware::extract_request_id(&req);
+    let Some(id) = sanitize_uuid(&path.id) else {
+        return bad_request_response(vec!["invalid id".to_string()], request_id);
+    };
+
+    match get_openvpn_client_privkey(db.get_ref(), &id).await {
+        Ok(pem) => pem_response(pem, "privkey.pem"),
+        Err(GetOpenvpnClientPrivkeyError::NotFound) => {
+            not_found_response("openvpn client not found", request_id)
+        }
+        Err(GetOpenvpnClientPrivkeyError::Database(err)) => {
+            internal_error_response(&req, request_id, "failed to fetch private key", err)
+        }
+    }
+}
+
+/// GET /openvpn-client/{id}/cert/privkey/passphrase
+pub async fn privkey_passphrase(
+    req: HttpRequest,
+    path: web::Path<OpenvpnClientPath>,
+    db: web::Data<DatabaseConnection>,
+    config: web::Data<Arc<Config>>,
+) -> HttpResponse {
+    let request_id = include_request_id_middleware::extract_request_id(&req);
+    let Some(id) = sanitize_uuid(&path.id) else {
+        return bad_request_response(vec!["invalid id".to_string()], request_id);
+    };
+
+    match get_openvpn_client_passphrase(db.get_ref(), config.as_ref().as_ref(), &id).await {
+        Ok(passphrase) => ok_response(json!({ "passphrase": passphrase }), request_id),
+        Err(GetOpenvpnClientPassphraseError::ClientNotFound) => {
+            not_found_response("openvpn client not found", request_id)
+        }
+        Err(GetOpenvpnClientPassphraseError::PassphraseNotFound) => {
+            not_found_response("passphrase not found for this private key", request_id)
+        }
+        Err(GetOpenvpnClientPassphraseError::Config(msg)) => {
+            internal_error_response(&req, request_id, "configuration error", msg)
+        }
+        Err(GetOpenvpnClientPassphraseError::Hash(msg)) => {
+            internal_error_response(&req, request_id, "hash error", msg)
+        }
+        Err(GetOpenvpnClientPassphraseError::Decryption(msg)) => {
+            internal_error_response(&req, request_id, "decryption error", msg)
+        }
+        Err(GetOpenvpnClientPassphraseError::Database(err)) => {
+            internal_error_response(&req, request_id, "failed to fetch passphrase", err)
+        }
+    }
+}
+
 fn sanitize_uuid(raw: &str) -> Option<String> {
     let sanitized = xss_security_helper::sanitize_input(raw, 64);
     let safe = xss_security_helper::strip_dangerous_tags(&sanitized);
@@ -191,4 +307,14 @@ fn internal_error_response<E: std::fmt::Display>(
         Some(rid) => http_response_helper::response_json_error_500_with_request_id(errors, rid),
         None => http_response_helper::response_json_error_500(errors),
     }
+}
+
+fn pem_response(pem: String, filename: &str) -> HttpResponse {
+    HttpResponse::Ok()
+        .content_type("application/x-pem-file")
+        .insert_header((
+            "Content-Disposition",
+            format!("attachment; filename=\"{}\"", filename),
+        ))
+        .body(pem)
 }

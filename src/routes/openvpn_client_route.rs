@@ -11,6 +11,11 @@ pub fn configure(cfg: &mut ServiceConfig) {
             .wrap(AllowedBranchesMiddleware)
             .wrap(AuthenticationMiddleware)
             .route("/{id}", web::get().to(controller::show))
-            .route("/{id}", web::delete().to(controller::destroy)),
+            .route("/{id}", web::delete().to(controller::destroy))
+            // Certificate file downloads
+            .route("/{id}/cert/ca-chain.pem", web::get().to(controller::ca_chain_pem))
+            .route("/{id}/cert/cert.pem", web::get().to(controller::cert_pem))
+            .route("/{id}/cert/privkey.pem", web::get().to(controller::privkey_pem))
+            .route("/{id}/cert/privkey/passphrase", web::get().to(controller::privkey_passphrase)),
     );
 }
