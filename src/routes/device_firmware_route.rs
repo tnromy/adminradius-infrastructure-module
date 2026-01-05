@@ -36,6 +36,6 @@ pub fn configure(cfg: &mut ServiceConfig) {
             .route("/{id}", web::get().to(script_controller::show_direct))
             .route("/{id}", web::put().to(script_controller::update_direct))
             .route("/{id}", web::delete().to(script_controller::destroy_direct))
-            .route("/{id}/build", web::get().to(script_controller::build)),
+            .route("/{id}/build", web::post().to(script_controller::build)),
     );
 }

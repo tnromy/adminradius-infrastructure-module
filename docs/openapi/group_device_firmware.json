@@ -811,7 +811,7 @@
       }
     },
     "/api-infra/device-firmware-script/{id}/build": {
-      "get": {
+      "post": {
         "tags": [
           "Device Firmware Script"
         ],
